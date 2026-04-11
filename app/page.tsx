@@ -2,12 +2,16 @@
 
 import React, { useEffect, useState, useMemo } from 'react'
 import Papa from 'papaparse'
-import Link from 'next/link' // Import Link for navigation
+import Link from 'next/link'
 import { 
   Timer, Zap, ShieldAlert, Quote, Trophy, 
   Activity, ChevronRight, TrendingUp, TrendingDown,
   ArrowUpDown, ArrowUp, ArrowDown 
 } from 'lucide-react'
+import { 
+  LineChart, Line, XAxis, YAxis, Tooltip, 
+  ResponsiveContainer, CartesianGrid, Legend 
+} from 'recharts'
 import Nav from '@/components/Nav'
 
 const SHEET_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vS3Ia2YO0T2yMBlPlOLOMUCgWnT0IzT-hNqKscWJT1SqqyE5INYObl3BEP7pdmaKJI3fzJQILj7BUV6/pub?gid=1401420857&single=true&output=csv"
@@ -35,6 +39,7 @@ type SortConfig = {
 
 export default function Home() {
   const [drivers, setDrivers] = useState<Driver[]>([])
+  const [chartData, setChartData] = useState<any[]>([]) 
   const [loading, setLoading] = useState(true)
   const [updated, setUpdated] = useState('')
   const [sortConfig, setSortConfig] = useState<SortConfig>({ key: 'elo', direction: 'descending' })
@@ -62,6 +67,7 @@ export default function Home() {
           const ELO_KEY = find(firstRow, 'elo') || ''
           const CHANGE_KEY = find(firstRow, 'elo change', 'last change', 'change', 'delta') || ''
 
+          // 1. Parse the driver standings
           const parsed: Driver[] = rows
             .filter(r => r[DRIVER_KEY]?.trim())
             .map((r, i) => ({
@@ -73,6 +79,23 @@ export default function Home() {
               change: r[CHANGE_KEY] ? parseInt(r[CHANGE_KEY]) : null,
             }))
           setDrivers(parsed)
+
+          // 2. Parse Timeline Data for Recharts
+          // Grabs columns that look like "01 AUS", "02 CHI", etc.
+          const raceColumns = Object.keys(firstRow).filter(key => /^\d{2}\s/.test(key));
+          
+          const timelineData = raceColumns.map(race => {
+            const dataPoint: any = { name: race };
+            rows.forEach(row => {
+              const driverName = row[DRIVER_KEY]?.trim();
+              const eloStr = row[race];
+              if (driverName && eloStr && !isNaN(parseInt(eloStr))) {
+                dataPoint[driverName] = parseInt(eloStr);
+              }
+            });
+            return dataPoint;
+          });
+          setChartData(timelineData)
         }
         setUpdated(new Date().toLocaleTimeString())
         setLoading(false)
@@ -112,7 +135,7 @@ export default function Home() {
     <div className="min-h-screen bg-[#0a0a0a] text-zinc-100 font-sans pb-20">
       <Nav />
 
-      {/* --- HERO EDITORIAL SECTION (NOW CLICKABLE) --- */}
+      {/* --- HERO EDITORIAL SECTION --- */}
       <section className="relative w-full border-b border-zinc-800 bg-[#0d0d10] transition-colors hover:bg-[#111116]">
         <Link href="/editorial" className="group block container mx-auto grid grid-cols-1 lg:grid-cols-12 cursor-pointer">
           <div className="lg:col-span-8 p-8 md:p-16 lg:border-r border-zinc-800">
@@ -150,7 +173,7 @@ export default function Home() {
             </div>
           </div>
 
-          {/* Quick Stats Sidebar (Visual only on Home) */}
+          {/* Quick Stats Sidebar */}
           <div className="lg:col-span-4 bg-[#0a0a0c] p-8 flex flex-col justify-between group-hover:bg-[#0c0c0e] transition-colors">
             <div className="space-y-8">
               <h3 className="text-xs font-black uppercase tracking-[0.3em] text-zinc-500 flex items-center gap-2 underline underline-offset-8 decoration-orange-500/50">
@@ -187,8 +210,63 @@ export default function Home() {
         </Link>
       </section>
 
+      {/* --- SEASON TRAJECTORY CHART --- */}
+      <section className="container mx-auto px-6 mt-16">
+        <div className="flex items-center gap-2 text-orange-500 mb-6">
+          <TrendingUp size={18} />
+          <span className="text-xs font-black uppercase tracking-[0.4em]">Season Trajectory (Top 5)</span>
+        </div>
+        
+        <div className="bg-[#121217] border border-zinc-800 rounded-2xl p-6 h-[400px] shadow-2xl">
+          {loading ? (
+             <div className="w-full h-full flex items-center justify-center font-mono text-xs uppercase italic text-zinc-600 tracking-widest">
+               Rendering Telemetry...
+             </div>
+          ) : (
+            <ResponsiveContainer width="100%" height="100%">
+              <LineChart data={chartData} margin={{ top: 5, right: 20, left: -20, bottom: 5 }}>
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#27272a" />
+                <XAxis 
+                  dataKey="name" 
+                  stroke="#52525b" 
+                  tick={{ fill: '#71717a', fontSize: 11, fontWeight: 700 }} 
+                  axisLine={false} 
+                  tickLine={false} 
+                />
+                <YAxis 
+                  domain={['auto', 'auto']} 
+                  stroke="#52525b" 
+                  tick={{ fill: '#71717a', fontSize: 11, fontFamily: 'monospace' }} 
+                  axisLine={false} 
+                  tickLine={false} 
+                />
+                <Tooltip 
+                  contentStyle={{ backgroundColor: '#0a0a0c', borderColor: '#27272a', borderRadius: '8px' }}
+                  itemStyle={{ fontSize: 13, fontWeight: 700 }}
+                  labelStyle={{ color: '#71717a', marginBottom: '8px', fontSize: 11, fontWeight: 900, textTransform: 'uppercase' }}
+                />
+                <Legend iconType="circle" wrapperStyle={{ fontSize: 12, paddingTop: 10 }} />
+                
+                {sortedDrivers.slice(0, 5).map((d) => (
+                  <Line
+                    key={d.driver}
+                    type="monotone"
+                    dataKey={d.driver}
+                    name={d.driver}
+                    stroke={TEAM_COLORS[d.team.toLowerCase()] || '#8a8a94'}
+                    strokeWidth={3}
+                    dot={false}
+                    activeDot={{ r: 6, strokeWidth: 0, fill: TEAM_COLORS[d.team.toLowerCase()] || '#8a8a94' }}
+                  />
+                ))}
+              </LineChart>
+            </ResponsiveContainer>
+          )}
+        </div>
+      </section>
+
       {/* --- LIVE RANKINGS SECTION --- */}
-      <section className="container mx-auto px-6 mt-20">
+      <section className="container mx-auto px-6 mt-16">
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-10">
           <div>
             <div className="flex items-center gap-2 text-red-600 mb-2">
@@ -288,7 +366,7 @@ export default function Home() {
         <div className="inline-flex flex-col md:flex-row items-center gap-6 p-4 md:p-1 rounded-3xl md:rounded-full bg-zinc-900 border border-zinc-800 pl-6 pr-2 shadow-xl">
           <span className="text-[10px] font-black uppercase italic tracking-widest text-zinc-500">Analyze Full Telemetry History</span>
           <button className="bg-white text-black text-[10px] font-black uppercase italic px-8 py-3 rounded-full hover:bg-orange-500 hover:text-white transition-all transform hover:scale-105 active:scale-95">
-            Open Archives
+            <Link href="/historical">Open Archives</Link>
           </button>
         </div>
       </footer>

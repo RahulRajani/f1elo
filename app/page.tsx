@@ -324,7 +324,8 @@ export default function Home() {
                   <XAxis 
                     dataKey="name" 
                     stroke="#52525b" 
-                    tick={{ fill: '#52525b', fontSize: 10, fontWeight: 800, textTransform: 'uppercase' }} 
+                    tick={{ fill: '#52525b', fontSize: 10, fontWeight: 800 }} 
+                    tickFormatter={(value) => value.toString().toUpperCase()}
                     axisLine={false} 
                     tickLine={false} 
                     minTickGap={20}

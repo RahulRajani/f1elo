@@ -136,38 +136,28 @@ export default function Home() {
             setSelectedChartDrivers(parsed.slice(0, 5).map(d => d.driver))
           }
 
+        const COMPLETED_RACES = 3 // Increment after each race weekend
+
         const allKeys = Object.keys(firstRow)
 
         const raceColumns = allKeys
           .filter(key => /^\d{2}\s[A-Z]{2,4}_1$/.test(key.trim()))
-          .filter(eloKey => {
-            // Position column sits 2 keys after the ELO column
-            const eloIdx = allKeys.indexOf(eloKey)
-            const posKey = allKeys[eloIdx + 2]
-            // Race has happened if any driver has a finishing position > 0
-            return rows.some(row => parseInt(row[posKey]) > 0)
-          })
+          .slice(0, COMPLETED_RACES)
 
-          const timelineData = raceColumns.map(race => {
-            const raceName = race.trim().replace('_1', '').substring(3)
-            const dataPoint: any = { name: raceName }
-            rows.forEach(row => {
-              const driverName = row[DRIVER_KEY]?.trim()
-              const val = parseInt(row[race])
-              if (driverName && !isNaN(val) && val > 500) {
-                dataPoint[driverName] = val
-              }
-            })
-            return dataPoint
-          }).filter(point => {
-            const vals = Object.values(point).filter((v): v is number => typeof v === 'number')
-            if (vals.length < 5) return false
-            const max = Math.max(...vals)
-            const min = Math.min(...vals)
-            return (max - min) > 100
+        const timelineData = raceColumns.map(race => {
+          const raceName = race.trim().replace('_1', '').substring(3)
+          const dataPoint: any = { name: raceName }
+          rows.forEach(row => {
+            const driverName = row[DRIVER_KEY]?.trim()
+            const val = parseInt(row[race])
+            if (driverName && !isNaN(val) && val > 500) {
+              dataPoint[driverName] = val
+            }
           })
+          return dataPoint
+        })
 
-          setChartData(timelineData)
+        setChartData(timelineData)
         }
         setUpdated(new Date().toLocaleTimeString())
         setLoading(false)

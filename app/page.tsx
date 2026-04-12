@@ -136,9 +136,14 @@ export default function Home() {
             setSelectedChartDrivers(parsed.slice(0, 5).map(d => d.driver))
           }
 
-          const raceColumns = Object.keys(firstRow).filter(key =>  /^\d{2}\s[A-Z]/.test(key) && !/_\d+$/.test(key))
+          const raceColumns = Object.keys(firstRow).filter(key => {
+          const trimmed = key.trim()
+          // Match "01 AUS" pattern exactly - 2 digits, space, 2-3 letters, nothing after
+          return /^\d{2}\s[A-Z]{2,4}$/.test(trimmed)
+        })
+          console.log('Race columns found:', raceColumns)
           const timelineData = raceColumns.map(race => {
-            const dataPoint: any = { name: race.substring(3) } // "01 AUS" → "AUS"
+          const dataPoint: any = { name: race.trim().substring(3) }
             rows.forEach(row => {
               const driverName = row[DRIVER_KEY]?.trim()
               const val = parseInt(row[race])

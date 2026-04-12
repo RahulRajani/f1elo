@@ -141,20 +141,23 @@ export default function Home() {
           // Match "01 AUS" pattern exactly - 2 digits, space, 2-3 letters, nothing after
           return /^\d{2}\s[A-Z]{2,4}$/.test(trimmed)
         })
-          console.log('Race columns found:', raceColumns)
-          const timelineData = raceColumns.map(race => {
+       console.log('Race columns found:', raceColumns)
+        console.log('First row keys:', Object.keys(firstRow))
+
+        const timelineData = raceColumns.map(race => {
           const dataPoint: any = { name: race.trim().substring(3) }
-            rows.forEach(row => {
-              const driverName = row[DRIVER_KEY]?.trim()
-              const val = parseInt(row[race])
-              // val > 500 ensures we never accidentally plot a delta or finishing position
-              if (driverName && !isNaN(val) && val > 500) {
-                dataPoint[driverName] = val
-              }
-            })
-            return dataPoint
+          rows.forEach(row => {
+            const driverName = row[DRIVER_KEY]?.trim()
+            const val = parseInt(row[race])
+            if (driverName && !isNaN(val) && val > 500) {
+              dataPoint[driverName] = val
+            }
           })
-          setChartData(timelineData)
+          return dataPoint
+        })
+
+        console.log('First data point:', timelineData[0])
+        setChartData(timelineData)
         }
         setUpdated(new Date().toLocaleTimeString())
         setLoading(false)

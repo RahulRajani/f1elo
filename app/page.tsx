@@ -136,29 +136,23 @@ export default function Home() {
             setSelectedChartDrivers(parsed.slice(0, 5).map(d => d.driver))
           }
 
-          const raceColumns = Object.keys(firstRow).filter(key => {
-          const trimmed = key.trim()
-          // Match "01 AUS" pattern exactly - 2 digits, space, 2-3 letters, nothing after
-          return /^\d{2}\s[A-Z]{2,4}$/.test(trimmed)
-        })
-       console.log('Race columns found:', raceColumns)
-        console.log('First row keys:', Object.keys(firstRow))
-        console.log('DRIVER_KEY:', DRIVER_KEY)
-        console.log('ELO_KEY:', ELO_KEY)
-        console.log('01 AUS raw value for row 0:', rows[0]?.["01 AUS"])
-        console.log('Sample row keys:', Object.keys(rows[0]).slice(0, 20))
+          // _1 suffix = absolute ELO column for each race
+          const raceColumns = Object.keys(firstRow).filter(key => 
+            /^\d{2}\s[A-Z]{2,4}_1$/.test(key.trim())
+          )
 
-        const timelineData = raceColumns.map(race => {
-          const dataPoint: any = { name: race.trim().substring(3) }
-          rows.forEach(row => {
-            const driverName = row[DRIVER_KEY]?.trim()
-            const val = parseInt(row[race])
-            if (driverName && !isNaN(val) && val > 500) {
-              dataPoint[driverName] = val
-            }
+          const timelineData = raceColumns.map(race => {
+            const raceName = race.trim().replace('_1', '').substring(3) // "01 AUS_1" → "AUS"
+            const dataPoint: any = { name: raceName }
+            rows.forEach(row => {
+              const driverName = row[DRIVER_KEY]?.trim()
+              const val = parseInt(row[race])
+              if (driverName && !isNaN(val) && val > 500) {
+                dataPoint[driverName] = val
+              }
+            })
+            return dataPoint
           })
-          return dataPoint
-        })
 
         console.log('First data point:', timelineData[0])
         setChartData(timelineData)

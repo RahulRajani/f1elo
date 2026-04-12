@@ -136,13 +136,12 @@ export default function Home() {
             setSelectedChartDrivers(parsed.slice(0, 5).map(d => d.driver))
           }
 
-          // _1 suffix = absolute ELO column for each race
           const raceColumns = Object.keys(firstRow).filter(key => 
             /^\d{2}\s[A-Z]{2,4}_1$/.test(key.trim())
           )
 
           const timelineData = raceColumns.map(race => {
-            const raceName = race.trim().replace('_1', '').substring(3) // "01 AUS_1" → "AUS"
+            const raceName = race.trim().replace('_1', '').substring(3)
             const dataPoint: any = { name: raceName }
             rows.forEach(row => {
               const driverName = row[DRIVER_KEY]?.trim()
@@ -152,10 +151,15 @@ export default function Home() {
               }
             })
             return dataPoint
+          }).filter(point => {
+            const vals = Object.values(point).filter((v): v is number => typeof v === 'number')
+            if (vals.length < 5) return false
+            const max = Math.max(...vals)
+            const min = Math.min(...vals)
+            return (max - min) > 100
           })
 
-        console.log('First data point:', timelineData[0])
-        setChartData(timelineData)
+          setChartData(timelineData)
         }
         setUpdated(new Date().toLocaleTimeString())
         setLoading(false)

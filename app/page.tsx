@@ -116,7 +116,8 @@ export default function Home() {
           const DRIVER_KEY = find(firstRow, 'driver') || ''
           const AVG_KEY = find(firstRow, 'season average', 'avg', 'average') || ''
           const ELO_KEY = find(firstRow, 'elo') || ''
-          const CHANGE_KEY = find(firstRow, 'elo change', 'last change', 'change', 'delta') || ''
+          const CHANGE_KEY = find(firstRow, 'last change', 'elo change', 'change', 'delta') || ''
+
 
           const parsed: Driver[] = rows
             .filter(r => r[DRIVER_KEY]?.trim())
@@ -135,18 +136,19 @@ export default function Home() {
             setSelectedChartDrivers(parsed.slice(0, 5).map(d => d.driver))
           }
 
-          const raceColumns = Object.keys(firstRow).filter(key => /^\d{2}\s/.test(key));
+          const raceColumns = Object.keys(firstRow).filter(key =>  /^\d{2}\s[A-Z]/.test(key) && !/_\d+$/.test(key))
           const timelineData = raceColumns.map(race => {
-            const dataPoint: any = { name: race };
+            const dataPoint: any = { name: race.substring(3) } // "01 AUS" → "AUS"
             rows.forEach(row => {
-              const driverName = row[DRIVER_KEY]?.trim();
-              const eloStr = row[race];
-              if (driverName && eloStr && !isNaN(parseInt(eloStr))) {
-                dataPoint[driverName] = parseInt(eloStr);
+              const driverName = row[DRIVER_KEY]?.trim()
+              const val = parseInt(row[race])
+              // val > 500 ensures we never accidentally plot a delta or finishing position
+              if (driverName && !isNaN(val) && val > 500) {
+                dataPoint[driverName] = val
               }
-            });
-            return dataPoint;
-          });
+            })
+            return dataPoint
+          })
           setChartData(timelineData)
         }
         setUpdated(new Date().toLocaleTimeString())

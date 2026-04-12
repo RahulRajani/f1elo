@@ -136,9 +136,17 @@ export default function Home() {
             setSelectedChartDrivers(parsed.slice(0, 5).map(d => d.driver))
           }
 
-          const raceColumns = Object.keys(firstRow).filter(key => 
-            /^\d{2}\s[A-Z]{2,4}_1$/.test(key.trim())
-          )
+        const allKeys = Object.keys(firstRow)
+
+        const raceColumns = allKeys
+          .filter(key => /^\d{2}\s[A-Z]{2,4}_1$/.test(key.trim()))
+          .filter(eloKey => {
+            // Position column sits 2 keys after the ELO column
+            const eloIdx = allKeys.indexOf(eloKey)
+            const posKey = allKeys[eloIdx + 2]
+            // Race has happened if any driver has a finishing position > 0
+            return rows.some(row => parseInt(row[posKey]) > 0)
+          })
 
           const timelineData = raceColumns.map(race => {
             const raceName = race.trim().replace('_1', '').substring(3)

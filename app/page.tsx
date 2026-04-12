@@ -316,57 +316,58 @@ export default function Home() {
           </div>
         </div>
         
-        {/* The Graph */}
+              {/* The Graph */}
         <div className="bg-[#0c0c0f] border border-zinc-800 rounded-2xl p-6 h-[450px] shadow-2xl relative overflow-hidden group">
           {loading ? (
-             <div className="w-full h-full flex items-center justify-center font-mono text-xs uppercase italic text-zinc-600 tracking-widest animate-pulse">
-               Connecting to Telemetry Servers...
-             </div>
+            <div className="w-full h-full flex items-center justify-center font-mono text-xs uppercase italic text-zinc-600 tracking-widest animate-pulse">
+              Connecting to Telemetry Servers...
+            </div>
           ) : (
             <>
               <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:24px_24px] pointer-events-none opacity-20 group-hover:opacity-30 transition-opacity"></div>
-              <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={chartData} margin={{ top: 10, right: 20, left: 0, bottom: 0 }}>
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#1f1f22" />
-                  <XAxis 
-                    dataKey="name" 
-                    stroke="#52525b" 
-                    tick={{ fill: '#52525b', fontSize: 10, fontWeight: 800 }} 
-                    tickFormatter={(value) => value.toString().toUpperCase()}
-                    axisLine={false} 
-                    tickLine={false} 
-                    minTickGap={20}
-                  />
-                  {/* domain={['dataMin - 20', 'dataMax + 20']} ZOOMs the graph in tightly */}
-                  <YAxis 
-                    domain={['dataMin - 25', 'dataMax + 25']} 
-                    stroke="#52525b" 
-                    tick={{ fill: '#71717a', fontSize: 11, fontFamily: 'monospace', fontWeight: 600 }} 
-                    axisLine={false} 
-                    tickLine={false}
-                    width={45}
-                  />
-                  <Tooltip content={<CustomTooltip />} cursor={{ stroke: '#3f3f46', strokeWidth: 1, strokeDasharray: '4 4' }} />
-                  
-                  {selectedChartDrivers.map((driverId) => {
-                    const driverObj = drivers.find(d => d.driver === driverId)
-                    const color = driverObj ? TEAM_COLORS[driverObj.team.toLowerCase()] : '#8a8a94'
-                    return (
-                      <Line
-                        key={driverId}
-                        type="monotone"
-                        dataKey={driverId}
-                        name={driverId}
-                        stroke={color}
-                        strokeWidth={3}
-                        dot={false}
-                        activeDot={{ r: 6, strokeWidth: 0, fill: color }}
-                        connectNulls
-                      />
-                    )
-                  })}
-                </LineChart>
-              </ResponsiveContainer>
+              <div style={{ width: '100%', height: '100%', minHeight: 400 }}>
+                <ResponsiveContainer width="100%" height="100%">
+                  <LineChart data={chartData} margin={{ top: 10, right: 20, left: 0, bottom: 0 }}>
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#1f1f22" />
+                    <XAxis 
+                      dataKey="name" 
+                      stroke="#52525b" 
+                      tick={{ fill: '#52525b', fontSize: 10, fontWeight: 800 }} 
+                      tickFormatter={(value) => value.toString().toUpperCase()}
+                      axisLine={false} 
+                      tickLine={false} 
+                      minTickGap={20}
+                    />
+                    <YAxis 
+                      domain={['dataMin - 25', 'dataMax + 25']} 
+                      stroke="#52525b" 
+                      tick={{ fill: '#71717a', fontSize: 11, fontFamily: 'monospace', fontWeight: 600 }} 
+                      axisLine={false} 
+                      tickLine={false}
+                      width={45}
+                    />
+                    <Tooltip content={<CustomTooltip />} cursor={{ stroke: '#3f3f46', strokeWidth: 1, strokeDasharray: '4 4' }} />
+                    
+                    {selectedChartDrivers.map((driverId) => {
+                      const driverObj = drivers.find(d => d.driver === driverId)
+                      const color = driverObj ? TEAM_COLORS[driverObj.team.toLowerCase()] : '#8a8a94'
+                      return (
+                        <Line
+                          key={driverId}
+                          type="monotone"
+                          dataKey={driverId}
+                          name={driverId}
+                          stroke={color}
+                          strokeWidth={3}
+                          dot={false}
+                          activeDot={{ r: 6, strokeWidth: 0, fill: color }}
+                          connectNulls
+                        />
+                      )
+                    })}
+                  </LineChart>
+                </ResponsiveContainer>
+              </div>
             </>
           )}
         </div>

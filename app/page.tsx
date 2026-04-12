@@ -143,6 +143,10 @@ export default function Home() {
         })
        console.log('Race columns found:', raceColumns)
         console.log('First row keys:', Object.keys(firstRow))
+        console.log('DRIVER_KEY:', DRIVER_KEY)
+        console.log('ELO_KEY:', ELO_KEY)
+        console.log('01 AUS raw value for row 0:', rows[0]?.["01 AUS"])
+        console.log('Sample row keys:', Object.keys(rows[0]).slice(0, 20))
 
         const timelineData = raceColumns.map(race => {
           const dataPoint: any = { name: race.trim().substring(3) }

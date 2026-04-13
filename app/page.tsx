@@ -20,22 +20,34 @@ const TEAM_COLORS: Record<string, string> = {
   'mercedes': '#00D2BE', 'ferrari': '#E80020', 'red bull': '#061D42',
   'mclaren': '#FF8000', 'aston martin': '#006F62', 'alpine': '#0090FF',
   'williams': '#005AFF', 'racing bulls': '#1634CC', 'vcarb': '#1634CC',
-  'sauber': '#52E252', 'haas': '#B6BABD', 'cadillac': '#C8A951',
+  'sauber': '#52E252', 'haas': '#B6BABD', 'cadillac': '#C8A951', // Added Cadillac
 }
 
-// 🗓️ RACE CALENDAR: Used to dynamically check current phase of the season
+// 🗓️ OFFICIAL 2026 RACE CALENDAR
 const RACE_CALENDAR = [
-  { name: 'Bahrain GP', date: '2026-03-01T15:00:00Z' },
-  { name: 'Saudi Arabian GP', date: '2026-03-08T17:00:00Z' },
-  { name: 'Australian GP', date: '2026-03-22T04:00:00Z' },
-  { name: 'Japanese GP', date: '2026-04-05T05:00:00Z' },
-  { name: 'Chinese GP', date: '2026-04-19T07:00:00Z' },
+  { name: 'Australian GP', date: '2026-03-08T04:00:00Z' },
+  { name: 'Chinese GP', date: '2026-03-15T07:00:00Z' },
+  { name: 'Japanese GP', date: '2026-03-29T05:00:00Z' },
+  // Bahrain and Saudi Arabia cancelled
   { name: 'Miami GP', date: '2026-05-03T20:00:00Z' },
-  { name: 'Emilia Romagna GP', date: '2026-05-17T13:00:00Z' },
-  { name: 'Monaco GP', date: '2026-05-24T13:00:00Z' },
-  { name: 'Canadian GP', date: '2026-06-07T18:00:00Z' },
-  { name: 'Spanish GP', date: '2026-06-21T13:00:00Z' },
-  // Add the rest of the season here...
+  { name: 'Canadian GP', date: '2026-05-24T18:00:00Z' },
+  { name: 'Monaco GP', date: '2026-06-07T13:00:00Z' },
+  { name: 'Spanish GP (Barcelona)', date: '2026-06-14T13:00:00Z' },
+  { name: 'Austrian GP', date: '2026-06-28T13:00:00Z' },
+  { name: 'British GP', date: '2026-07-05T14:00:00Z' },
+  { name: 'Belgian GP', date: '2026-07-19T13:00:00Z' },
+  { name: 'Hungarian GP', date: '2026-07-26T13:00:00Z' },
+  { name: 'Dutch GP', date: '2026-08-23T13:00:00Z' },
+  { name: 'Italian GP', date: '2026-09-06T13:00:00Z' },
+  { name: 'Spanish GP (Madrid)', date: '2026-09-13T13:00:00Z' },
+  { name: 'Azerbaijan GP', date: '2026-09-26T11:00:00Z' },
+  { name: 'Singapore GP', date: '2026-10-11T12:00:00Z' },
+  { name: 'United States GP', date: '2026-10-25T19:00:00Z' },
+  { name: 'Mexico City GP', date: '2026-11-01T20:00:00Z' },
+  { name: 'São Paulo GP', date: '2026-11-08T17:00:00Z' },
+  { name: 'Las Vegas GP', date: '2026-11-21T06:00:00Z' },
+  { name: 'Qatar GP', date: '2026-11-29T17:00:00Z' },
+  { name: 'Abu Dhabi GP', date: '2026-12-06T13:00:00Z' }
 ]
 
 interface Driver {
@@ -158,27 +170,27 @@ export default function Home() {
             setSelectedChartDrivers(parsed.slice(0, 5).map(d => d.driver))
           }
 
-        const allKeys = Object.keys(firstRow)
+          const allKeys = Object.keys(firstRow)
 
-        // Dynamically slice columns based on the completed race check (+24 hours logic)
-        const raceColumns = allKeys
-          .filter(key => /^\d{2}\s[A-Z]{2,4}_1$/.test(key.trim()))
-          .slice(0, completedCount)
+          // Dynamically slice columns based on the completed race check (+24 hours logic)
+          const raceColumns = allKeys
+            .filter(key => /^\d{2}\s[A-Z]{2,4}_1$/.test(key.trim()))
+            .slice(0, completedCount)
 
-        const timelineData = raceColumns.map(race => {
-          const raceName = race.trim().replace('_1', '').substring(3)
-          const dataPoint: any = { name: raceName }
-          rows.forEach(row => {
-            const driverName = row[DRIVER_KEY]?.trim()
-            const val = parseInt(row[race])
-            if (driverName && !isNaN(val) && val > 500) {
-              dataPoint[driverName] = val
-            }
+          const timelineData = raceColumns.map(race => {
+            const raceName = race.trim().replace('_1', '').substring(3)
+            const dataPoint: any = { name: raceName }
+            rows.forEach(row => {
+              const driverName = row[DRIVER_KEY]?.trim()
+              const val = parseInt(row[race])
+              if (driverName && !isNaN(val) && val > 500) {
+                dataPoint[driverName] = val
+              }
+            })
+            return dataPoint
           })
-          return dataPoint
-        })
 
-        setChartData(timelineData)
+          setChartData(timelineData)
         }
         setUpdated(new Date().toLocaleTimeString())
         setLoading(false)
@@ -343,7 +355,7 @@ export default function Home() {
           </div>
         </div>
         
-              {/* The Graph */}
+        {/* The Graph */}
         <div className="bg-[#0c0c0f] border border-zinc-800 rounded-2xl p-6 h-[450px] shadow-2xl relative overflow-hidden group">
           {loading ? (
             <div className="w-full h-full flex items-center justify-center font-mono text-xs uppercase italic text-zinc-600 tracking-widest animate-pulse">

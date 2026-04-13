@@ -23,6 +23,21 @@ const TEAM_COLORS: Record<string, string> = {
   'sauber': '#52E252', 'haas': '#B6BABD', 'cadillac': '#C8A951',
 }
 
+// 🗓️ RACE CALENDAR: Used to dynamically check current phase of the season
+const RACE_CALENDAR = [
+  { name: 'Bahrain GP', date: '2026-03-01T15:00:00Z' },
+  { name: 'Saudi Arabian GP', date: '2026-03-08T17:00:00Z' },
+  { name: 'Australian GP', date: '2026-03-22T04:00:00Z' },
+  { name: 'Japanese GP', date: '2026-04-05T05:00:00Z' },
+  { name: 'Chinese GP', date: '2026-04-19T07:00:00Z' },
+  { name: 'Miami GP', date: '2026-05-03T20:00:00Z' },
+  { name: 'Emilia Romagna GP', date: '2026-05-17T13:00:00Z' },
+  { name: 'Monaco GP', date: '2026-05-24T13:00:00Z' },
+  { name: 'Canadian GP', date: '2026-06-07T18:00:00Z' },
+  { name: 'Spanish GP', date: '2026-06-21T13:00:00Z' },
+  // Add the rest of the season here...
+]
+
 interface Driver {
   rank: number
   driver: string
@@ -70,19 +85,31 @@ export default function Home() {
   const [updated, setUpdated] = useState('')
   const [sortConfig, setSortConfig] = useState<SortConfig>({ key: 'elo', direction: 'descending' })
   
-  // Countdown State
+  // Dynamic Target State
+  const [targetRaceName, setTargetRaceName] = useState<string>('Loading...')
   const [timeLeft, setTimeLeft] = useState({ d: '00', h: '00', m: '00', s: '00' })
 
   useEffect(() => {
-    // Target: Monaco GP 2026 (Example Date)
-    const targetDate = new Date('2026-05-24T13:00:00Z').getTime()
+    const now = new Date().getTime()
+    const ONE_DAY_MS = 24 * 60 * 60 * 1000
     
+    // Find the next upcoming race for the timer
+    const upcomingRace = RACE_CALENDAR.find(r => new Date(r.date).getTime() > now) || RACE_CALENDAR[RACE_CALENDAR.length - 1]
+    
+    // Calculate how many races are fully completed (current time > race time + 24 hours)
+    const completedCount = RACE_CALENDAR.filter(r => now > new Date(r.date).getTime() + ONE_DAY_MS).length
+
+    setTargetRaceName(upcomingRace.name)
+    const targetDate = new Date(upcomingRace.date).getTime()
+    
+    // Start countdown timer
     const interval = setInterval(() => {
-      const now = new Date().getTime()
-      const diff = targetDate - now
+      const currentTime = new Date().getTime()
+      const diff = targetDate - currentTime
       
       if (diff <= 0) {
         clearInterval(interval)
+        setTimeLeft({ d: '00', h: '00', m: '00', s: '00' })
       } else {
         const d = Math.floor(diff / (1000 * 60 * 60 * 24)).toString().padStart(2, '0')
         const h = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)).toString().padStart(2, '0')
@@ -91,11 +118,8 @@ export default function Home() {
         setTimeLeft({ d, h, m, s })
       }
     }, 1000)
-    
-    return () => clearInterval(interval)
-  }, [])
 
-  useEffect(() => {
+    // Fetch Google Sheet Data
     Papa.parse(SHEET_URL + '&cachebust=' + Date.now(), {
       download: true,
       header: true,
@@ -118,7 +142,6 @@ export default function Home() {
           const ELO_KEY = find(firstRow, 'elo') || ''
           const CHANGE_KEY = find(firstRow, 'last change', 'elo change', 'change', 'delta') || ''
 
-
           const parsed: Driver[] = rows
             .filter(r => r[DRIVER_KEY]?.trim())
             .map((r, i) => ({
@@ -131,18 +154,16 @@ export default function Home() {
             }))
           setDrivers(parsed)
           
-          // Default selection to top 5
           if (selectedChartDrivers.length === 0) {
             setSelectedChartDrivers(parsed.slice(0, 5).map(d => d.driver))
           }
 
-        const COMPLETED_RACES = 3 // Increment after each race weekend
-
         const allKeys = Object.keys(firstRow)
 
+        // Dynamically slice columns based on the completed race check (+24 hours logic)
         const raceColumns = allKeys
           .filter(key => /^\d{2}\s[A-Z]{2,4}_1$/.test(key.trim()))
-          .slice(0, COMPLETED_RACES)
+          .slice(0, completedCount)
 
         const timelineData = raceColumns.map(race => {
           const raceName = race.trim().replace('_1', '').substring(3)
@@ -164,8 +185,10 @@ export default function Home() {
       },
       error: () => setLoading(false)
     })
+    
+    return () => clearInterval(interval)
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []) // We only want this to run once on mount
+  }, []) 
 
   const sortedDrivers = useMemo(() => {
     let sortableItems = [...drivers]
@@ -198,7 +221,7 @@ export default function Home() {
     setSelectedChartDrivers(prev => 
       prev.includes(driverName) 
         ? prev.filter(n => n !== driverName)
-        : [...prev, driverName].slice(-9) // Keep max 9 to avoid clutter
+        : [...prev, driverName].slice(-9)
     )
   }
 
@@ -301,7 +324,8 @@ export default function Home() {
               <p className="text-[10px] font-black uppercase tracking-widest text-zinc-500 mb-1 flex items-center gap-1 justify-end">
                 <MapPin size={10}/> Target Lock
               </p>
-              <p className="font-bold text-sm uppercase text-orange-500 italic">Monaco GP</p>
+              {/* Dynamic Race Name Injected Here */}
+              <p className="font-bold text-sm uppercase text-orange-500 italic">{targetRaceName}</p>
             </div>
             <div className="flex items-center gap-4 text-center tabular-nums font-mono font-black">
               {[

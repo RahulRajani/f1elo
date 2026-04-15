@@ -6,6 +6,7 @@ const links = [
   { href: '/', label: 'Live 2026' },
   { href: '/tiers', label: 'Tier List' },
   { href: '/historical', label: 'Historical' },
+  { href: '/effone-season-sim', label: '2026 Season Simulator'}
 ]
 
 export default function Nav() {

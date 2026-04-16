@@ -37,26 +37,22 @@ interface LeaderboardEntry {
 }
 
 export default function StockMarket() {
-  // 1. CLERK AUTH HOOK
   const { isLoaded: authLoaded, isSignedIn, user } = useUser()
 
-  // Application State
   const [marketData, setMarketData] = useState<MarketStock[]>([])
   const [isDataLoaded, setIsDataLoaded] = useState(false)
+  const [dataError, setDataError] = useState<string | null>(null)
   
-  // User State
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null)
   
-  // UI State
   const [activeTab, setActiveTab] = useState<'market' | 'portfolio' | 'leaderboard'>('market')
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([])
   const [isLeaderboardLoading, setIsLeaderboardLoading] = useState(false)
 
-  // Trade Modal State
   const [tradeModal, setTradeModal] = useState<{ isOpen: boolean, stockCode: string | null }>({ isOpen: false, stockCode: null })
   const [tradeQty, setTradeQty] = useState<number>(1)
 
-  // 2. FETCH FIREBASE USER PROFILE (TRIGGERED WHEN AUTH LOADS)
+  // 1. FETCH FIREBASE USER PROFILE
   useEffect(() => {
     if (authLoaded && isSignedIn && user) {
       const fetchOrInitializeUser = async () => {
@@ -64,10 +60,22 @@ export default function StockMarket() {
           const res = await fetch(`${DB_URL}users/${user.id}.json`)
           const data = await res.json()
 
+          // Firebase permission errors return an object with an 'error' key
+          if (data && data.error) {
+            console.error("Firebase Rules Error:", data.error)
+            setDataError("Firebase Permission Denied. Check DB Rules.")
+            return
+          }
+
           if (data) {
-            setUserProfile({ ...data, portfolio: data.portfolio || {} })
+            // Safely parse numbers to prevent NaN infinite loops
+            setUserProfile({ 
+              ...data, 
+              portfolio: data.portfolio || {},
+              cash: Number(data.cash) || 0,
+              netWorth: Number(data.netWorth) || 0
+            })
           } else {
-            // Register brand new user in Firebase
             const newUser: UserProfile = { 
               managerName: user.fullName || user.firstName || 'Anonymous Manager', 
               cash: INITIAL_CASH, 
@@ -82,22 +90,31 @@ export default function StockMarket() {
           }
         } catch (e) {
           console.error("Firebase sync error:", e)
+          setDataError("Failed to connect to Firebase.")
         }
       }
       fetchOrInitializeUser()
     }
   }, [authLoaded, isSignedIn, user])
 
-  // 3. FETCH ELO DATA FROM GOOGLE SHEETS
+  // 2. FETCH ELO DATA FROM GOOGLE SHEETS
   useEffect(() => {
     Papa.parse(SHEET_URL + '&cachebust=' + Date.now(), {
       download: true,
       header: true,
       skipEmptyLines: true,
+      error: (err) => {
+        console.error("CSV Error:", err)
+        setDataError("Failed to load Google Sheet data.")
+      },
       complete: (results) => {
         const rows = results.data as Record<string, string>[]
+        if (!rows || rows.length === 0) {
+          setDataError("Google Sheet is empty or malformed.")
+          return
+        }
+
         const firstRow = rows[0]
-        
         const getCol = (...names: string[]) => Object.keys(firstRow).find(k => names.includes(k.toLowerCase().trim())) || ''
         const TEAM_KEY = getCol('team')
         const DRIVER_KEY = getCol('driver')
@@ -130,19 +147,21 @@ export default function StockMarket() {
     })
   }, [])
 
-  // 4. RECALCULATE NET WORTH WHEN PORTFOLIO OR MARKET CHANGES
+  // 3. SAFE NET WORTH RECALCULATION
   useEffect(() => {
     if (userProfile && marketData.length > 0) {
       let stockVal = 0
       Object.entries(userProfile.portfolio || {}).forEach(([code, qty]) => {
         const stock = marketData.find(s => s.code === code)
-        if (stock) stockVal += (stock.currentPrice * qty)
+        if (stock) stockVal += (stock.currentPrice * Number(qty))
       })
       
-      const newNetWorth = userProfile.cash + stockVal
-      if (newNetWorth !== userProfile.netWorth) {
+      const safeCash = Number(userProfile.cash) || 0
+      const safeNetWorth = Number(userProfile.netWorth) || 0
+      const newNetWorth = safeCash + stockVal
+
+      if (newNetWorth !== safeNetWorth && !isNaN(newNetWorth)) {
         setUserProfile(prev => prev ? { ...prev, netWorth: newNetWorth } : null)
-        // Background sync networth to firebase
         if (user?.id) {
           fetch(`${DB_URL}users/${user.id}/netWorth.json`, { method: 'PUT', body: JSON.stringify(newNetWorth) })
         }
@@ -151,7 +170,6 @@ export default function StockMarket() {
   }, [marketData, userProfile?.portfolio, userProfile?.cash, user?.id]) 
 
   // --- ACTIONS ---
-
   const executeTrade = async (action: 'buy' | 'sell') => {
     if (!userProfile || !tradeModal.stockCode || tradeQty <= 0 || !user) return
     
@@ -187,7 +205,7 @@ export default function StockMarket() {
       const res = await fetch(`${DB_URL}users.json`)
       const data = await res.json()
       
-      if (data) {
+      if (data && !data.error) {
         const players = Object.values(data).map((u: any) => {
           let currentPortfolioValue = 0
           if (u.portfolio) {
@@ -198,7 +216,7 @@ export default function StockMarket() {
           }
           return {
             name: u.managerName || "Unknown",
-            netWorth: (u.cash || 0) + currentPortfolioValue,
+            netWorth: (Number(u.cash) || 0) + currentPortfolioValue,
             isMe: u.managerName === userProfile?.managerName
           }
         })
@@ -234,20 +252,39 @@ export default function StockMarket() {
     )
   }
 
-  // --- LOADING STATES ---
+  // --- ERROR STATE ---
+  if (dataError) {
+    return (
+      <div className="min-h-screen bg-[#050505] flex flex-col items-center justify-center text-red-500 font-mono text-sm tracking-widest gap-4">
+        <X size={48} />
+        <div>System Failure: {dataError}</div>
+      </div>
+    )
+  }
+
+  // --- LOADING STATE (WITH DIAGNOSTICS) ---
   if (!authLoaded || !isDataLoaded || (isSignedIn && !userProfile)) {
     return (
       <div className="min-h-screen bg-[#050505] flex flex-col items-center justify-center text-orange-500 font-mono text-sm tracking-widest gap-4">
         <Loader2 className="animate-spin" size={32} />
-        Syncing Telemetry...
+        <div>Syncing Telemetry...</div>
+        
+        {/* Debug Box so you know exactly what is stuck */}
+        <div className="mt-8 flex flex-col items-center gap-2 text-[10px] text-zinc-500 bg-[#0a0a0c] p-4 rounded-lg border border-zinc-800">
+          <p>Auth Link: {authLoaded ? <span className="text-green-500">Established</span> : 'Connecting...'}</p>
+          <p>Market Data: {isDataLoaded ? <span className="text-green-500">Fetched</span> : 'Awaiting Sheet...'}</p>
+          <p>Cloud Profile: {userProfile ? <span className="text-green-500">Synced</span> : (isSignedIn ? 'Querying Firebase...' : 'No Auth Token')}</p>
+        </div>
       </div>
     )
   }
 
   if (!isSignedIn) {
     return (
-      <div className="min-h-screen bg-[#050505] flex items-center justify-center text-zinc-500 font-mono text-sm tracking-widest">
-        Authentication required. Use the terminal above to log in.
+      <div className="min-h-screen bg-[#050505] flex flex-col items-center justify-center text-zinc-500 font-mono text-sm tracking-widest gap-2">
+        <Activity size={32} className="text-orange-500 mb-4" />
+        Authentication required. 
+        <span className="text-[10px]">Use the top navigation to INITIATE UPLINK.</span>
       </div>
     )
   }

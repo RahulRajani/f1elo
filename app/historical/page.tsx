@@ -1,7 +1,6 @@
 'use client'
 import { useState, useMemo } from 'react'
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, Legend, CartesianGrid } from 'recharts'
-import Nav from '@/components/Nav'
 // Make sure this file actually contains all 611 drivers in the 'history' object!
 import { HISTORICAL_DATA, HistoryPoint } from '@/app/lib/historicalData'; 
 
@@ -85,7 +84,6 @@ export default function HistoricalPage() {
 
   return (
     <div style={{ minHeight: '100vh', background: '#09090b', fontFamily: '"Titillium Web", sans-serif', color: '#f0f0f5' }}>
-      <Nav />
       <div style={{ maxWidth: 1200, margin: '0 auto', padding: '40px 20px' }}>
         
         <header style={{ marginBottom: 32 }}>

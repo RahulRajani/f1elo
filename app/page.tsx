@@ -19,7 +19,7 @@ const TEAM_COLORS: Record<string, string> = {
   'mercedes': '#00D2BE', 'ferrari': '#E80020', 'red bull': '#061D42',
   'mclaren': '#FF8000', 'aston martin': '#006F62', 'alpine': '#0090FF',
   'williams': '#005AFF', 'racing bulls': '#1634CC', 'vcarb': '#1634CC',
-  'sauber': '#52E252', 'haas': '#B6BABD', 'cadillac': '#C8A951', // Added Cadillac
+  'sauber': '#52E252', 'haas': '#B6BABD', 'cadillac': '#C8A951', 
 }
 
 // 🗓️ OFFICIAL 2026 RACE CALENDAR
@@ -27,7 +27,6 @@ const RACE_CALENDAR = [
   { name: 'Australian GP', date: '2026-03-08T04:00:00Z' },
   { name: 'Chinese GP', date: '2026-03-15T07:00:00Z' },
   { name: 'Japanese GP', date: '2026-03-29T05:00:00Z' },
-  // Bahrain and Saudi Arabia cancelled
   { name: 'Miami GP', date: '2026-05-03T20:00:00Z' },
   { name: 'Canadian GP', date: '2026-05-24T18:00:00Z' },
   { name: 'Monaco GP', date: '2026-06-07T13:00:00Z' },
@@ -240,33 +239,45 @@ export default function Home() {
     <div className="min-h-screen bg-[#050505] text-zinc-100 font-sans pb-20 selection:bg-orange-500/30">
 
       {/* --- HERO EDITORIAL SECTION --- */}
-      <section className="relative w-full border-b border-zinc-800 bg-[#0a0a0c] transition-colors hover:bg-[#0c0c0e]">
-        <Link href="/editorial" className="group block container mx-auto grid grid-cols-1 lg:grid-cols-12 cursor-pointer">
-          <div className="lg:col-span-8 p-8 md:p-16 lg:border-r border-zinc-800">
+      <section className="relative w-full border-b border-zinc-800 bg-[#0a0a0c] transition-colors group/hero overflow-hidden">
+        
+        {/* Background Image Layer */}
+        <div 
+          className="absolute inset-0 z-0 opacity-15 group-hover/hero:opacity-30 transition-opacity duration-1000 bg-cover bg-center bg-no-repeat"
+          // Swap this URL with your preferred McLaren image link
+          style={{ backgroundImage: "url('https://images.unsplash.com/photo-1614200187524-dc4b892acf16?q=80&w=3200&auto=format&fit=crop')" }} 
+        />
+        
+        {/* Dark Gradient Overlays for Readability */}
+        <div className="absolute inset-0 z-0 bg-gradient-to-r from-[#050505] via-[#050505]/95 to-transparent"></div>
+        <div className="absolute inset-0 z-0 bg-gradient-to-t from-[#0a0a0c] via-transparent to-transparent"></div>
+
+        <Link href="/editorial" className="relative z-10 group block container mx-auto grid grid-cols-1 lg:grid-cols-12 cursor-pointer">
+          <div className="lg:col-span-8 p-8 md:p-16 lg:border-r border-zinc-800/50 backdrop-blur-[2px]">
             <div className="flex items-center gap-3 mb-6">
-              <span className="bg-orange-600 text-[10px] font-black italic px-2 py-0.5 uppercase tracking-tighter">Premium Analysis</span>
-              <span className="text-zinc-500 font-mono text-[10px] uppercase tracking-widest group-hover:text-orange-500 transition-colors">Click to Read Full Article →</span>
+              <span className="bg-orange-600 text-[10px] font-black italic px-2 py-0.5 uppercase tracking-tighter shadow-lg shadow-orange-500/20">Premium Analysis</span>
+              <span className="text-zinc-400 font-mono text-[10px] uppercase tracking-widest group-hover:text-orange-500 transition-colors">Click to Read Full Article →</span>
             </div>
 
-            <h1 className="text-5xl md:text-7xl font-black italic uppercase tracking-tighter leading-[0.85] mb-8 group-hover:text-white transition-colors">
+            <h1 className="text-4xl md:text-6xl lg:text-7xl font-black italic uppercase tracking-tighter leading-[0.9] mb-8 group-hover:text-white transition-colors">
               The State of the Grid: <br/>
-              <span className="text-orange-500 group-hover:text-orange-400 drop-shadow-[0_0_15px_rgba(249,115,22,0.3)]">Innovation</span> vs. Imitation
+              McLaren, Regulations, and the Road to <span className="text-orange-500 group-hover:text-orange-400 drop-shadow-[0_0_15px_rgba(249,115,22,0.3)]">Miami</span>
             </h1>
 
             <div className="flex items-center gap-4 mb-12">
-              <div className="w-10 h-10 rounded-full bg-zinc-800 border border-zinc-700 flex items-center justify-center text-orange-500 font-black italic shadow-lg shadow-orange-500/10">MF</div>
+              <div className="w-10 h-10 rounded-full bg-[#050505] border border-zinc-700 flex items-center justify-center text-orange-500 font-black italic shadow-lg shadow-orange-500/10">MF</div>
               <div>
                 <p className="text-xs font-bold uppercase tracking-widest text-zinc-200">@FullTimeMclarenFan</p>
-                <p className="text-[10px] font-mono text-zinc-500 italic">Senior Technical Analyst</p>
+                <p className="text-[10px] font-mono text-zinc-400 italic">Senior Technical Analyst</p>
               </div>
             </div>
 
             <div className="prose prose-invert prose-orange max-w-none">
-              <p className="text-xl text-zinc-400 leading-relaxed italic border-l-4 border-orange-600 pl-6 mb-10 bg-orange-500/5 py-4 group-hover:bg-orange-500/10 transition-colors">
+              <p className="text-xl text-zinc-300 leading-relaxed italic border-l-4 border-orange-600 pl-6 mb-10 bg-[#050505]/40 py-4 backdrop-blur-sm group-hover:bg-[#050505]/60 transition-colors">
                 "Stella made it very clear we would start on the backfoot, but hopefully we should have a stable platform to upgrade on going forward."
               </p>
 
-              <div className="grid md:grid-cols-2 gap-8 text-sm text-zinc-300 leading-relaxed opacity-80 group-hover:opacity-100 transition-opacity">
+              <div className="grid md:grid-cols-2 gap-8 text-sm text-zinc-400 leading-relaxed opacity-90 group-hover:opacity-100 transition-opacity">
                 <p>
                   <span className="text-orange-500 font-black italic uppercase text-xs">McLaren:</span> Inconsistent but trending upwards. We were 4th best in Australia, 3rd in China, and 2nd in Japan...
                 </p>
@@ -277,9 +288,9 @@ export default function Home() {
             </div>
           </div>
 
-          <div className="lg:col-span-4 bg-[#08080a] p-8 flex flex-col justify-between group-hover:bg-[#0a0a0c] transition-colors relative overflow-hidden">
+          <div className="lg:col-span-4 bg-[#08080a]/80 backdrop-blur-md p-8 flex flex-col justify-between group-hover:bg-[#0a0a0c]/90 transition-colors relative overflow-hidden">
             <div className="space-y-8 z-10 relative">
-              <h3 className="text-xs font-black uppercase tracking-[0.3em] text-zinc-500 flex items-center gap-2 underline underline-offset-8 decoration-orange-500/50">
+              <h3 className="text-xs font-black uppercase tracking-[0.3em] text-zinc-400 flex items-center gap-2 underline underline-offset-8 decoration-orange-500/50">
                 <Timer size={14} className="text-orange-500" /> Sector Analysis
               </h3>
               

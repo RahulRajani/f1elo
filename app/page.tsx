@@ -12,7 +12,6 @@ import {
   LineChart, Line, XAxis, YAxis, Tooltip, 
   ResponsiveContainer, CartesianGrid, Legend 
 } from 'recharts'
-import Nav from '@/components/Nav'
 
 const SHEET_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vS3Ia2YO0T2yMBlPlOLOMUCgWnT0IzT-hNqKscWJT1SqqyE5INYObl3BEP7pdmaKJI3fzJQILj7BUV6/pub?gid=1401420857&single=true&output=csv"
 
@@ -239,7 +238,6 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-[#050505] text-zinc-100 font-sans pb-20 selection:bg-orange-500/30">
-      <Nav />
 
       {/* --- HERO EDITORIAL SECTION --- */}
       <section className="relative w-full border-b border-zinc-800 bg-[#0a0a0c] transition-colors hover:bg-[#0c0c0e]">

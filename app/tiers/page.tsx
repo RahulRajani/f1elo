@@ -1,7 +1,6 @@
 'use client'
 import { useEffect, useState } from 'react'
 import Papa from 'papaparse'
-import Nav from '@/components/Nav'
 
 const SHEET_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vS3Ia2YO0T2yMBlPlOLOMUCgWnT0IzT-hNqKscWJT1SqqyE5INYObl3BEP7pdmaKJI3fzJQILj7BUV6/pub?gid=1401420857&single=true&output=csv"
 
@@ -50,7 +49,6 @@ export default function TiersPage() {
 
   return (
     <div style={{ minHeight: '100vh', background: '#0d0d10', fontFamily: '"Titillium Web", sans-serif', color: '#f0f0f5' }}>
-      <Nav />
       <div style={{ maxWidth: 960, margin: '0 auto', padding: '32px 20px' }}>
         <h1 style={{ margin: '0 0 8px', fontSize: 36, fontWeight: 900, fontStyle: 'italic', textTransform: 'uppercase', letterSpacing: -1 }}>
           2026 Driver <span style={{ color: '#e8001e' }}>Tier</span> List

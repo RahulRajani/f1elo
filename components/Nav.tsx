@@ -1,4 +1,5 @@
 'use client'
+
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 
@@ -11,25 +12,45 @@ const links = [
 
 export default function Nav() {
   const path = usePathname()
+  
   return (
-    <nav style={{
-      background: '#000', borderBottom: '3px solid #e8001e',
-      padding: '0 24px', display: 'flex', alignItems: 'center',
-      gap: 0, height: 56, position: 'sticky', top: 0, zIndex: 100,
-      fontFamily: '"Titillium Web", sans-serif',
-    }}>
-      <Link href="/" style={{ fontSize: 20, fontWeight: 900, fontStyle: 'italic', color: 'white', textDecoration: 'none', marginRight: 32 }}>
-        F1 <span style={{ color: '#e8001e' }}>ELO</span>
-      </Link>
-      {links.map(l => (
-        <Link key={l.href} href={l.href} style={{
-          padding: '0 20px', height: 56, display: 'flex', alignItems: 'center',
-          fontSize: 13, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 1,
-          textDecoration: 'none', color: path === l.href ? 'white' : '#5a5a6a',
-          borderBottom: path === l.href ? '3px solid #e8001e' : '3px solid transparent',
-          marginBottom: -3, transition: 'color 0.2s',
-        }}>{l.label}</Link>
-      ))}
+    <nav className="sticky top-0 z-[100] w-full bg-[#050505]/90 backdrop-blur-md border-b border-zinc-800 flex items-center h-16 font-sans shadow-2xl transition-colors">
+      <div className="container mx-auto px-6 flex items-center">
+        
+        {/* Main Logo */}
+        <Link 
+          href="/" 
+          className="text-2xl font-black italic uppercase tracking-tighter text-white mr-8 hover:opacity-80 transition-opacity flex items-center"
+        >
+          F1 <span className="text-[#e8001e] ml-1 drop-shadow-[0_0_12px_rgba(232,0,30,0.6)]">ELO</span>
+        </Link>
+
+        {/* Navigation Links */}
+        <div className="flex h-full items-center gap-2 md:gap-6 overflow-x-auto no-scrollbar">
+          {links.map(l => {
+            const isActive = path === l.href
+            return (
+              <Link 
+                key={l.href} 
+                href={l.href} 
+                className={`relative h-16 flex items-center px-2 text-[11px] md:text-xs font-black uppercase tracking-widest transition-colors duration-300 whitespace-nowrap ${
+                  isActive 
+                    ? 'text-white' 
+                    : 'text-zinc-500 hover:text-zinc-300'
+                }`}
+              >
+                {l.label}
+                
+                {/* Active Underline Glow */}
+                {isActive && (
+                  <span className="absolute bottom-[-1px] left-0 w-full h-[3px] bg-[#e8001e] shadow-[0_-3px_12px_rgba(232,0,30,0.6)] rounded-t-sm"></span>
+                )}
+              </Link>
+            )
+          })}
+        </div>
+        
+      </div>
     </nav>
   )
 }

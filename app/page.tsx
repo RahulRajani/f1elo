@@ -6,7 +6,7 @@ import Link from 'next/link'
 import {
   Quote, Trophy,
   Activity, ChevronRight, TrendingUp, TrendingDown,
-  ArrowUpDown, ArrowUp, ArrowDown, Crosshair, BarChart2
+  Crosshair, BarChart2
 } from 'lucide-react'
 import {
   LineChart, Line, XAxis, YAxis, Tooltip,
@@ -97,7 +97,7 @@ const MiniSparkline = ({ data, driverName, color, w = 72, h = 28 }: { data: any[
 }
 
 const TileHeader = ({ label, icon: Icon, extra }: { label: string; icon: any; extra?: React.ReactNode }) => (
-  <div className="flex items-center justify-between px-6 py-4 border-b border-zinc-800/70">
+  <div className="flex items-center justify-between px-6 py-4 border-b border-zinc-800/70 bg-[#0a0a0c]/50">
     <div className="flex items-center gap-2">
       <Icon size={14} className="text-orange-500" />
       <span className="text-[10px] font-black uppercase tracking-[0.3em] text-zinc-400">{label}</span>
@@ -241,17 +241,17 @@ export default function Home() {
                 extra={<span className="text-[9px] font-mono text-zinc-600">{updated ? `synced ${updated}` : 'live'}</span>}
               />
               
-              {/* Driver Selectors */}
-              <div className="flex flex-wrap gap-2 px-6 py-4 border-b border-zinc-800/40">
-                {drivers.slice(0, 12).map(d => {
+              {/* Driver Selectors - Map updated to show ALL drivers instead of slice */}
+              <div className="flex flex-wrap gap-2 px-6 py-4 border-b border-zinc-800/40 max-h-[160px] overflow-y-auto no-scrollbar">
+                {drivers.map(d => {
                   const sel = selectedChartDrivers.includes(d.driver)
                   const tc = TEAM_COLORS[d.team.toLowerCase()] || '#8a8a94'
                   return (
                     <button key={d.driver} onClick={() => toggleDriverChart(d.driver)}
-                      className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-[10px] font-bold uppercase border transition-all ${sel ? 'bg-zinc-800 text-white shadow-md' : 'bg-transparent text-zinc-500 border-zinc-800 hover:text-zinc-300'}`}
+                      className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-[10px] font-bold uppercase border transition-all duration-300 ${sel ? 'bg-zinc-800 text-white shadow-md' : 'bg-[#0f0f13] text-zinc-500 border-zinc-800 hover:text-zinc-300 hover:border-zinc-700'}`}
                       style={{ borderColor: sel ? tc : undefined }}
                     >
-                      <span className="w-2 h-2 rounded-full" style={{ backgroundColor: tc }} />
+                      <span className={`w-2 h-2 rounded-full ${sel ? 'shadow-sm' : ''}`} style={{ backgroundColor: tc, boxShadow: sel ? `0 0 6px ${tc}` : 'none' }} />
                       {d.driver.split(' ').pop()}
                     </button>
                   )
@@ -259,22 +259,22 @@ export default function Home() {
               </div>
 
               {/* Graph Container */}
-              <div className="flex-1 relative p-2 min-h-[350px]">
+              <div className="flex-1 relative pt-6 pr-6 pb-2 min-h-[350px]">
                 {loading ? (
                   <div className="absolute inset-0 flex items-center justify-center font-mono text-xs uppercase italic text-zinc-700 tracking-widest animate-pulse">Connecting to Telemetry...</div>
                 ) : (
                   <>
                     <div className="absolute inset-0 bg-[linear-gradient(to_right,#8080800a_1px,transparent_1px),linear-gradient(to_bottom,#8080800a_1px,transparent_1px)] bg-[size:24px_24px] pointer-events-none" />
                     <ResponsiveContainer width="100%" height="100%">
-                      <LineChart data={chartData} margin={{ top: 20, right: 30, left: 0, bottom: 10 }}>
-                        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#1a1a1f" />
-                        <XAxis dataKey="name" stroke="#52525b" tick={{ fill: '#52525b', fontSize: 10, fontWeight: 800 }} tickFormatter={v => v.toString().toUpperCase()} axisLine={false} tickLine={false} minTickGap={20} />
-                        <YAxis domain={['dataMin - 25', 'dataMax + 25']} stroke="#52525b" tick={{ fill: '#71717a', fontSize: 11, fontFamily: 'monospace' }} axisLine={false} tickLine={false} width={45} />
-                        <Tooltip content={<CustomTooltip />} cursor={{ stroke: '#3f3f46', strokeWidth: 1, strokeDasharray: '4 4' }} />
+                      <LineChart data={chartData} margin={{ top: 10, right: 10, left: 0, bottom: 10 }}>
+                        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#27272a" opacity={0.6} />
+                        <XAxis dataKey="name" stroke="#52525b" tick={{ fill: '#71717a', fontSize: 10, fontWeight: 700 }} tickFormatter={v => v.toString().toUpperCase()} axisLine={false} tickLine={false} minTickGap={20} dy={10} />
+                        <YAxis domain={['dataMin - 15', 'dataMax + 15']} stroke="#52525b" tick={{ fill: '#71717a', fontSize: 11, fontFamily: 'monospace' }} axisLine={false} tickLine={false} width={50} dx={-10} />
+                        <Tooltip content={<CustomTooltip />} cursor={{ stroke: '#52525b', strokeWidth: 1, strokeDasharray: '4 4' }} />
                         {selectedChartDrivers.map(id => {
                           const d = drivers.find(x => x.driver === id)
                           const color = d ? TEAM_COLORS[d.team.toLowerCase()] : '#8a8a94'
-                          return <Line key={id} type="monotone" dataKey={id} name={id} stroke={color} strokeWidth={3} dot={false} activeDot={{ r: 6, strokeWidth: 0, fill: color }} connectNulls />
+                          return <Line key={id} type="monotone" dataKey={id} name={id} stroke={color} strokeWidth={3} dot={false} activeDot={{ r: 5, strokeWidth: 0, fill: color }} connectNulls />
                         })}
                       </LineChart>
                     </ResponsiveContainer>

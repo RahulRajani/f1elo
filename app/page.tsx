@@ -21,6 +21,15 @@ const TEAM_COLORS: Record<string, string> = {
   'williams': '#005AFF', 'racing bulls': '#1634CC', 'vcarb': '#1634CC',
   'sauber': '#52E252', 'haas': '#B6BABD', 'cadillac': '#C8A951', 
 }
+const RACE_FLAGS: Record<string, string> = {
+  'Australian GP': '🇦🇺', 'Chinese GP': '🇨🇳', 'Japanese GP': '🇯🇵',
+  'Miami GP': '🇺🇸', 'Canadian GP': '🇨🇦', 'Monaco GP': '🇲🇨',
+  'Spanish GP (Barcelona)': '🇪🇸', 'Austrian GP': '🇦🇹', 'British GP': '🇬🇧',
+  'Belgian GP': '🇧🇪', 'Hungarian GP': '🇭🇺', 'Dutch GP': '🇳🇱',
+  'Italian GP': '🇮🇹', 'Spanish GP (Madrid)': '🇪🇸', 'Azerbaijan GP': '🇦🇿',
+  'Singapore GP': '🇸🇬', 'United States GP': '🇺🇸', 'Mexico City GP': '🇲🇽',
+  'São Paulo GP': '🇧🇷', 'Las Vegas GP': '🇺🇸', 'Qatar GP': '🇶🇦', 'Abu Dhabi GP': '🇦🇪',
+}
 
 // 🗓️ OFFICIAL 2026 RACE CALENDAR
 const RACE_CALENDAR = [
@@ -98,37 +107,41 @@ export default function Home() {
   // Dynamic Target State
   const [targetRaceName, setTargetRaceName] = useState<string>('Loading...')
   const [timeLeft, setTimeLeft] = useState({ d: '00', h: '00', m: '00', s: '00' })
+  const [nextRaceIndex, setNextRaceIndex] = useState(0)
+  const [targetRaceDate, setTargetRaceDate] = useState('')
+useEffect(() => {
+  const now = new Date().getTime()
+  const ONE_DAY_MS = 24 * 60 * 60 * 1000
 
-  useEffect(() => {
-    const now = new Date().getTime()
-    const ONE_DAY_MS = 24 * 60 * 60 * 1000
-    
-    // Find the next upcoming race for the timer
-    const upcomingRace = RACE_CALENDAR.find(r => new Date(r.date).getTime() > now) || RACE_CALENDAR[RACE_CALENDAR.length - 1]
-    
-    // Calculate how many races are fully completed (current time > race time + 24 hours)
-    const completedCount = RACE_CALENDAR.filter(r => now > new Date(r.date).getTime() + ONE_DAY_MS).length
+  const upcomingRace = RACE_CALENDAR.find(r => new Date(r.date).getTime() > now) || RACE_CALENDAR[RACE_CALENDAR.length - 1]
+  const completedCount = RACE_CALENDAR.filter(r => now > new Date(r.date).getTime() + ONE_DAY_MS).length
 
-    setTargetRaceName(upcomingRace.name)
-    const targetDate = new Date(upcomingRace.date).getTime()
-    
-    // Start countdown timer
-    const interval = setInterval(() => {
-      const currentTime = new Date().getTime()
-      const diff = targetDate - currentTime
-      
-      if (diff <= 0) {
-        clearInterval(interval)
-        setTimeLeft({ d: '00', h: '00', m: '00', s: '00' })
-      } else {
-        const d = Math.floor(diff / (1000 * 60 * 60 * 24)).toString().padStart(2, '0')
-        const h = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)).toString().padStart(2, '0')
-        const m = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60)).toString().padStart(2, '0')
-        const s = Math.floor((diff % (1000 * 60)) / 1000).toString().padStart(2, '0')
-        setTimeLeft({ d, h, m, s })
-      }
-    }, 1000)
+  const raceIdx = RACE_CALENDAR.indexOf(upcomingRace)
+  setNextRaceIndex(raceIdx)
+  setTargetRaceDate(new Date(upcomingRace.date).toLocaleDateString('en-GB', {
+    weekday: 'long', day: 'numeric', month: 'long', year: 'numeric'
+  }))
+  setTargetRaceName(upcomingRace.name)
 
+  const targetDate = new Date(upcomingRace.date).getTime()
+
+  const interval = setInterval(() => {
+    const currentTime = new Date().getTime()
+    const diff = targetDate - currentTime
+
+    if (diff <= 0) {
+      clearInterval(interval)
+      setTimeLeft({ d: '00', h: '00', m: '00', s: '00' })
+    } else {
+      const d = Math.floor(diff / (1000 * 60 * 60 * 24)).toString().padStart(2, '0')
+      const h = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)).toString().padStart(2, '0')
+      const m = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60)).toString().padStart(2, '0')
+      const s = Math.floor((diff % (1000 * 60)) / 1000).toString().padStart(2, '0')
+      setTimeLeft({ d, h, m, s })
+    }
+  }, 1000)
+
+  // ... rest of your Papa.parse fetch below this
     // Fetch Google Sheet Data
     Papa.parse(SHEET_URL + '&cachebust=' + Date.now(), {
       download: true,
@@ -238,92 +251,202 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-[#050505] text-zinc-100 font-sans pb-20 selection:bg-orange-500/30">
 
-      {/* --- HERO EDITORIAL SECTION --- */}
-      <section className="relative w-full border-b border-zinc-800 bg-[#0a0a0c] transition-colors group/hero overflow-hidden">
-        
-        {/* Background Image Layer */}
-        <div 
-          className="absolute inset-0 z-0 opacity-15 group-hover/hero:opacity-30 transition-opacity duration-1000 bg-cover bg-center bg-no-repeat"
-          // Swap this URL with your preferred McLaren image link
-          style={{ backgroundImage: "url('https://images.unsplash.com/photo-1614200187524-dc4b892acf16?q=80&w=3200&auto=format&fit=crop')" }} 
-        />
-        
-        {/* Dark Gradient Overlays for Readability */}
-        <div className="absolute inset-0 z-0 bg-gradient-to-r from-[#050505] via-[#050505]/95 to-transparent"></div>
-        <div className="absolute inset-0 z-0 bg-gradient-to-t from-[#0a0a0c] via-transparent to-transparent"></div>
+  {/* ══════════ NEXT RACE COMMAND BAR ══════════ */}
+  <section className="w-full bg-[#08080a] border-b border-zinc-800/80 relative overflow-hidden">
+    <div className="absolute inset-0 bg-[repeating-linear-gradient(90deg,transparent,transparent_120px,rgba(255,255,255,0.012)_120px,rgba(255,255,255,0.012)_121px)] pointer-events-none" />
+    <div className="container mx-auto px-6 py-4">
+      <div className="flex flex-col sm:flex-row items-center justify-between gap-5">
 
-        <Link href="/editorial" className="relative z-10 group block container mx-auto grid grid-cols-1 lg:grid-cols-12 cursor-pointer">
-          <div className="lg:col-span-8 p-8 md:p-16 lg:border-r border-zinc-800/50 backdrop-blur-[2px]">
-            <div className="flex items-center gap-3 mb-6">
-              <span className="bg-orange-600 text-[10px] font-black italic px-2 py-0.5 uppercase tracking-tighter shadow-lg shadow-orange-500/20">Premium Analysis</span>
-              <span className="text-zinc-400 font-mono text-[10px] uppercase tracking-widest group-hover:text-orange-500 transition-colors">Click to Read Full Article →</span>
+        {/* Left block */}
+        <div className="flex items-center gap-5">
+          <div className="relative shrink-0">
+            <div className="w-14 h-14 rounded-full bg-orange-600 flex items-center justify-center shadow-[0_0_20px_rgba(234,88,12,0.35)]">
+              <span className="font-black italic text-white text-xl leading-none">
+                R{(nextRaceIndex + 1).toString().padStart(2, '0')}
+              </span>
             </div>
+            <span className="absolute -top-1 -right-1 w-3 h-3 bg-green-500 rounded-full animate-ping" />
+            <span className="absolute -top-1 -right-1 w-3 h-3 bg-green-500 rounded-full" />
+          </div>
+          <div>
+            <p className="text-[9px] font-black uppercase tracking-[0.45em] text-zinc-500 mb-0.5 flex items-center gap-2">
+              <span className="inline-block w-1.5 h-1.5 bg-orange-500 rounded-full" /> Next Race
+            </p>
+            <h2 className="text-2xl md:text-3xl font-black italic uppercase tracking-tighter leading-none text-white">
+              {RACE_FLAGS[targetRaceName] ?? '🏁'}&nbsp;{targetRaceName}
+            </h2>
+            <p className="text-[10px] font-mono text-zinc-500 mt-1 tracking-wider">{targetRaceDate}</p>
+          </div>
+        </div>
 
-            <h1 className="text-4xl md:text-6xl lg:text-7xl font-black italic uppercase tracking-tighter leading-[0.9] mb-8 group-hover:text-white transition-colors">
-              The State of the Grid: <br/>
-              McLaren, Regulations, and the Road to <span className="text-orange-500 group-hover:text-orange-400 drop-shadow-[0_0_15px_rgba(249,115,22,0.3)]">Miami</span>
-            </h1>
-
-            <div className="flex items-center gap-4 mb-12">
-              <div className="w-10 h-10 rounded-full bg-[#050505] border border-zinc-700 flex items-center justify-center text-orange-500 font-black italic shadow-lg shadow-orange-500/10">MF</div>
-              <div>
-                <p className="text-xs font-bold uppercase tracking-widest text-zinc-200">@FullTimeMclarenFan</p>
-                <p className="text-[10px] font-mono text-zinc-400 italic">Senior Technical Analyst</p>
-              </div>
+        {/* Right: Countdown */}
+        <div className="flex items-stretch gap-0 bg-[#0c0c0f] rounded-xl border border-zinc-800 overflow-hidden shadow-inner">
+          {[
+            { val: timeLeft.d, label: 'DAYS' },
+            { val: timeLeft.h, label: 'HRS' },
+            { val: timeLeft.m, label: 'MIN' },
+            { val: timeLeft.s, label: 'SEC' },
+          ].map((t, i) => (
+            <div key={i} className={`flex flex-col items-center justify-center px-5 py-3 tabular-nums ${i < 3 ? 'border-r border-zinc-800' : ''}`}>
+              <span className="text-2xl md:text-3xl font-black font-mono text-white leading-none drop-shadow-[0_0_6px_rgba(255,255,255,0.2)]">{t.val}</span>
+              <span className="text-[8px] font-black uppercase tracking-[0.25em] text-zinc-600 mt-1">{t.label}</span>
             </div>
+          ))}
+        </div>
 
-            <div className="prose prose-invert prose-orange max-w-none">
-              <p className="text-xl text-zinc-300 leading-relaxed italic border-l-4 border-orange-600 pl-6 mb-10 bg-[#050505]/40 py-4 backdrop-blur-sm group-hover:bg-[#050505]/60 transition-colors">
-                "Stella made it very clear we would start on the backfoot, but hopefully we should have a stable platform to upgrade on going forward."
-              </p>
+      </div>
+    </div>
+  </section>
 
-              <div className="grid md:grid-cols-2 gap-8 text-sm text-zinc-400 leading-relaxed opacity-90 group-hover:opacity-100 transition-opacity">
-                <p>
-                  <span className="text-orange-500 font-black italic uppercase text-xs">McLaren:</span> Inconsistent but trending upwards. We were 4th best in Australia, 3rd in China, and 2nd in Japan...
-                </p>
-                <p>
-                  <span className="text-orange-500 font-black italic uppercase text-xs">The Regs:</span> The "super clipping" at 50kph is killing the show. Battery recovery is determining race order...
-                </p>
-              </div>
+     {/* ══════════ EDITORIAL HERO ══════════ */}
+  <section className="relative w-full border-b border-zinc-800 overflow-hidden bg-[#050505]">
+
+    {/* BG image */}
+    <div
+      className="absolute inset-0 z-0 opacity-10 hover:opacity-20 transition-opacity duration-1000 bg-cover bg-center"
+      style={{ backgroundImage: "url('https://images.unsplash.com/photo-1614200187524-dc4b892acf16?q=80&w=3200&auto=format&fit=crop')" }}
+    />
+    <div className="absolute inset-0 z-0 bg-gradient-to-r from-[#050505] via-[#050505]/90 to-transparent" />
+    <div className="absolute inset-0 z-0 bg-gradient-to-t from-[#050505] via-transparent to-transparent" />
+
+    {/* Diagonal accent stripe */}
+    <div className="absolute top-0 right-0 w-1/3 h-full z-0 pointer-events-none overflow-hidden hidden lg:block">
+      <div className="absolute inset-0 bg-gradient-to-l from-orange-600/5 to-transparent" />
+      <div className="absolute top-0 left-0 w-px h-full bg-gradient-to-b from-transparent via-orange-600/30 to-transparent" />
+    </div>
+
+    <Link href="/editorial" className="relative z-10 group block">
+      <div className="container mx-auto grid grid-cols-1 lg:grid-cols-12">
+
+        {/* Main content */}
+        <div className="lg:col-span-8 px-8 md:px-16 pt-16 pb-12 lg:border-r border-zinc-800/40">
+
+          {/* Tag strip */}
+          <div className="flex items-center gap-3 mb-8 flex-wrap">
+            <span className="bg-orange-600 text-white text-[9px] font-black italic px-3 py-1 uppercase tracking-widest shadow-lg shadow-orange-900/30">
+              Premium Analysis
+            </span>
+            <span className="text-[9px] uppercase tracking-[0.4em] font-black text-zinc-500 border border-zinc-800 px-3 py-1 rounded-full">
+              2026 Season · Issue 03
+            </span>
+            <span className="ml-auto text-[10px] font-mono text-orange-500/70 group-hover:text-orange-400 transition-colors hidden sm:block">
+              Read Full Article →
+            </span>
+          </div>
+
+          {/* Headline */}
+          <h1 className="text-5xl md:text-6xl lg:text-7xl xl:text-8xl font-black italic uppercase tracking-tighter leading-[0.88] mb-10 group-hover:text-white transition-colors duration-300">
+            <span className="block text-zinc-400 text-lg md:text-xl font-black italic tracking-widest mb-4 not-italic normal-case">
+              The State of the Grid
+            </span>
+            McLaren,<br/>
+            Regulations<br/>
+            &amp; the Road<br/>
+            to <span className="text-orange-500 group-hover:text-orange-400 transition-colors relative">
+              Miami
+              <span className="absolute -bottom-1 left-0 w-full h-px bg-orange-500/50 group-hover:w-0 transition-all duration-500" />
+            </span>
+          </h1>
+
+          {/* Byline */}
+          <div className="flex items-center gap-4 mb-10">
+            <div className="w-9 h-9 rounded-full bg-zinc-900 border border-zinc-700 flex items-center justify-center text-orange-500 font-black italic text-sm shadow-md">
+              MF
+            </div>
+            <div>
+              <p className="text-xs font-bold uppercase tracking-widest text-zinc-200">@FullTimeMclarenFan</p>
+              <p className="text-[9px] font-mono text-zinc-500 italic uppercase tracking-widest">Senior Technical Analyst</p>
+            </div>
+            <div className="ml-auto hidden md:flex items-center gap-2 bg-zinc-900 border border-zinc-800 rounded-full px-4 py-1.5">
+              <span className="w-1.5 h-1.5 bg-orange-500 rounded-full animate-pulse" />
+              <span className="text-[9px] font-black uppercase tracking-widest text-zinc-400">Live Commentary</span>
             </div>
           </div>
 
-          <div className="lg:col-span-4 bg-[#08080a]/80 backdrop-blur-md p-8 flex flex-col justify-between group-hover:bg-[#0a0a0c]/90 transition-colors relative overflow-hidden">
-            <div className="space-y-8 z-10 relative">
-              <h3 className="text-xs font-black uppercase tracking-[0.3em] text-zinc-400 flex items-center gap-2 underline underline-offset-8 decoration-orange-500/50">
-                <Timer size={14} className="text-orange-500" /> Sector Analysis
-              </h3>
-              
-              <div className="space-y-6">
-                {[
-                  { label: 'Straight Line Speed', val: '224 MPH', percent: 85 },
-                  { label: 'Battery Recovery', val: '120kW/S', percent: 65 },
-                  { label: 'Aero Efficiency', val: 'STAGE 4', percent: 92 }
-                ].map((stat) => (
-                  <div key={stat.label}>
-                    <div className="flex justify-between text-[10px] font-bold uppercase mb-2">
-                      <span className="text-zinc-500">{stat.label}</span>
-                      <span className="text-white font-mono group-hover:text-orange-500 transition-colors">{stat.val}</span>
-                    </div>
-                    <div className="h-1 w-full bg-zinc-900 rounded-full overflow-hidden">
-                      <div 
-                        className="h-full bg-orange-600 transition-all duration-1000 shadow-[0_0_10px_rgba(234,88,12,0.5)]" 
-                        style={{ width: `${stat.percent}%` }}
-                      ></div>
-                    </div>
-                  </div>
+          {/* Pull quote */}
+          <blockquote className="relative border-l-2 border-orange-600 pl-8 py-4 mb-10 group-hover:border-orange-400 transition-colors">
+            <Quote size={20} className="absolute top-2 left-2 text-orange-600/30" />
+            <p className="text-xl md:text-2xl text-zinc-200 leading-relaxed italic font-light">
+              "Stella made it very clear we would start on the backfoot, but hopefully we should have a stable platform to upgrade on going forward."
+            </p>
+          </blockquote>
+
+          {/* Body snippets */}
+          <div className="grid md:grid-cols-2 gap-8 text-sm text-zinc-500 leading-relaxed">
+            <div>
+              <p className="text-[9px] font-black uppercase tracking-[0.35em] text-orange-500 mb-3 flex items-center gap-2">
+                <span className="w-4 h-px bg-orange-600 inline-block" /> McLaren
+              </p>
+              <p>Inconsistent but trending upwards. We were 4th best in Australia, 3rd in China, and 2nd in Japan...</p>
+            </div>
+            <div>
+              <p className="text-[9px] font-black uppercase tracking-[0.35em] text-orange-500 mb-3 flex items-center gap-2">
+                <span className="w-4 h-px bg-orange-600 inline-block" /> The Regs
+              </p>
+              <p>The "super clipping" at 50kph is killing the show. Battery recovery is determining race order...</p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2 mt-10 text-orange-500 text-xs font-black italic uppercase tracking-widest group-hover:gap-4 transition-all duration-300">
+            Read Full Editorial <ChevronRight size={16} />
+          </div>
+        </div>
+
+        {/* Right sidebar */}
+        <div className="lg:col-span-4 bg-[#07070a] border-t lg:border-t-0 border-zinc-800/50 p-8 flex flex-col justify-between relative overflow-hidden">
+          <div className="absolute -top-40 -right-40 w-80 h-80 bg-orange-600/4 rounded-full blur-3xl pointer-events-none" />
+          <div className="relative z-10 space-y-10">
+            <div className="flex items-center gap-2 border-b border-zinc-800 pb-4">
+              <Timer size={12} className="text-orange-500 shrink-0" />
+              <h3 className="text-[9px] font-black uppercase tracking-[0.4em] text-zinc-400">Sector Analysis</h3>
+            </div>
+            {[
+              { label: 'Straight Line Speed', val: '224 MPH', pct: 85, color: '#FF8000' },
+              { label: 'Battery Recovery',    val: '120kW/S', pct: 65, color: '#00D2BE' },
+              { label: 'Aero Efficiency',     val: 'Stage 4', pct: 92, color: '#E80020' },
+            ].map((s) => (
+              <div key={s.label}>
+                <div className="flex justify-between text-[10px] font-bold uppercase mb-2.5">
+                  <span className="text-zinc-500">{s.label}</span>
+                  <span className="font-mono text-white">{s.val}</span>
+                </div>
+                <div className="h-px w-full bg-zinc-800 relative">
+                  <div
+                    className="absolute top-0 left-0 h-full transition-all duration-1000"
+                    style={{ width: `${s.pct}%`, backgroundColor: s.color, boxShadow: `0 0 8px ${s.color}60` }}
+                  />
+                </div>
+              </div>
+            ))}
+
+            {/* Race-number progress strip */}
+            <div>
+              <p className="text-[9px] font-black uppercase tracking-[0.4em] text-zinc-500 mb-3">Season Progress</p>
+              <div className="flex gap-1 flex-wrap">
+                {RACE_CALENDAR.map((_, i) => (
+                  <div
+                    key={i}
+                    className="w-2 h-2 rounded-sm transition-colors"
+                    style={{
+                      backgroundColor: i < nextRaceIndex
+                        ? '#f97316'
+                        : i === nextRaceIndex
+                        ? '#fdba74'
+                        : '#1f1f23'
+                    }}
+                  />
                 ))}
               </div>
+              <p className="text-[9px] font-mono text-zinc-600 mt-2">
+                {nextRaceIndex} / {RACE_CALENDAR.length} races complete
+              </p>
             </div>
-            <div className="pt-12 z-10 relative">
-              <div className="flex items-center gap-2 text-orange-500 text-xs font-black italic uppercase tracking-widest animate-pulse">
-                Read Full Editorial <ChevronRight size={16} />
-              </div>
-            </div>
-            <div className="absolute -bottom-20 -right-20 w-64 h-64 bg-orange-600/5 rounded-full blur-3xl pointer-events-none"></div>
           </div>
-        </Link>
-      </section>
+        </div>
+
+      </div>
+    </Link>
+  </section>
 
       {/* --- TELEMETRY HUB: COUNTDOWN & CHART --- */}
       <section className="container mx-auto px-6 mt-16">

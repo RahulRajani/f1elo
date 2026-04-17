@@ -95,6 +95,21 @@ const CustomTooltip = ({ active, payload, label }: any) => {
   }
   return null;
 };
+const MiniSparkline = ({ data, driverName, color }: { data: any[], driverName: string, color: string }) => {
+  const points = data.map(d => d[driverName]).filter((v): v is number => v !== undefined && !isNaN(v))
+  if (points.length < 2) return <span className="text-zinc-700 text-[9px] font-mono italic">NO DATA</span>
+  const min = Math.min(...points), max = Math.max(...points)
+  const range = max - min || 1
+  const w = 88, h = 30
+  const coords = points.map((v, i) => `${(i / (points.length - 1)) * w},${h - ((v - min) / range) * h}`).join(' ')
+  const lastX = w, lastY = h - ((points[points.length - 1] - min) / range) * h
+  return (
+    <svg width={w} height={h} className="overflow-visible">
+      <polyline points={coords} fill="none" stroke={color} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" opacity="0.8" />
+      <circle cx={lastX} cy={lastY} r="3" fill={color} />
+    </svg>
+  )
+}
 
 export default function Home() {
   const [drivers, setDrivers] = useState<Driver[]>([])
@@ -518,6 +533,7 @@ useEffect(() => {
                       width={45}
                     />
                     <Tooltip content={<CustomTooltip />} cursor={{ stroke: '#3f3f46', strokeWidth: 1, strokeDasharray: '4 4' }} />
+                    
                     
                     {selectedChartDrivers.map((driverId) => {
                       const driverObj = drivers.find(d => d.driver === driverId)

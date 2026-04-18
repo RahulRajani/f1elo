@@ -366,7 +366,7 @@ export default function Home() {
               </div>
               
               <div className="border-t border-zinc-800/80 px-6 py-4 bg-[#08080a]">
-                <Link href="#full-rankings" className="text-[10px] font-black uppercase tracking-widest text-orange-500/80 hover:text-orange-400 transition-colors flex items-center justify-center gap-1.5">
+                <Link href="#tiers" className="text-[10px] font-black uppercase tracking-widest text-orange-500/80 hover:text-orange-400 transition-colors flex items-center justify-center gap-1.5">
                   View Full Grid <ChevronRight size={12} />
                 </Link>
               </div>
@@ -413,7 +413,7 @@ export default function Home() {
               </div>
 
               <div className="px-4 pb-4">
-                 <Link href="/stock-market" className="block w-full text-center bg-zinc-100 text-black text-[10px] font-black uppercase italic py-3 rounded-xl hover:bg-orange-500 hover:text-white transition-colors">
+                 <Link href="/market" className="block w-full text-center bg-zinc-100 text-black text-[10px] font-black uppercase italic py-3 rounded-xl hover:bg-orange-500 hover:text-white transition-colors">
                     Enter Trading Floor
                  </Link>
               </div>

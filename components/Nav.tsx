@@ -7,8 +7,8 @@ import { SignInButton, Show, UserButton } from '@clerk/nextjs'
 
 const links = [
   { href: '/', label: 'Live 2026' },
-  { href: '/tiers', label: 'Tier List' },
-  { href: '/historical', label: 'Historical' },
+  { href: '/tiers', label: 'Drivers' },
+  { href: '/historical', label: 'Historical ELO' },
   { href: '/effone-season-sim', label: '2026 Season Simulator'},
   { href: '/market', label: 'Stock Market' },
   { href: '/about', label: 'About' }

@@ -25,16 +25,16 @@ const TIERS = [
 ]
 
 interface Driver {
-  rank:   number
-  driver: string
-  team:   string
-  elo:    number
-  pts:    number
-  change: number
-  wins:   number
-  p2:     number
-  p3:     number
-  peak:   number
+  rank:    number
+  driver:  string
+  team:    string
+  elo:     number
+  change:  number
+  avg:     number
+  implied: number
+  peak:    number
+  low:     number
+  form:    number
 }
 
 type SortDir = 'asc' | 'desc'
@@ -43,18 +43,19 @@ type SortCol = keyof Driver
 const getTeamColor = (team: string | undefined): string =>
   TEAM_COLORS[team?.toLowerCase() ?? ''] ?? '#8a8a94'
 
+// Flexible header finder — matches if the header CONTAINS any of the search terms
+function makeFind(keys: string[]) {
+  return (...terms: string[]): string =>
+    keys.find(k => {
+      const norm = k.toLowerCase().trim()
+      return terms.some(t => norm === t || norm.includes(t))
+    }) ?? ''
+}
+
 // ── Sub-components ────────────────────────────────────────────────
 
-function DriverName({
-  name,
-  size = 14,
-  lastSize = 14,
-  color = '#fff',
-}: {
-  name: string
-  size?: number
-  lastSize?: number
-  color?: string
+function DriverName({ name, size = 14, lastSize = 14, color = '#fff' }: {
+  name: string; size?: number; lastSize?: number; color?: string
 }) {
   const parts = name.split(' ')
   const last  = parts.pop() ?? ''
@@ -97,31 +98,38 @@ export default function App() {
         if (!rows.length) { setLoading(false); return }
 
         const keys = Object.keys(rows[0])
-        const find = (...names: string[]): string =>
-          keys.find(k => names.includes(k.toLowerCase().trim())) ?? ''
+        const find = makeFind(keys)
 
-        const DRIVER  = find('driver')
-        const TEAM    = find('team')
-        const ELO     = find('elo')
-        const CHANGE  = find('last change')
-        const PEAK    = find('highest rating')
-        const LOW     = find('lowest rating')
-        const AVG     = find('season average')
-        const IMPLIED = find('implied rating')
+        // Log headers in dev so mismatches are obvious
+        if (typeof window !== 'undefined') {
+          console.log('[DPI] Sheet headers:', keys)
+        }
+
+        const COL_DRIVER  = find('driver')
+        const COL_TEAM    = find('team')
+        const COL_ELO     = find('elo')
+        const COL_CHANGE  = find('last change', 'lastchange', 'change', 'delta')
+        const COL_AVG     = find('season average', 'seasonaverage', 'average', 'avg')
+        const COL_IMPLIED = find('implied rating', 'impliedrating', 'implied')
+        const COL_PEAK    = find('highest rating', 'highestrating', 'peak elo', 'peak')
+        const COL_LOW     = find('lowest rating', 'lowestrating', 'low elo')
+        const COL_FORM    = find('form')
+
+        console.log('[DPI] Column map:', { COL_DRIVER, COL_TEAM, COL_ELO, COL_CHANGE, COL_AVG, COL_IMPLIED, COL_PEAK, COL_LOW, COL_FORM })
 
         const parsed: Driver[] = rows
-          .filter(r => r[DRIVER]?.trim())
+          .filter(r => r[COL_DRIVER]?.trim())
           .map(r => ({
             rank:    0,
-            driver:  r[DRIVER].trim(),
-            team:    (r[TEAM] || 'Unknown').trim(),
-            elo:     parseInt(r[ELO])      || 1500,
-            pts:     parseFloat(r[AVG])    || 0,   // repurposed as Season Avg
-            change:  r[CHANGE] ? parseInt(r[CHANGE]) : 0,
-            wins:    parseInt(r[IMPLIED])  || 0,   // repurposed as Implied
-            p2:      parseInt(r[LOW])      || 0,   // repurposed as Lowest
-            p3:      0,
-            peak:    parseInt(r[PEAK])     || parseInt(r[ELO]) || 1500,
+            driver:  r[COL_DRIVER].trim(),
+            team:    (r[COL_TEAM] || 'Unknown').trim(),
+            elo:     parseInt(r[COL_ELO])     || 1500,
+            change:  COL_CHANGE  ? (parseInt(r[COL_CHANGE])  || 0) : 0,
+            avg:     COL_AVG     ? (parseFloat(r[COL_AVG])   || 0) : 0,
+            implied: COL_IMPLIED ? (parseInt(r[COL_IMPLIED]) || 0) : 0,
+            peak:    COL_PEAK    ? (parseInt(r[COL_PEAK])    || parseInt(r[COL_ELO]) || 1500) : (parseInt(r[COL_ELO]) || 1500),
+            low:     COL_LOW     ? (parseInt(r[COL_LOW])     || 0) : 0,
+            form:    COL_FORM    ? (parseFloat(r[COL_FORM])  || 0) : 0,
           }))
           .sort((a, b) => b.elo - a.elo)
           .map((d, i) => ({ ...d, rank: i + 1 }))
@@ -151,6 +159,19 @@ export default function App() {
   const handleSort = (col: SortCol) =>
     setSort(prev => ({ col, dir: prev.col === col && prev.dir === 'desc' ? 'asc' : 'desc' }))
 
+  // Column definitions for the table
+  const TABLE_COLS: { k: SortCol | null; label: string; align: 'left' | 'right'; pl?: number; pr?: number }[] = [
+    { k: null,      label: '#',       align: 'left',  pl: 24 },
+    { k: null,      label: 'DRIVER',  align: 'left' },
+    { k: 'elo',     label: 'ELO',     align: 'right' },
+    { k: 'change',  label: '+/−',     align: 'right' },
+    { k: 'avg',     label: 'AVG',     align: 'right' },
+    { k: 'implied', label: 'IMPLIED', align: 'right' },
+    { k: 'peak',    label: 'PEAK',    align: 'right' },
+    { k: 'low',     label: 'LOW',     align: 'right' },
+    { k: null,      label: 'FORM',    align: 'right', pr: 20 },
+  ]
+
   // ── Render ──────────────────────────────────────────────────────
   return (
     <div style={{ minHeight: '100vh', background: '#050507', color: '#e4e4e7', fontFamily: 'system-ui, -apple-system, sans-serif' }}>
@@ -177,8 +198,8 @@ export default function App() {
           {/* NAV TABS */}
           <div style={{ display: 'flex', gap: 0, borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
             {([
-              { id: 'rankings', label: 'Rankings',  Icon: BarChart2 },
-              { id: 'tiers',    label: 'Tier List',  Icon: Layers    },
+              { id: 'rankings', label: 'Rankings', Icon: BarChart2 },
+              { id: 'tiers',    label: 'Tier List', Icon: Layers   },
             ] as const).map(({ id, label, Icon }) => (
               <button key={id} onClick={() => setView(id)} style={{
                 display: 'flex', alignItems: 'center', gap: 8,
@@ -208,7 +229,7 @@ export default function App() {
                       <div key={i} style={{ width: w, height: i === 1 ? 210 : 175, background: '#111116', borderRadius: 20, animation: 'pulse 1.5s infinite' }} />
                     ))
                   : ([top3[1], top3[0], top3[2]] as (Driver | undefined)[]).filter((d): d is Driver => !!d).map((d, idx) => {
-                      const pos = idx === 0 ? 2 : idx === 1 ? 1 : 3
+                      const pos        = idx === 0 ? 2 : idx === 1 ? 1 : 3
                       const color      = getTeamColor(d.team)
                       const isP1       = pos === 1
                       const medalColor = pos === 1 ? '#FBB924' : pos === 2 ? '#9CA3AF' : '#CD7F32'
@@ -260,19 +281,9 @@ export default function App() {
                 <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                   <thead>
                     <tr style={{ background: 'rgba(0,0,0,0.5)' }}>
-                      {([
-                        { k: null,     label: '#',      align: 'left',  pl: 24 },
-                        { k: null,     label: 'DRIVER', align: 'left' },
-                        { k: 'elo',    label: 'ELO',    align: 'right' },
-                        { k: 'pts',  label: 'AVG',     align: 'right' },
-                        { k: 'wins', label: 'IMPLIED', align: 'right' },
-                        { k: 'p2',   label: 'LOW',     align: 'right' },
-                        { k: 'change', label: '+/−',    align: 'right' },
-                        { k: 'peak',   label: 'PEAK',   align: 'right' },
-                        { k: null,     label: 'FORM',   align: 'right', pr: 20 },
-                      ] as { k: SortCol | null; label: string; align: string; pl?: number; pr?: number }[]).map(({ k, label, align, pl, pr }) => (
+                      {TABLE_COLS.map(({ k, label, align, pl, pr }) => (
                         <th key={label} onClick={k ? () => handleSort(k) : undefined}
-                          style={{ padding: `10px ${pr ?? 14}px 10px ${pl ?? 14}px`, textAlign: align as 'left' | 'right', fontSize: 9, fontWeight: 900, letterSpacing: '0.35em', textTransform: 'uppercase', color: k && sort.col === k ? '#f97316' : '#3f3f46', cursor: k ? 'pointer' : 'default', whiteSpace: 'nowrap', userSelect: 'none', transition: 'color 0.15s' }}>
+                          style={{ padding: `10px ${pr ?? 14}px 10px ${pl ?? 14}px`, textAlign: align, fontSize: 9, fontWeight: 900, letterSpacing: '0.35em', textTransform: 'uppercase', color: k && sort.col === k ? '#f97316' : '#3f3f46', cursor: k ? 'pointer' : 'default', whiteSpace: 'nowrap', userSelect: 'none', transition: 'color 0.15s' }}>
                           <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: align === 'right' ? 'flex-end' : 'flex-start' }}>
                             {label}{k && <SortIndicator col={k} sort={sort} />}
                           </span>
@@ -284,7 +295,7 @@ export default function App() {
                     {loading
                       ? Array(12).fill(null).map((_, i) => (
                           <tr key={i} style={{ borderTop: '1px solid rgba(255,255,255,0.03)' }}>
-                            {Array(10).fill(null).map((_, j) => (
+                            {Array(TABLE_COLS.length).fill(null).map((_, j) => (
                               <td key={j} style={{ padding: '15px 14px' }}>
                                 <div style={{ height: 12, background: '#111116', borderRadius: 4, width: j === 1 ? 130 : 50, animation: 'pulse 1.5s infinite' }} />
                               </td>
@@ -292,11 +303,12 @@ export default function App() {
                           </tr>
                         ))
                       : sorted.map(d => {
-                          const color  = getTeamColor(d.team)
-                          const isHov  = hovered === d.driver
-                          const isTop  = d.rank <= 3
-                          const pct    = d.peak > 0 ? Math.min(100, Math.round((d.elo / d.peak) * 100)) : 100
+                          const color      = getTeamColor(d.team)
+                          const isHov      = hovered === d.driver
+                          const isTop      = d.rank <= 3
                           const medalColor = d.rank === 1 ? '#FBB924' : d.rank === 2 ? '#9CA3AF' : '#CD7F32'
+                          // Form bar: % of peak ELO
+                          const formPct    = d.peak > 0 ? Math.min(100, Math.round((d.elo / d.peak) * 100)) : 100
 
                           return (
                             <tr key={d.driver}
@@ -304,6 +316,7 @@ export default function App() {
                               onMouseLeave={() => setHovered(null)}
                               style={{ borderTop: '1px solid rgba(255,255,255,0.03)', background: isHov ? 'rgba(255,255,255,0.02)' : 'transparent', transition: 'background 0.1s', cursor: 'default' }}>
 
+                              {/* # */}
                               <td style={{ padding: '13px 14px 13px 24px', width: 60 }}>
                                 {isTop
                                   ? <span style={{ fontSize: 9, fontWeight: 900, letterSpacing: '0.1em', color: medalColor, background: `${medalColor}15`, border: `1px solid ${medalColor}35`, padding: '3px 8px', borderRadius: 99, fontFamily: 'monospace' }}>
@@ -312,6 +325,7 @@ export default function App() {
                                   : <span style={{ fontSize: 12, fontWeight: 800, fontStyle: 'italic', color: '#3f3f46', fontFamily: 'monospace' }}>{d.rank}</span>}
                               </td>
 
+                              {/* DRIVER */}
                               <td style={{ padding: '13px 14px', minWidth: 185 }}>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                                   <div style={{ width: 3, height: 30, background: color, borderRadius: 99, flexShrink: 0, opacity: isHov ? 1 : 0.7, transition: 'opacity 0.15s' }} />
@@ -322,41 +336,48 @@ export default function App() {
                                 </div>
                               </td>
 
+                              {/* ELO */}
                               <td style={{ padding: '13px 14px', textAlign: 'right', fontFamily: 'monospace', fontSize: 15, fontWeight: 900, color: isTop ? '#fff' : '#d4d4d8', whiteSpace: 'nowrap' }}>
                                 {d.elo.toLocaleString()}
                               </td>
 
-                              <td style={{ padding: '13px 14px', textAlign: 'right', fontFamily: 'monospace', fontSize: 13, fontWeight: 700, color: '#a1a1aa', whiteSpace: 'nowrap' }}>
-                                {d.pts > 0 ? d.pts : <span style={{ color: '#27272a' }}>—</span>}
-                              </td>
-
-                              <td style={{ padding: '13px 14px', textAlign: 'right', fontFamily: 'monospace', fontSize: 13, fontWeight: 700, whiteSpace: 'nowrap' }}>
-                                {d.wins > 0 ? <span style={{ color: '#FBB924', fontWeight: 900 }}>{d.wins}</span> : <span style={{ color: '#27272a' }}>—</span>}
-                              </td>
-
-                              {(['p2', 'p3'] as const).map(k => (
-                                <td key={k} style={{ padding: '13px 14px', textAlign: 'right', fontFamily: 'monospace', fontSize: 13, fontWeight: 700, color: '#71717a', whiteSpace: 'nowrap' }}>
-                                  {d[k] > 0 ? d[k] : <span style={{ color: '#27272a' }}>—</span>}
-                                </td>
-                              ))}
-
+                              {/* +/− Last Change */}
                               <td style={{ padding: '13px 14px', textAlign: 'right', whiteSpace: 'nowrap' }}>
-                                <span style={{ display: 'inline-flex', alignItems: 'center', gap: 3, fontFamily: 'monospace', fontSize: 12, fontWeight: 800, color: d.change > 0 ? '#22c55e' : d.change < 0 ? '#ef4444' : '#3f3f46' }}>
-                                  {d.change > 0 ? <TrendingUp size={9} /> : d.change < 0 ? <TrendingDown size={9} /> : null}
-                                  {d.change > 0 ? `+${d.change}` : d.change === 0 ? '—' : d.change}
-                                </span>
+                                {d.change === 0
+                                  ? <span style={{ color: '#27272a', fontFamily: 'monospace', fontSize: 12 }}>—</span>
+                                  : <span style={{ display: 'inline-flex', alignItems: 'center', gap: 3, fontFamily: 'monospace', fontSize: 12, fontWeight: 800, color: d.change > 0 ? '#22c55e' : '#ef4444', background: d.change > 0 ? 'rgba(34,197,94,0.08)' : 'rgba(239,68,68,0.08)', padding: '2px 7px', borderRadius: 99 }}>
+                                      {d.change > 0 ? <TrendingUp size={9} /> : <TrendingDown size={9} />}
+                                      {d.change > 0 ? `+${d.change}` : d.change}
+                                    </span>}
                               </td>
 
+                              {/* AVG */}
+                              <td style={{ padding: '13px 14px', textAlign: 'right', fontFamily: 'monospace', fontSize: 13, fontWeight: 700, color: '#a1a1aa', whiteSpace: 'nowrap' }}>
+                                {d.avg > 0 ? d.avg.toFixed(2) : <span style={{ color: '#27272a' }}>—</span>}
+                              </td>
+
+                              {/* IMPLIED */}
+                              <td style={{ padding: '13px 14px', textAlign: 'right', fontFamily: 'monospace', fontSize: 13, fontWeight: 700, color: '#71717a', whiteSpace: 'nowrap' }}>
+                                {d.implied > 0 ? d.implied : <span style={{ color: '#27272a' }}>—</span>}
+                              </td>
+
+                              {/* PEAK (Highest Rating) */}
                               <td style={{ padding: '13px 14px', textAlign: 'right', fontFamily: 'monospace', fontSize: 12, fontWeight: 700, color: '#52525b', whiteSpace: 'nowrap' }}>
-                                {d.peak.toLocaleString()}
+                                {d.peak > 0 ? d.peak.toLocaleString() : <span style={{ color: '#27272a' }}>—</span>}
                               </td>
 
+                              {/* LOW (Lowest Rating) */}
+                              <td style={{ padding: '13px 14px', textAlign: 'right', fontFamily: 'monospace', fontSize: 12, fontWeight: 700, color: '#3f3f46', whiteSpace: 'nowrap' }}>
+                                {d.low > 0 ? d.low.toLocaleString() : <span style={{ color: '#27272a' }}>—</span>}
+                              </td>
+
+                              {/* FORM bar */}
                               <td style={{ padding: '13px 20px 13px 14px', textAlign: 'right' }}>
                                 <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 3 }}>
                                   <div style={{ width: 64, height: 4, background: 'rgba(255,255,255,0.06)', borderRadius: 99, overflow: 'hidden' }}>
-                                    <div style={{ height: '100%', width: `${pct}%`, background: `linear-gradient(90deg, ${color}aa, ${color})`, borderRadius: 99, transition: 'width 0.6s ease' }} />
+                                    <div style={{ height: '100%', width: `${formPct}%`, background: `linear-gradient(90deg, ${color}aa, ${color})`, borderRadius: 99, transition: 'width 0.6s ease' }} />
                                   </div>
-                                  <span style={{ fontSize: 8, fontFamily: 'monospace', color: '#27272a' }}>{pct}%</span>
+                                  <span style={{ fontSize: 8, fontFamily: 'monospace', color: '#27272a' }}>{formPct}%</span>
                                 </div>
                               </td>
                             </tr>

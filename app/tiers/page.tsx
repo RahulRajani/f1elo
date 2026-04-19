@@ -100,29 +100,28 @@ export default function App() {
         const find = (...names: string[]): string =>
           keys.find(k => names.includes(k.toLowerCase().trim())) ?? ''
 
-        const DRIVER = find('driver')
-        const TEAM   = find('team')
-        const ELO    = find('elo')
-        const PTS    = find('points', 'pts')
-        const CHANGE = find('last change', 'elo change', 'change', 'delta')
-        const WINS   = find('wins', '1st')
-        const P2     = find('2nd', 'second')
-        const P3     = find('3rd', 'third')
-        const PEAK   = find('peak', 'peak elo')
+        const DRIVER  = find('driver')
+        const TEAM    = find('team')
+        const ELO     = find('elo')
+        const CHANGE  = find('last change')
+        const PEAK    = find('highest rating')
+        const LOW     = find('lowest rating')
+        const AVG     = find('season average')
+        const IMPLIED = find('implied rating')
 
         const parsed: Driver[] = rows
           .filter(r => r[DRIVER]?.trim())
           .map(r => ({
-            rank:   0,
-            driver: r[DRIVER].trim(),
-            team:   (r[TEAM] || 'Unknown').trim(),
-            elo:    parseInt(r[ELO])    || 1500,
-            pts:    parseFloat(r[PTS]) || 0,
-            change: r[CHANGE] ? parseInt(r[CHANGE]) : 0,
-            wins:   parseInt(r[WINS])   || 0,
-            p2:     parseInt(r[P2])     || 0,
-            p3:     parseInt(r[P3])     || 0,
-            peak:   parseInt(r[PEAK])   || parseInt(r[ELO]) || 1500,
+            rank:    0,
+            driver:  r[DRIVER].trim(),
+            team:    (r[TEAM] || 'Unknown').trim(),
+            elo:     parseInt(r[ELO])      || 1500,
+            pts:     parseFloat(r[AVG])    || 0,   // repurposed as Season Avg
+            change:  r[CHANGE] ? parseInt(r[CHANGE]) : 0,
+            wins:    parseInt(r[IMPLIED])  || 0,   // repurposed as Implied
+            p2:      parseInt(r[LOW])      || 0,   // repurposed as Lowest
+            p3:      0,
+            peak:    parseInt(r[PEAK])     || parseInt(r[ELO]) || 1500,
           }))
           .sort((a, b) => b.elo - a.elo)
           .map((d, i) => ({ ...d, rank: i + 1 }))

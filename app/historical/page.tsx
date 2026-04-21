@@ -1,8 +1,7 @@
 'use client'
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, Legend, CartesianGrid } from 'recharts'
-// Make sure this file actually contains all 611 drivers in the 'history' object!
-import { HISTORICAL_DATA, HistoryPoint } from '@/app/lib/historicalData'; 
+import { HISTORICAL_DATA, HistoryPoint } from '@/app/lib/historicalData'
 
 const COLORS = ['#e8001e','#00D2BE','#FF8000','#ffcc00','#a371f7','#34d058','#4fc3f7','#ff6b6b','#06d6a0']
 
@@ -13,12 +12,9 @@ const ALL_DRIVERS = Object.keys(HISTORICAL_DATA.final).map(id => ({
 
 const DEFAULT_DRIVERS = ['hamilton', 'michael_schumacher', 'senna', 'alonso', 'vettel']
 
-// 🏎️ Peak UI: Custom Telemetry Tooltip
 const CustomTooltip = ({ active, payload, label }: any) => {
   if (active && payload && payload.length) {
-    // Sort so the highest ELO is at the top of the tooltip
     const sorted = [...payload].sort((a, b) => b.value - a.value);
-    
     return (
       <div style={{ background: '#16161d', border: '1px solid #2a2a35', borderRadius: 8, padding: '12px 16px', boxShadow: '0 8px 32px rgba(0,0,0,0.6)', fontFamily: '"Titillium Web", sans-serif' }}>
         <p style={{ margin: '0 0 10px', color: '#8a8a94', fontSize: 11, fontWeight: 800, textTransform: 'uppercase', letterSpacing: 1 }}>
@@ -49,32 +45,29 @@ export default function HistoricalPage() {
     [search]
   )
 
-  // 🏎️ Peak UI: Aligning all drivers by "Career Race #" for true cross-era comparison
+  // Transform data for chart
   const chartData = useMemo(() => {
     const data: any[] = [];
     let maxRaces = 0;
+    const history = HISTORICAL_DATA.history as Record<string, HistoryPoint[]>;
 
-    // 1. Find the longest career among currently selected drivers
     selected.forEach(id => {
-      const history = (HISTORICAL_DATA.history as Record<string, HistoryPoint[]>)[id] || [];
-      if (history.length > maxRaces) maxRaces = history.length;
+      const driverHistory = history[id] || [];
+      if (driverHistory.length > maxRaces) maxRaces = driverHistory.length;
     });
 
-    // 2. Build out the array, aligning everyone at race 1, 2, 3...
     for (let i = 0; i < maxRaces; i++) {
       const point: Record<string, any> = { race: i + 1 };
-      
       selected.forEach(id => {
-        const history = (HISTORICAL_DATA.history as Record<string, HistoryPoint[]>)[id];
-        if (history && history[i]) {
-          point[id] = history[i].elo;
+        const driverHistory = history[id];
+        if (driverHistory?.[i]) {
+          point[id] = driverHistory[i].elo;
         }
       });
       data.push(point);
     }
-    
     return data;
-  }, [selected]);
+  }, [selected])
 
   const toggle = (id: string) => {
     setSelected(prev =>
@@ -95,93 +88,38 @@ export default function HistoricalPage() {
           </p>
         </header>
 
-        {/* 🏎️ Peak UI: Chart Container */}
         <div style={{ background: '#121217', borderRadius: 12, padding: '32px 24px 24px', marginBottom: 32, border: '1px solid #27272a', boxShadow: '0 4px 20px rgba(0,0,0,0.2)' }}>
           <ResponsiveContainer width="100%" height={450}>
             <LineChart data={chartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
               <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#27272a" />
-              <XAxis 
-                dataKey="race" 
-                stroke="#52525b" 
-                tick={{ fill: '#71717a', fontSize: 12, fontWeight: 600 }} 
-                tickLine={false}
-                axisLine={false}
-                minTickGap={30}
-              />
-              <YAxis 
-                stroke="#52525b" 
-                tick={{ fill: '#71717a', fontSize: 12, fontWeight: 600 }} 
-                domain={['auto', 'auto']} 
-                tickLine={false}
-                axisLine={false}
-              />
+              <XAxis dataKey="race" stroke="#52525b" tick={{ fill: '#71717a', fontSize: 12, fontWeight: 600 }} tickLine={false} axisLine={false} minTickGap={30} />
+              <YAxis stroke="#52525b" tick={{ fill: '#71717a', fontSize: 12, fontWeight: 600 }} domain={['auto', 'auto']} tickLine={false} axisLine={false} />
               <Tooltip content={<CustomTooltip />} cursor={{ stroke: '#3f3f46', strokeWidth: 1, strokeDasharray: '4 4' }} />
               <Legend wrapperStyle={{ paddingTop: 20, fontSize: 13, fontWeight: 600 }} iconType="circle" />
-              
               {selected.map((id, i) => (
-                <Line
-                  key={id}
-                  type="monotone"
-                  dataKey={id}
-                  name={ALL_DRIVERS.find(d => d.id === id)?.name || id}
-                  stroke={COLORS[i % COLORS.length]}
-                  strokeWidth={3}
-                  dot={false}
-                  activeDot={{ r: 6, strokeWidth: 0, fill: COLORS[i % COLORS.length] }}
-                  connectNulls
-                />
+                <Line key={id} type="monotone" dataKey={id} name={ALL_DRIVERS.find(d => d.id === id)?.name || id} stroke={COLORS[i % COLORS.length]} strokeWidth={3} dot={false} activeDot={{ r: 6, strokeWidth: 0, fill: COLORS[i % COLORS.length] }} connectNulls />
               ))}
             </LineChart>
           </ResponsiveContainer>
         </div>
 
-        {/* Selected chips */}
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10, marginBottom: 24 }}>
           {selected.map((id, i) => (
-            <div key={id} onClick={() => toggle(id)} style={{
-              display: 'flex', alignItems: 'center', gap: 8,
-              padding: '6px 14px', borderRadius: 24,
-              background: COLORS[i % COLORS.length] + '1A', // 10% opacity
-              border: `1px solid ${COLORS[i % COLORS.length]}40`, // 25% opacity
-              color: COLORS[i % COLORS.length], fontSize: 13, fontWeight: 700,
-              cursor: 'pointer', transition: 'all 0.2s ease'
-            }}>
+            <div key={id} onClick={() => toggle(id)} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '6px 14px', borderRadius: 24, background: COLORS[i % COLORS.length] + '1A', border: `1px solid ${COLORS[i % COLORS.length]}40`, color: COLORS[i % COLORS.length], fontSize: 13, fontWeight: 700, cursor: 'pointer', transition: 'all 0.2s ease' }}>
               {ALL_DRIVERS.find(d => d.id === id)?.name || id}
               <span style={{ fontSize: 16, lineHeight: 1 }}>×</span>
             </div>
           ))}
         </div>
 
-        {/* Search + driver grid */}
         <div style={{ background: '#121217', padding: 24, borderRadius: 12, border: '1px solid #27272a' }}>
-          <input
-            value={search}
-            onChange={e => setSearch(e.target.value)}
-            placeholder="Search 611 historical drivers..."
-            style={{
-              width: '100%', padding: '14px 18px', marginBottom: 20,
-              background: '#09090b', border: '1px solid #27272a', borderRadius: 8,
-              color: '#f0f0f5', fontSize: 15, fontFamily: '"Titillium Web", sans-serif', fontWeight: 600,
-              outline: 'none', boxSizing: 'border-box',
-              transition: 'border-color 0.2s ease'
-            }}
-            onFocus={(e) => e.target.style.borderColor = '#e8001e'}
-            onBlur={(e) => e.target.style.borderColor = '#27272a'}
-          />
+          <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search 611 historical drivers..." style={{ width: '100%', padding: '14px 18px', marginBottom: 20, background: '#09090b', border: '1px solid #27272a', borderRadius: 8, color: '#f0f0f5', fontSize: 15, fontFamily: '"Titillium Web", sans-serif', fontWeight: 600, outline: 'none', boxSizing: 'border-box', transition: 'border-color 0.2s ease' }} onFocus={(e) => e.currentTarget.style.borderColor = '#e8001e'} onBlur={(e) => e.currentTarget.style.borderColor = '#27272a'} />
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: 8, maxHeight: 300, overflowY: 'auto', paddingRight: 8 }}>
             {filtered.map(d => {
               const isSelected = selected.includes(d.id)
               const colorIdx = selected.indexOf(d.id)
               return (
-                <div key={d.id} onClick={() => toggle(d.id)} style={{
-                  padding: '10px 14px', borderRadius: 8, cursor: 'pointer',
-                  background: isSelected ? (COLORS[colorIdx % COLORS.length] + '1A') : '#09090b',
-                  border: `1px solid ${isSelected ? COLORS[colorIdx % COLORS.length] + '40' : '#27272a'}`,
-                  color: isSelected ? COLORS[colorIdx % COLORS.length] : '#a1a1aa',
-                  fontSize: 14, fontWeight: isSelected ? 700 : 500,
-                  transition: 'all 0.15s ease',
-                  whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis'
-                }}>
+                <div key={d.id} onClick={() => toggle(d.id)} style={{ padding: '10px 14px', borderRadius: 8, cursor: 'pointer', background: isSelected ? (COLORS[colorIdx % COLORS.length] + '1A') : '#09090b', border: `1px solid ${isSelected ? COLORS[colorIdx % COLORS.length] + '40' : '#27272a'}`, color: isSelected ? COLORS[colorIdx % COLORS.length] : '#a1a1aa', fontSize: 14, fontWeight: isSelected ? 700 : 500, transition: 'all 0.15s ease', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                   {d.name}
                 </div>
               )

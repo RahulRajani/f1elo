@@ -46,28 +46,39 @@ export default function HistoricalPage() {
   )
 
   // Transform data for chart
-  const chartData = useMemo(() => {
-    const data: any[] = [];
-    let maxRaces = 0;
-    const history = HISTORICAL_DATA.history as Record<string, HistoryPoint[]>;
+const chartData = useMemo(() => {
+  const data: any[] = [];
+  let maxRaces = 0;
+  const history = HISTORICAL_DATA.history as Record<string, HistoryPoint[]>;
 
-    selected.forEach(id => {
-      const driverHistory = history[id] || [];
-      if (driverHistory.length > maxRaces) maxRaces = driverHistory.length;
-    });
+  console.log('🔍 Building chart:');
+  console.log('Selected:', selected);
+  console.log('History keys:', Object.keys(history).slice(0, 5)); // first 5 drivers
 
-    for (let i = 0; i < maxRaces; i++) {
-      const point: Record<string, any> = { race: i + 1 };
-      selected.forEach(id => {
-        const driverHistory = history[id];
-        if (driverHistory?.[i]) {
-          point[id] = driverHistory[i].elo;
-        }
-      });
-      data.push(point);
+  selected.forEach(id => {
+    const driverHistory = history[id];
+    console.log(`${id}:`, driverHistory?.length, 'races');
+    if (driverHistory?.length) {
+      maxRaces = Math.max(maxRaces, driverHistory.length);
     }
-    return data;
-  }, [selected])
+  });
+
+  console.log('Max races:', maxRaces);
+
+  for (let i = 0; i < maxRaces; i++) {
+    const point: Record<string, any> = { race: i + 1 };
+    selected.forEach(id => {
+      const driverHistory = history[id];
+      if (driverHistory?.[i]) {
+        point[id] = driverHistory[i].elo;
+      }
+    });
+    data.push(point);
+  }
+  
+  console.log('Final chartData:', data.slice(0, 3)); // first 3 points
+  return data;
+}, [selected])
 
   const toggle = (id: string) => {
     setSelected(prev =>

@@ -1,5 +1,5 @@
 'use client'
-import { useState, useMemo, useEffect } from 'react'
+import { useState, useMemo } from 'react'
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, Legend, CartesianGrid } from 'recharts'
 import { HISTORICAL_DATA, HistoryPoint } from '@/app/lib/historicalData'
 
@@ -18,7 +18,7 @@ const CustomTooltip = ({ active, payload, label }: any) => {
     return (
       <div style={{ background: '#16161d', border: '1px solid #2a2a35', borderRadius: 8, padding: '12px 16px', boxShadow: '0 8px 32px rgba(0,0,0,0.6)', fontFamily: '"Titillium Web", sans-serif' }}>
         <p style={{ margin: '0 0 10px', color: '#8a8a94', fontSize: 11, fontWeight: 800, textTransform: 'uppercase', letterSpacing: 1 }}>
-          Career Race {label}
+          Career Season {label}
         </p>
         {sorted.map((entry, index) => (
           <div key={index} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 24, marginBottom: 6 }}>
@@ -45,40 +45,44 @@ export default function HistoricalPage() {
     [search]
   )
 
-  // Transform data for chart
-const chartData = useMemo(() => {
-  const data: any[] = [];
-  let maxRaces = 0;
-  const history = HISTORICAL_DATA.history as Record<string, HistoryPoint[]>;
+  // Transform data for chart - normalized by career year (years since debut)
+  const chartData = useMemo(() => {
+    const data: any[] = [];
+    const history = HISTORICAL_DATA.history as Record<string, HistoryPoint[]>;
 
-  console.log('🔍 Building chart:');
-  console.log('Selected:', selected);
-  console.log('History keys:', Object.keys(history).slice(0, 5)); // first 5 drivers
+    // Build a map of driver -> career year -> max ELO
+    const driverCareerMap: Record<string, Record<number, number>> = {};
+    let maxCareerYear = 0;
 
-  selected.forEach(id => {
-    const driverHistory = history[id];
-    console.log(`${id}:`, driverHistory?.length, 'races');
-    if (driverHistory?.length) {
-      maxRaces = Math.max(maxRaces, driverHistory.length);
-    }
-  });
-
-  console.log('Max races:', maxRaces);
-
-  for (let i = 0; i < maxRaces; i++) {
-    const point: Record<string, any> = { race: i + 1 };
     selected.forEach(id => {
       const driverHistory = history[id];
-      if (driverHistory?.[i]) {
-        point[id] = driverHistory[i].elo;
-      }
+      if (!driverHistory || driverHistory.length === 0) return;
+
+      const debutSeason = driverHistory[0].season;
+      const careerMap: Record<number, number> = {};
+
+      driverHistory.forEach(point => {
+        const careerYear = point.season - debutSeason + 1; // 1-indexed
+        careerMap[careerYear] = Math.max(careerMap[careerYear] || 0, point.elo);
+      });
+
+      driverCareerMap[id] = careerMap;
+      maxCareerYear = Math.max(maxCareerYear, Math.max(...Object.keys(careerMap).map(Number)));
     });
-    data.push(point);
-  }
-  
-  console.log('Final chartData:', data.slice(0, 3)); // first 3 points
-  return data;
-}, [selected])
+
+    // Build chart data by career year
+    for (let careerYear = 1; careerYear <= maxCareerYear; careerYear++) {
+      const point: Record<string, any> = { year: careerYear };
+      selected.forEach(id => {
+        if (driverCareerMap[id] && driverCareerMap[id][careerYear]) {
+          point[id] = driverCareerMap[id][careerYear];
+        }
+      });
+      data.push(point);
+    }
+
+    return data;
+  }, [selected])
 
   const toggle = (id: string) => {
     setSelected(prev =>
@@ -95,7 +99,7 @@ const chartData = useMemo(() => {
             Historical <span style={{ color: '#e8001e' }}>ELO</span>
           </h1>
           <p style={{ margin: '0', fontSize: 13, color: '#71717a', textTransform: 'uppercase', letterSpacing: 2, fontWeight: 600 }}>
-            1950–2024 · 611 Drivers · Cross-Era Comparison
+            1950–2024 · 611 Drivers · Cross-Era Comparison (Normalized by Career Year)
           </p>
         </header>
 
@@ -103,7 +107,7 @@ const chartData = useMemo(() => {
           <ResponsiveContainer width="100%" height={450}>
             <LineChart data={chartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
               <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#27272a" />
-              <XAxis dataKey="race" stroke="#52525b" tick={{ fill: '#71717a', fontSize: 12, fontWeight: 600 }} tickLine={false} axisLine={false} minTickGap={30} />
+              <XAxis dataKey="year" stroke="#52525b" tick={{ fill: '#71717a', fontSize: 12, fontWeight: 600 }} tickLine={false} axisLine={false} label={{ value: 'Years Since Debut', position: 'insideBottomRight', offset: -5, fill: '#71717a', fontSize: 12 }} />
               <YAxis stroke="#52525b" tick={{ fill: '#71717a', fontSize: 12, fontWeight: 600 }} domain={['auto', 'auto']} tickLine={false} axisLine={false} />
               <Tooltip content={<CustomTooltip />} cursor={{ stroke: '#3f3f46', strokeWidth: 1, strokeDasharray: '4 4' }} />
               <Legend wrapperStyle={{ paddingTop: 20, fontSize: 13, fontWeight: 600 }} iconType="circle" />

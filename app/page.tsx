@@ -33,6 +33,16 @@ const RACE_FLAGS: Record<string, string> = {
   'São Paulo GP': '🇧🇷', 'Las Vegas GP': '🇺🇸', 'Qatar GP': '🇶🇦', 'Abu Dhabi GP': '🇦🇪',
 }
 
+// Driver image URLs - can be updated with real F1 photos
+const DRIVER_IMAGES: Record<string, string> = {
+  'Charles Leclerc': 'https://images.unsplash.com/photo-1552820728-8ac41f1ce891?w=500&h=600&fit=crop',
+  'Oscar Piastri': 'https://images.unsplash.com/photo-1614162692292-7ac56d7f7f1e?w=500&h=600&fit=crop',
+  'Lando Norris': 'https://images.unsplash.com/photo-1552820728-8ac41f1ce891?w=500&h=600&fit=crop',
+  'Max Verstappen': 'https://images.unsplash.com/photo-1614200187524-dc4b892acf16?w=500&h=600&fit=crop',
+  'Yuki Tsunoda': 'https://images.unsplash.com/photo-1552820728-8ac41f1ce891?w=500&h=600&fit=crop',
+  'George Russell': 'https://images.unsplash.com/photo-1614162692292-7ac56d7f7f1e?w=500&h=600&fit=crop',
+}
+
 const RACE_CALENDAR = [
   { name: 'Australian GP',         date: '2026-03-08T04:00:00Z' },
   { name: 'Chinese GP',            date: '2026-03-15T07:00:00Z' },
@@ -105,6 +115,54 @@ const TileHeader = ({ label, icon: Icon, extra }: { label: string; icon: any; ex
     {extra}
   </div>
 )
+
+// Driver Card Component
+const DriverCard = ({ driver, isGainer }: { driver: Driver; isGainer: boolean }) => {
+  const tc = TEAM_COLORS[driver.team.toLowerCase()] || '#8a8a94'
+  const changeVal = driver.change ?? 0
+  const last = driver.driver.split(' ').pop()
+  const first = driver.driver.split(' ').slice(0, -1).join(' ')
+  const imageUrl = DRIVER_IMAGES[driver.driver] || 'https://images.unsplash.com/photo-1552820728-8ac41f1ce891?w=500&h=600&fit=crop'
+  
+  return (
+    <div className={`group relative overflow-hidden rounded-2xl border border-zinc-800/60 hover:border-zinc-600 transition-all duration-300 h-full flex flex-col bg-[#111116]`}>
+      {/* Image Background */}
+      <div className="relative h-48 overflow-hidden bg-[#0a0a0c]">
+        <img 
+          src={imageUrl} 
+          alt={driver.driver}
+          className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500 opacity-40 group-hover:opacity-60"
+        />
+        {/* Overlay Gradient */}
+        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-[#111116]/40 to-[#111116]" />
+        
+        {/* Team Color Bar */}
+        <div className="absolute top-0 left-0 right-0 h-1" style={{ backgroundColor: tc }} />
+      </div>
+
+      {/* Content */}
+      <div className="flex-1 flex flex-col p-5">
+        <div className="mb-4">
+          <p className="text-[10px] text-zinc-500 uppercase tracking-widest font-bold">{first}</p>
+          <h3 className="text-xl font-black italic uppercase text-white mt-1">{last}</h3>
+          <p className="text-[9px] font-bold uppercase tracking-[0.2em] mt-2" style={{ color: tc }}>{driver.team}</p>
+        </div>
+
+        <div className="mt-auto">
+          <div className="flex items-baseline justify-between mb-3">
+            <span className="text-xs text-zinc-500 uppercase tracking-wider">ELO Rating</span>
+            <span className="text-2xl font-black font-mono text-white">{driver.elo.toLocaleString()}</span>
+          </div>
+          
+          <div className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-black ${isGainer ? 'bg-green-500/15 text-green-400' : 'bg-red-500/15 text-red-400'}`}>
+            {isGainer ? <TrendingUp size={16} /> : <TrendingDown size={16} />}
+            <span>{isGainer ? '+' : ''}{changeVal}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
 
 // --- MAIN COMPONENT ---
 export default function Home() {
@@ -228,7 +286,43 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ── EDITORIAL HERO SECTION (CENTER STAGE) ── */}
+      {/* ── BIGGEST MOVERS SECTION (NOW FIRST - CENTER STAGE) ── */}
+      <div className="container mx-auto px-6 max-w-[1400px] mb-12">
+        <div className="mb-6">
+          <h2 className="text-3xl lg:text-4xl font-black uppercase tracking-tight flex items-center gap-3">
+            <Zap size={28} className="text-orange-500" />
+            Biggest Movers This Weekend
+          </h2>
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          {/* TOP GAINERS */}
+          <div>
+            <h3 className="text-xl font-black uppercase tracking-widest text-green-500 mb-6 flex items-center gap-2 pb-3 border-b-2 border-green-500/30">
+              <TrendingUp size={20} /> Top Gainers
+            </h3>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {sortedDrivers.filter(d => (d.change ?? 0) > 0).slice(0, 4).map((d) => (
+                <DriverCard key={d.driver} driver={d} isGainer={true} />
+              ))}
+            </div>
+          </div>
+
+          {/* TOP LOSERS */}
+          <div>
+            <h3 className="text-xl font-black uppercase tracking-widest text-red-500 mb-6 flex items-center gap-2 pb-3 border-b-2 border-red-500/30">
+              <TrendingDown size={20} /> Top Losers
+            </h3>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {sortedDrivers.filter(d => (d.change ?? 0) < 0).slice(0, 4).map((d) => (
+                <DriverCard key={d.driver} driver={d} isGainer={false} />
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* ── EDITORIAL HERO SECTION ── */}
       <div className="container mx-auto px-6 max-w-[1400px] mb-10">
         <div className="bg-[#0a0a0c] border border-zinc-800/80 rounded-3xl relative overflow-hidden group shadow-2xl">
           <div className="absolute inset-0 z-0 opacity-[0.2] bg-cover bg-center transition-transform duration-1000 group-hover:scale-105"
@@ -257,79 +351,6 @@ export default function Home() {
               </div>
             </div>
           </Link>
-        </div>
-      </div>
-
-      {/* ── BIGGEST MOVERS SECTION (CENTER STAGE) ── */}
-      <div className="container mx-auto px-6 max-w-[1400px] mb-12">
-        <div className="bg-[#0a0a0c] border border-zinc-800/80 rounded-3xl overflow-hidden shadow-2xl">
-          <TileHeader label="Biggest Movers This Weekend" icon={Zap}
-            extra={<span className="text-[10px] font-mono text-zinc-600">Δ ELO change</span>}
-          />
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 p-8">
-            {/* TOP GAINERS */}
-            <div>
-              <h3 className="text-lg font-black uppercase tracking-widest text-green-500 mb-5 flex items-center gap-2">
-                <TrendingUp size={18} /> Top Gainers
-              </h3>
-              <div className="flex flex-col gap-3">
-                {sortedDrivers.filter(d => (d.change ?? 0) > 0).slice(0, 3).map((d) => {
-                  const tc = TEAM_COLORS[d.team.toLowerCase()] || '#8a8a94'
-                  const changeVal = d.change ?? 0
-                  const last = d.driver.split(' ').pop()
-                  
-                  return (
-                    <div key={d.driver} className="flex items-center gap-4 p-5 bg-[#111116] rounded-xl border border-zinc-800/60 hover:border-green-500/40 transition-all group">
-                      <div className="w-2 h-14 rounded-full shrink-0" style={{ backgroundColor: tc }} />
-                      <div className="flex-1">
-                        <p className="text-base font-black italic uppercase text-white">{last}</p>
-                        <p className="text-[10px] text-zinc-500 uppercase tracking-widest font-bold mt-1.5" style={{ color: tc }}>{d.team}</p>
-                      </div>
-                      <div className="text-right">
-                        <p className="text-xl font-black font-mono text-white">{d.elo.toLocaleString()}</p>
-                        <p className="text-sm font-black text-green-500 mt-2 flex items-center gap-1.5">
-                          <TrendingUp size={16} />
-                          +{changeVal}
-                        </p>
-                      </div>
-                    </div>
-                  )
-                })}
-              </div>
-            </div>
-
-            {/* TOP LOSERS */}
-            <div>
-              <h3 className="text-lg font-black uppercase tracking-widest text-red-500 mb-5 flex items-center gap-2">
-                <TrendingDown size={18} /> Top Losers
-              </h3>
-              <div className="flex flex-col gap-3">
-                {sortedDrivers.filter(d => (d.change ?? 0) < 0).slice(0, 3).map((d) => {
-                  const tc = TEAM_COLORS[d.team.toLowerCase()] || '#8a8a94'
-                  const changeVal = d.change ?? 0
-                  const last = d.driver.split(' ').pop()
-                  
-                  return (
-                    <div key={d.driver} className="flex items-center gap-4 p-5 bg-[#111116] rounded-xl border border-zinc-800/60 hover:border-red-500/40 transition-all group">
-                      <div className="w-2 h-14 rounded-full shrink-0" style={{ backgroundColor: tc }} />
-                      <div className="flex-1">
-                        <p className="text-base font-black italic uppercase text-white">{last}</p>
-                        <p className="text-[10px] text-zinc-500 uppercase tracking-widest font-bold mt-1.5" style={{ color: tc }}>{d.team}</p>
-                      </div>
-                      <div className="text-right">
-                        <p className="text-xl font-black font-mono text-white">{d.elo.toLocaleString()}</p>
-                        <p className="text-sm font-black text-red-500 mt-2 flex items-center gap-1.5">
-                          <TrendingDown size={16} />
-                          {changeVal}
-                        </p>
-                      </div>
-                    </div>
-                  )
-                })}
-              </div>
-            </div>
-          </div>
         </div>
       </div>
 

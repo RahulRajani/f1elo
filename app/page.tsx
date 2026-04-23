@@ -6,7 +6,7 @@ import Link from 'next/link'
 import {
   Quote, Trophy,
   Activity, ChevronRight, TrendingUp, TrendingDown,
-  Crosshair, BarChart2
+  Crosshair, BarChart2, Zap
 } from 'lucide-react'
 import {
   LineChart, Line, XAxis, YAxis, Tooltip,
@@ -69,9 +69,9 @@ const CustomTooltip = ({ active, payload, label }: any) => {
     const sorted = [...payload].sort((a, b) => b.value - a.value)
     return (
       <div className="bg-[#0a0a0c]/95 border border-zinc-800 rounded-xl p-4 shadow-2xl backdrop-blur-md">
-        <p className="text-zinc-500 text-[10px] font-black uppercase tracking-widest mb-3 border-b border-zinc-800 pb-2">GP / {label}</p>
+        <p className="text-zinc-500 text-[11px] font-black uppercase tracking-widest mb-3 border-b border-zinc-800 pb-2">GP / {label}</p>
         {sorted.map((entry, i) => (
-          <div key={i} className="flex justify-between items-center gap-6 mb-1.5">
+          <div key={i} className="flex justify-between items-center gap-6 mb-2">
             <span style={{ color: entry.color }} className="font-bold text-sm">{entry.name}</span>
             <span className="text-zinc-100 font-black font-mono text-sm tabular-nums">{Math.round(entry.value)}</span>
           </div>
@@ -84,7 +84,7 @@ const CustomTooltip = ({ active, payload, label }: any) => {
 
 const MiniSparkline = ({ data, driverName, color, w = 72, h = 28 }: { data: any[], driverName: string, color: string, w?: number, h?: number }) => {
   const pts = data.map(d => d[driverName]).filter((v): v is number => v !== undefined && !isNaN(v))
-  if (pts.length < 2) return <span className="text-zinc-700 text-[9px] font-mono italic">—</span>
+  if (pts.length < 2) return <span className="text-zinc-700 text-[10px] font-mono italic">—</span>
   const min = Math.min(...pts), max = Math.max(...pts), range = max - min || 1
   const coords = pts.map((v, i) => `${(i / (pts.length - 1)) * w},${h - ((v - min) / range) * h}`).join(' ')
   const lastY = h - ((pts[pts.length - 1] - min) / range) * h
@@ -97,10 +97,10 @@ const MiniSparkline = ({ data, driverName, color, w = 72, h = 28 }: { data: any[
 }
 
 const TileHeader = ({ label, icon: Icon, extra }: { label: string; icon: any; extra?: React.ReactNode }) => (
-  <div className="flex items-center justify-between px-6 py-4 border-b border-zinc-800/70 bg-[#0a0a0c]/50">
-    <div className="flex items-center gap-2">
-      <Icon size={14} className="text-orange-500" />
-      <span className="text-[10px] font-black uppercase tracking-[0.3em] text-zinc-400">{label}</span>
+  <div className="flex items-center justify-between px-7 py-5 border-b border-zinc-800/70 bg-[#0a0a0c]/50">
+    <div className="flex items-center gap-3">
+      <Icon size={16} className="text-orange-500" />
+      <span className="text-[11px] font-black uppercase tracking-[0.3em] text-zinc-400">{label}</span>
     </div>
     {extra}
   </div>
@@ -191,36 +191,36 @@ export default function Home() {
   const toggleDriverChart = (n: string) => setSelectedChartDrivers(prev => prev.includes(n) ? prev.filter(x => x !== n) : [...prev, n].slice(-9))
 
   return (
-    <div className="min-h-screen bg-[#050505] text-zinc-100 font-sans pb-20 selection:bg-orange-500/30">
+    <div className="min-h-screen bg-[#050505] text-zinc-100 font-sans pb-24 selection:bg-orange-500/30">
 
       {/* ── NEXT RACE BAR ── */}
-      <section className="w-full bg-[#08080a] border-b border-zinc-800/80 relative overflow-hidden mb-8">
+      <section className="w-full bg-[#08080a] border-b border-zinc-800/80 relative overflow-hidden mb-10">
         <div className="absolute inset-0 bg-[repeating-linear-gradient(90deg,transparent,transparent_120px,rgba(255,255,255,0.012)_120px,rgba(255,255,255,0.012)_121px)] pointer-events-none" />
-        <div className="container mx-auto px-6 py-4">
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-5">
-            <div className="flex items-center gap-5">
+        <div className="container mx-auto px-6 py-6">
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-6">
+            <div className="flex items-center gap-6">
               <div className="relative shrink-0">
-                <div className="w-14 h-14 rounded-full bg-orange-600 flex items-center justify-center shadow-[0_0_20px_rgba(234,88,12,0.35)]">
-                  <span className="font-black italic text-white text-xl leading-none">R{(nextRaceIndex + 1).toString().padStart(2, '0')}</span>
+                <div className="w-16 h-16 rounded-full bg-orange-600 flex items-center justify-center shadow-[0_0_20px_rgba(234,88,12,0.35)]">
+                  <span className="font-black italic text-white text-2xl leading-none">R{(nextRaceIndex + 1).toString().padStart(2, '0')}</span>
                 </div>
                 <span className="absolute -top-1 -right-1 w-3 h-3 bg-green-500 rounded-full animate-ping" />
                 <span className="absolute -top-1 -right-1 w-3 h-3 bg-green-500 rounded-full" />
               </div>
               <div>
-                <p className="text-[9px] font-black uppercase tracking-[0.45em] text-zinc-500 mb-0.5 flex items-center gap-2">
+                <p className="text-[10px] font-black uppercase tracking-[0.45em] text-zinc-500 mb-1 flex items-center gap-2">
                   <span className="w-1.5 h-1.5 bg-orange-500 rounded-full inline-block" /> Next Race
                 </p>
-                <h2 className="text-2xl md:text-3xl font-black italic uppercase tracking-tighter leading-none text-white">
+                <h2 className="text-2xl sm:text-3xl lg:text-4xl font-black italic uppercase tracking-tighter leading-none text-white">
                   {RACE_FLAGS[targetRaceName] ?? '🏁'}&nbsp;{targetRaceName}
                 </h2>
-                <p className="text-[10px] font-mono text-zinc-500 mt-1 tracking-wider">{targetRaceDate}</p>
+                <p className="text-[11px] font-mono text-zinc-500 mt-2 tracking-wider">{targetRaceDate}</p>
               </div>
             </div>
             <div className="flex items-stretch gap-0 bg-[#0c0c0f] rounded-xl border border-zinc-800 overflow-hidden">
               {[{ val: timeLeft.d, label: 'DAYS' }, { val: timeLeft.h, label: 'HRS' }, { val: timeLeft.m, label: 'MIN' }, { val: timeLeft.s, label: 'SEC' }].map((t, i) => (
-                <div key={i} className={`flex flex-col items-center justify-center px-5 py-3 tabular-nums ${i < 3 ? 'border-r border-zinc-800' : ''}`}>
-                  <span className="text-2xl md:text-3xl font-black font-mono text-white leading-none">{t.val}</span>
-                  <span className="text-[8px] font-black uppercase tracking-[0.25em] text-zinc-600 mt-1">{t.label}</span>
+                <div key={i} className={`flex flex-col items-center justify-center px-6 py-3 tabular-nums ${i < 3 ? 'border-r border-zinc-800' : ''}`}>
+                  <span className="text-3xl sm:text-4xl font-black font-mono text-white leading-none">{t.val}</span>
+                  <span className="text-[9px] font-black uppercase tracking-[0.25em] text-zinc-600 mt-1.5">{t.label}</span>
                 </div>
               ))}
             </div>
@@ -230,25 +230,84 @@ export default function Home() {
 
       {/* ── BENTO GRID LAYOUT ── */}
       <div className="container mx-auto px-6 max-w-[1400px]">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
 
-          {/* LEFT COLUMN (Large Quadrant + Wide Bottom Bar) */}
-          <div className="lg:col-span-8 flex flex-col gap-5">
+          {/* LEFT COLUMN - ELO RANKINGS (NOW PROMINENT) */}
+          <div className="lg:col-span-6 flex flex-col gap-6">
             
-            {/* LARGE QUADRANT: Live Trajectory Graph */}
-            <div className="bg-[#0a0a0c] border border-zinc-800/80 rounded-3xl flex flex-col shadow-2xl overflow-hidden flex-1 min-h-[500px]">
-              <TileHeader label="Season Trajectory" icon={Crosshair} 
-                extra={<span className="text-[9px] font-mono text-zinc-600">{updated ? `synced ${updated}` : 'live'}</span>}
+            {/* LARGE ELO RANKINGS CARD */}
+            <div className="bg-[#0a0a0c] border border-zinc-800/80 rounded-3xl flex flex-col shadow-2xl flex-1 overflow-hidden">
+              <TileHeader label="Live ELO Rankings" icon={Activity} 
+                extra={<span className="flex items-center gap-1.5 text-[10px] text-red-500 font-black uppercase tracking-widest"><span className="w-1.5 h-1.5 bg-red-500 rounded-full animate-pulse inline-block" />Live</span>}
               />
               
-              {/* Driver Selectors - Map updated to show ALL drivers instead of slice */}
-              <div className="flex flex-wrap gap-2 px-6 py-4 border-b border-zinc-800/40 max-h-[160px] overflow-y-auto no-scrollbar">
+              <div className="flex-1 overflow-y-auto no-scrollbar p-3">
+                {loading ? (
+                  <div className="py-20 text-center font-mono text-sm uppercase italic text-zinc-700 animate-pulse">Decrypting Feed...</div>
+                ) : (
+                  <div className="flex flex-col gap-2">
+                    {sortedDrivers.slice(0, 15).map((d, i) => {
+                      const tc = TEAM_COLORS[d.team.toLowerCase()] || '#8a8a94'
+                      const nameParts = d.driver.split(' ')
+                      const last = nameParts.pop()
+                      const first = nameParts.join(' ')
+                      const changeVal = d.change ?? 0
+                      const isTop3 = i < 3
+
+                      return (
+                        <div key={d.driver} className="flex items-center gap-4 px-5 py-4 rounded-xl hover:bg-[#111116] transition-colors group cursor-pointer border border-transparent hover:border-zinc-800">
+                          <span className={`text-2xl font-black italic w-8 text-center shrink-0 ${isTop3 ? 'text-orange-500' : 'text-zinc-600'} group-hover:text-zinc-300 transition-colors`}>{i + 1}</span>
+                          
+                          <div className="w-1.5 h-10 rounded-full shrink-0" style={{ backgroundColor: tc }} />
+                          
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-baseline gap-2">
+                              <span className="text-[11px] text-zinc-500 group-hover:text-zinc-400 transition-colors">{first}</span>
+                              <span className="text-base lg:text-lg font-black italic uppercase text-white tracking-tight">{last}</span>
+                            </div>
+                            <div className="text-[9px] font-bold uppercase tracking-[0.2em] mt-1.5" style={{ color: tc }}>{d.team}</div>
+                          </div>
+                          
+                          <div className="text-right shrink-0">
+                            <div className="text-lg lg:text-xl font-black font-mono text-white tabular-nums leading-none">{d.elo.toLocaleString()}</div>
+                            <div className={`text-[10px] font-bold font-mono mt-2 flex justify-end items-center gap-1 ${changeVal > 0 ? 'text-green-500' : changeVal < 0 ? 'text-red-500' : 'text-zinc-600'}`}>
+                              {changeVal > 0 ? <TrendingUp size={11}/> : changeVal < 0 ? <TrendingDown size={11}/> : null}
+                              <span>{changeVal !== null ? (changeVal > 0 ? `+${changeVal}` : changeVal) : '—'}</span>
+                            </div>
+                          </div>
+                        </div>
+                      )
+                    })}
+                  </div>
+                )}
+              </div>
+              
+              <div className="border-t border-zinc-800/80 px-6 py-4 bg-[#08080a]">
+                <Link href="#tiers" className="text-[11px] font-black uppercase tracking-widest text-orange-500/80 hover:text-orange-400 transition-colors flex items-center justify-center gap-2">
+                  View Full Grid <ChevronRight size={14} />
+                </Link>
+              </div>
+            </div>
+
+          </div>
+
+          {/* RIGHT COLUMN - GRAPH & EXTRAS */}
+          <div className="lg:col-span-6 flex flex-col gap-6">
+            
+            {/* TRAJECTORY GRAPH */}
+            <div className="bg-[#0a0a0c] border border-zinc-800/80 rounded-3xl flex flex-col shadow-2xl overflow-hidden min-h-[380px]">
+              <TileHeader label="Season Trajectory" icon={Crosshair} 
+                extra={<span className="text-[10px] font-mono text-zinc-600">{updated ? `synced ${updated}` : 'live'}</span>}
+              />
+              
+              {/* Driver Selectors */}
+              <div className="flex flex-wrap gap-2 px-6 py-4 border-b border-zinc-800/40 max-h-[140px] overflow-y-auto no-scrollbar">
                 {drivers.map(d => {
                   const sel = selectedChartDrivers.includes(d.driver)
                   const tc = TEAM_COLORS[d.team.toLowerCase()] || '#8a8a94'
                   return (
                     <button key={d.driver} onClick={() => toggleDriverChart(d.driver)}
-                      className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-[10px] font-bold uppercase border transition-all duration-300 ${sel ? 'bg-zinc-800 text-white shadow-md' : 'bg-[#0f0f13] text-zinc-500 border-zinc-800 hover:text-zinc-300 hover:border-zinc-700'}`}
+                      className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-[11px] font-bold uppercase border transition-all duration-300 ${sel ? 'bg-zinc-800 text-white shadow-md' : 'bg-[#0f0f13] text-zinc-500 border-zinc-800 hover:text-zinc-300 hover:border-zinc-700'}`}
                       style={{ borderColor: sel ? tc : undefined }}
                     >
                       <span className={`w-2 h-2 rounded-full ${sel ? 'shadow-sm' : ''}`} style={{ backgroundColor: tc, boxShadow: sel ? `0 0 6px ${tc}` : 'none' }} />
@@ -259,7 +318,7 @@ export default function Home() {
               </div>
 
               {/* Graph Container */}
-              <div className="flex-1 relative pt-6 pr-6 pb-2 min-h-[350px]">
+              <div className="flex-1 relative pt-6 pr-6 pb-2 min-h-[280px]">
                 {loading ? (
                   <div className="absolute inset-0 flex items-center justify-center font-mono text-xs uppercase italic text-zinc-700 tracking-widest animate-pulse">Connecting to Telemetry...</div>
                 ) : (
@@ -268,7 +327,7 @@ export default function Home() {
                     <ResponsiveContainer width="100%" height="100%">
                       <LineChart data={chartData} margin={{ top: 10, right: 10, left: 0, bottom: 10 }}>
                         <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#27272a" opacity={0.6} />
-                        <XAxis dataKey="name" stroke="#52525b" tick={{ fill: '#71717a', fontSize: 10, fontWeight: 700 }} tickFormatter={v => v.toString().toUpperCase()} axisLine={false} tickLine={false} minTickGap={20} dy={10} />
+                        <XAxis dataKey="name" stroke="#52525b" tick={{ fill: '#71717a', fontSize: 11, fontWeight: 700 }} tickFormatter={v => v.toString().toUpperCase()} axisLine={false} tickLine={false} minTickGap={20} dy={10} />
                         <YAxis domain={['dataMin - 15', 'dataMax + 15']} stroke="#52525b" tick={{ fill: '#71717a', fontSize: 11, fontFamily: 'monospace' }} axisLine={false} tickLine={false} width={50} dx={-10} />
                         <Tooltip content={<CustomTooltip />} cursor={{ stroke: '#52525b', strokeWidth: 1, strokeDasharray: '4 4' }} />
                         {selectedChartDrivers.map(id => {
@@ -283,7 +342,7 @@ export default function Home() {
               </div>
             </div>
 
-            {/* WIDE BOTTOM BAR: Technical Insight */}
+            {/* EDITORIAL CARD */}
             <div className="bg-[#0a0a0c] border border-zinc-800/80 rounded-3xl relative overflow-hidden group min-h-[220px] shadow-2xl">
               <div className="absolute inset-0 z-0 opacity-[0.15] bg-cover bg-center transition-transform duration-1000 group-hover:scale-105"
                 style={{ backgroundImage: "url('https://images.unsplash.com/photo-1614200187524-dc4b892acf16?q=80&w=1600&auto=format&fit=crop')" }} />
@@ -292,133 +351,75 @@ export default function Home() {
               <Link href="/editorial" className="relative z-10 flex flex-col p-8 h-full justify-between">
                 <div>
                   <div className="flex items-center gap-3 mb-4">
-                    <span className="bg-orange-600 text-white text-[9px] font-black italic px-3 py-1 uppercase tracking-widest shadow-md">Premium Analysis</span>
-                    <span className="text-[9px] uppercase tracking-[0.3em] font-black text-zinc-500 border border-zinc-800 px-3 py-1 rounded-full bg-black/40 backdrop-blur-sm">Issue 03</span>
+                    <span className="bg-orange-600 text-white text-[10px] font-black italic px-3 py-1.5 uppercase tracking-widest shadow-md">Premium Analysis</span>
+                    <span className="text-[10px] uppercase tracking-[0.3em] font-black text-zinc-500 border border-zinc-800 px-3 py-1.5 rounded-full bg-black/40 backdrop-blur-sm">Issue 03</span>
                   </div>
-                  <h2 className="text-3xl md:text-4xl lg:text-5xl font-black italic uppercase tracking-tighter leading-[0.9] group-hover:text-white transition-colors duration-200">
-                    McLaren, Regulations<br />&amp; the Road to <span className="text-orange-500">Miami</span>
+                  <h2 className="text-3xl md:text-4xl font-black italic uppercase tracking-tighter leading-[0.95] group-hover:text-white transition-colors duration-200">
+                    McLaren, Regulations &amp; <span className="text-orange-500">Miami</span>
                   </h2>
                 </div>
 
-                <div className="flex items-end justify-between mt-6">
-                  <blockquote className="border-l-2 border-orange-600 pl-4 group-hover:border-orange-400 transition-colors max-w-lg">
-                    <Quote size={14} className="text-orange-600/60 mb-1.5" />
+                <div className="flex items-end justify-between mt-6 gap-4">
+                  <blockquote className="border-l-2 border-orange-600 pl-4 group-hover:border-orange-400 transition-colors flex-1">
+                    <Quote size={16} className="text-orange-600/60 mb-2" />
                     <p className="text-sm text-zinc-300 italic leading-relaxed">"Stella made it very clear we would start on the backfoot, but hopefully we should have a stable platform to upgrade on going forward."</p>
                   </blockquote>
                   
-                  <div className="flex items-center gap-2 text-orange-500 text-[10px] font-black italic uppercase tracking-widest group-hover:gap-4 transition-all duration-300 whitespace-nowrap">
-                    Read Full Editorial <ChevronRight size={14} />
+                  <div className="flex items-center gap-2 text-orange-500 text-[11px] font-black italic uppercase tracking-widest group-hover:gap-4 transition-all duration-300 whitespace-nowrap shrink-0">
+                    Read <ChevronRight size={16} />
                   </div>
                 </div>
               </Link>
             </div>
 
           </div>
+        </div>
 
-          {/* RIGHT COLUMN (Tall Sidebar + Small Square) */}
-          <div className="lg:col-span-4 flex flex-col gap-5">
+        {/* MARKET EXCHANGE - FULL WIDTH BELOW */}
+        <div className="mt-6">
+          <div className="bg-[#0a0a0c] border border-zinc-800/80 rounded-3xl flex flex-col shadow-2xl overflow-hidden">
+            <TileHeader label="Market Exchange" icon={BarChart2} 
+              extra={<span className="text-[9px] bg-orange-500/10 text-orange-400 font-black uppercase tracking-widest px-2.5 py-1 rounded-full border border-orange-500/20">BETA</span>}
+            />
             
-            {/* TALL SIDEBAR: Live Elo Rankings */}
-            <div className="bg-[#0a0a0c] border border-zinc-800/80 rounded-3xl flex flex-col shadow-2xl flex-1 overflow-hidden">
-              <TileHeader label="Live ELO Rankings" icon={Activity} 
-                extra={<span className="flex items-center gap-1.5 text-[9px] text-red-500 font-black uppercase tracking-widest"><span className="w-1.5 h-1.5 bg-red-500 rounded-full animate-pulse inline-block" />Live</span>}
-              />
-              
-              <div className="flex-1 overflow-y-auto no-scrollbar p-2">
-                {loading ? (
-                  <div className="py-20 text-center font-mono text-xs uppercase italic text-zinc-700 animate-pulse">Decrypting Feed...</div>
-                ) : (
-                  <div className="flex flex-col gap-1">
-                    {sortedDrivers.slice(0, 10).map((d, i) => {
-                      const tc = TEAM_COLORS[d.team.toLowerCase()] || '#8a8a94'
-                      const nameParts = d.driver.split(' ')
-                      const last = nameParts.pop()
-                      const first = nameParts.join(' ')
-                      const changeVal = d.change ?? 0
-                      const isTop3 = i < 3
+            <div className="p-6 grid grid-cols-1 md:grid-cols-3 gap-4">
+              {(loading ? Array(3).fill(null) : sortedDrivers.slice(0, 3)).map((d, i) => {
+                if (!d) return <div key={i} className="h-[100px] bg-[#111116] rounded-xl animate-pulse" />
+                const tc = TEAM_COLORS[d.team.toLowerCase()] || '#8a8a94'
+                const last = d.driver.split(' ').pop()
+                const changeVal = d.change ?? 0
+                const isUp = changeVal >= 0
 
-                      return (
-                        <div key={d.driver} className="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-[#111116] transition-colors group cursor-pointer border border-transparent hover:border-zinc-800">
-                          <span className={`text-xl font-black italic w-6 text-center ${isTop3 ? 'text-orange-500' : 'text-zinc-600'} group-hover:text-zinc-300 transition-colors`}>{i + 1}</span>
-                          
-                          <div className="w-1 h-8 rounded-full shrink-0" style={{ backgroundColor: tc }} />
-                          
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-baseline gap-1.5 truncate">
-                              <span className="text-[10px] text-zinc-500 group-hover:text-zinc-400 transition-colors">{first}</span>
-                              <span className="text-sm font-black italic uppercase text-white tracking-tight">{last}</span>
-                            </div>
-                            <div className="text-[8px] font-bold uppercase tracking-[0.2em] truncate mt-0.5" style={{ color: tc }}>{d.team}</div>
-                          </div>
-                          
-                          <div className="text-right shrink-0">
-                            <div className="text-base font-black font-mono text-white tabular-nums leading-none">{d.elo.toLocaleString()}</div>
-                            <div className={`text-[9px] font-bold font-mono mt-1 flex justify-end items-center gap-0.5 ${changeVal > 0 ? 'text-green-500' : changeVal < 0 ? 'text-red-500' : 'text-zinc-600'}`}>
-                              {changeVal > 0 ? <TrendingUp size={9}/> : changeVal < 0 ? <TrendingDown size={9}/> : null}
-                              {changeVal !== null ? (changeVal > 0 ? `+${changeVal}` : changeVal) : '—'}
-                            </div>
-                          </div>
-                        </div>
-                      )
-                    })}
-                  </div>
-                )}
-              </div>
-              
-              <div className="border-t border-zinc-800/80 px-6 py-4 bg-[#08080a]">
-                <Link href="#tiers" className="text-[10px] font-black uppercase tracking-widest text-orange-500/80 hover:text-orange-400 transition-colors flex items-center justify-center gap-1.5">
-                  View Full Grid <ChevronRight size={12} />
-                </Link>
-              </div>
-            </div>
-
-            {/* SMALL SQUARE: Stock Market Preview */}
-            <div className="bg-[#0a0a0c] border border-zinc-800/80 rounded-3xl flex flex-col shadow-2xl overflow-hidden min-h-[250px]">
-              <TileHeader label="Market Exchange" icon={BarChart2} 
-                extra={<span className="text-[8px] bg-orange-500/10 text-orange-400 font-black uppercase tracking-widest px-2 py-0.5 rounded-full border border-orange-500/20">BETA</span>}
-              />
-              
-              <div className="p-4 flex flex-col gap-2 flex-1">
-                {(loading ? Array(3).fill(null) : sortedDrivers.slice(0, 3)).map((d, i) => {
-                  if (!d) return <div key={i} className="h-[46px] bg-[#111116] rounded-xl animate-pulse" />
-                  const tc = TEAM_COLORS[d.team.toLowerCase()] || '#8a8a94'
-                  const last = d.driver.split(' ').pop()
-                  const changeVal = d.change ?? 0
-                  const isUp = changeVal >= 0
-
-                  return (
-                    <div key={d.driver} className="flex items-center justify-between bg-[#111116] rounded-xl px-4 py-3 border border-zinc-800/40 hover:border-zinc-600 transition-colors group">
-                      <div className="flex items-center gap-3">
-                        <div className="w-0.5 h-6 rounded-full shrink-0" style={{ backgroundColor: tc }} />
-                        <div>
-                          <p className="text-xs font-black italic uppercase text-white leading-none">{last}</p>
-                          <p className="text-[8px] text-zinc-500 uppercase tracking-widest font-bold mt-1 group-hover:text-zinc-400">{last?.substring(0, 3).toUpperCase()}</p>
-                        </div>
-                      </div>
-                      
-                      <div className="flex items-center gap-4">
-                        <div className="hidden sm:block opacity-60 group-hover:opacity-100 transition-opacity">
-                          <MiniSparkline data={chartData} driverName={d.driver} color={tc} w={38} h={14} />
-                        </div>
-                        <div className="text-right">
-                          <p className="text-sm font-black font-mono text-white tabular-nums leading-none">${d.elo.toLocaleString()}</p>
-                          <p className={`text-[9px] font-bold font-mono mt-1 ${isUp ? 'text-green-500' : 'text-red-500'}`}>
-                            {changeVal > 0 ? '+' : ''}{changeVal !== 0 ? changeVal : '—'}
-                          </p>
-                        </div>
+                return (
+                  <div key={d.driver} className="flex flex-col bg-[#111116] rounded-xl p-5 border border-zinc-800/40 hover:border-zinc-600 transition-colors group">
+                    <div className="flex items-center gap-3 mb-4">
+                      <div className="w-1 h-8 rounded-full shrink-0" style={{ backgroundColor: tc }} />
+                      <div>
+                        <p className="text-sm font-black italic uppercase text-white leading-none">{last}</p>
+                        <p className="text-[10px] text-zinc-500 uppercase tracking-widest font-bold mt-1.5 group-hover:text-zinc-400">{last?.substring(0, 3).toUpperCase()}</p>
                       </div>
                     </div>
-                  )
-                })}
-              </div>
+                    
+                    <div className="hidden sm:block mb-4 opacity-70 group-hover:opacity-100 transition-opacity">
+                      <MiniSparkline data={chartData} driverName={d.driver} color={tc} w={100} h={32} />
+                    </div>
 
-              <div className="px-4 pb-4">
-                 <Link href="/market" className="block w-full text-center bg-zinc-100 text-black text-[10px] font-black uppercase italic py-3 rounded-xl hover:bg-orange-500 hover:text-white transition-colors">
-                    Enter Trading Floor
-                 </Link>
-              </div>
+                    <div className="mt-auto">
+                      <p className="text-xl font-black font-mono text-white tabular-nums leading-none">${d.elo.toLocaleString()}</p>
+                      <p className={`text-[11px] font-bold font-mono mt-2 ${isUp ? 'text-green-500' : 'text-red-500'}`}>
+                        {changeVal > 0 ? '+' : ''}{changeVal !== 0 ? changeVal : '—'}
+                      </p>
+                    </div>
+                  </div>
+                )
+              })}
             </div>
 
+            <div className="px-6 pb-6 pt-2">
+               <Link href="/market" className="block w-full text-center bg-zinc-100 text-black text-[11px] font-black uppercase italic py-3.5 rounded-xl hover:bg-orange-500 hover:text-white transition-colors font-semibold">
+                  Enter Trading Floor
+               </Link>
+            </div>
           </div>
         </div>
       </div>

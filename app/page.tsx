@@ -12,6 +12,7 @@ import {
   LineChart, Line, XAxis, YAxis, Tooltip,
   ResponsiveContainer, CartesianGrid
 } from 'recharts'
+import { User } from 'lucide-react' // Added for the fallback icon
 
 // --- CONFIGURATION ---
 const SHEET_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vS3Ia2YO0T2yMBlPlOLOMUCgWnT0IzT-hNqKscWJT1SqqyE5INYObl3BEP7pdmaKJI3fzJQILj7BUV6/pub?gid=1401420857&single=true&output=csv"
@@ -118,14 +119,12 @@ const DriverCard = ({ driver, isGainer }: { driver: Driver; isGainer: boolean })
   
   const [imageUrl, setImageUrl] = useState<string | null>(null)
   const [imageError, setImageError] = useState(false)
+  const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
     const fetchWikiImage = async () => {
       try {
-        // Handle common CSV name variations to match Wikipedia exact titles
         const searchName = driver.driver === 'Yuuki Tsunoda' ? 'Yuki Tsunoda' : driver.driver;
-
-        // Fetch page image from Wikipedia API (CORS friendly via origin=*)
         const res = await fetch(
           `https://en.wikipedia.org/w/api.php?action=query&titles=${encodeURIComponent(searchName)}&prop=pageimages&format=json&pithumbsize=600&origin=*`
         );
@@ -136,61 +135,68 @@ const DriverCard = ({ driver, isGainer }: { driver: Driver; isGainer: boolean })
 
         const pageId = Object.keys(pages)[0];
         
-        // If a valid page and thumbnail exist, use it
         if (pageId !== '-1' && pages[pageId].thumbnail?.source) {
           setImageUrl(pages[pageId].thumbnail.source);
         } else {
           throw new Error("No image found on Wikipedia");
         }
       } catch (err) {
-        console.warn(`Failed to fetch image for ${driver.driver}`, err);
-        setImageUrl(FALLBACK_IMAGE);
+        setImageError(true);
+      } finally {
+        setIsLoading(false);
       }
     };
 
     fetchWikiImage();
   }, [driver.driver]);
 
-  // Use fallback if it's still loading, errored out, or failed the wiki fetch
-  const displayImage = imageError || !imageUrl ? FALLBACK_IMAGE : imageUrl;
-
   return (
-    <div className={`group relative overflow-hidden rounded-2xl border border-zinc-800/60 hover:border-zinc-600 transition-all duration-300 h-full flex flex-col bg-[#111116]`}>
-      {/* Image Background */}
+    <div className="group relative overflow-hidden rounded-2xl border border-zinc-800/60 hover:border-zinc-600 transition-all duration-300 h-full flex flex-col bg-[#111116]">
+      {/* Top Team Color Accent */}
+      <div className="absolute top-0 left-0 right-0 h-1.5 z-20" style={{ backgroundColor: tc }} />
+
+      {/* Image Header Area */}
       <div className="relative h-48 overflow-hidden bg-[#0a0a0c]">
-        {/* Skeleton loader while fetching */}
-        {!imageUrl && (
-          <div className="absolute inset-0 bg-zinc-800/50 animate-pulse" />
+        {isLoading && (
+          <div className="absolute inset-0 bg-zinc-800/30 animate-pulse" />
         )}
         
-        <img 
-          src={displayImage}
-          alt={driver.driver}
-          onError={() => setImageError(true)}
-          className={`w-full h-full object-cover group-hover:scale-110 transition-transform duration-500 opacity-40 group-hover:opacity-60 ${!imageUrl ? 'invisible' : 'visible'}`}
-        />
-        {/* Overlay Gradient */}
-        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-[#111116]/40 to-[#111116]" />
+        {/* Bulletproof Fallback UI */}
+        {(imageError || (!isLoading && !imageUrl)) ? (
+          <div className="absolute inset-0 flex items-center justify-center opacity-30" style={{ background: `linear-gradient(to bottom, ${tc}40, transparent)` }}>
+            <User size={64} className="text-zinc-500" />
+          </div>
+        ) : (
+          <img 
+            src={imageUrl || ''}
+            alt="" // Left empty intentionally to prevent ugly alt text on brief load failures
+            onError={() => setImageError(true)}
+            // Added object-top to prevent heads getting chopped off!
+            className={`w-full h-full object-cover object-top group-hover:scale-105 transition-transform duration-700 opacity-50 group-hover:opacity-70 ${isLoading ? 'invisible' : 'visible'}`}
+          />
+        )}
         
-        {/* Team Color Bar */}
-        <div className="absolute top-0 left-0 right-0 h-1" style={{ backgroundColor: tc }} />
+        {/* Seamless Gradient Overlay */}
+        <div className="absolute inset-0 bg-gradient-to-b from-[#111116]/10 via-[#111116]/60 to-[#111116]" />
       </div>
 
       {/* Content */}
-      <div className="flex-1 flex flex-col p-5">
+      <div className="flex-1 flex flex-col p-5 relative z-10 -mt-6">
         <div className="mb-4">
-          <p className="text-[10px] text-zinc-500 uppercase tracking-widest font-bold">{first}</p>
-          <h3 className="text-xl font-black italic uppercase text-white mt-1">{last}</h3>
-          <p className="text-[9px] font-bold uppercase tracking-[0.2em] mt-2" style={{ color: tc }}>{driver.team}</p>
+          <p className="text-[10px] text-zinc-400 uppercase tracking-widest font-bold drop-shadow-md">{first}</p>
+          <h3 className="text-2xl font-black italic uppercase text-white mt-0.5 drop-shadow-lg">{last}</h3>
+          <p className="text-[10px] font-black uppercase tracking-[0.2em] mt-2 drop-shadow-md" style={{ color: tc }}>
+            {driver.team}
+          </p>
         </div>
 
-        <div className="mt-auto">
-          <div className="flex items-baseline justify-between mb-3">
-            <span className="text-xs text-zinc-500 uppercase tracking-wider">ELO Rating</span>
+        <div className="mt-auto pt-4 border-t border-zinc-800/50">
+          <div className="flex items-center justify-between mb-3">
+            <span className="text-[10px] text-zinc-500 uppercase tracking-[0.15em] font-bold">ELO Rating</span>
             <span className="text-2xl font-black font-mono text-white">{driver.elo.toLocaleString()}</span>
           </div>
           
-          <div className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-black ${isGainer ? 'bg-green-500/15 text-green-400' : 'bg-red-500/15 text-red-400'}`}>
+          <div className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-black transition-colors ${isGainer ? 'bg-green-500/10 text-green-400 border border-green-500/20' : 'bg-red-500/10 text-red-400 border border-red-500/20'}`}>
             {isGainer ? <TrendingUp size={16} /> : <TrendingDown size={16} />}
             <span>{isGainer ? '+' : ''}{changeVal}</span>
           </div>

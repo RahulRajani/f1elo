@@ -228,11 +228,116 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ── BENTO GRID LAYOUT ── */}
+      {/* ── EDITORIAL HERO SECTION (CENTER STAGE) ── */}
+      <div className="container mx-auto px-6 max-w-[1400px] mb-10">
+        <div className="bg-[#0a0a0c] border border-zinc-800/80 rounded-3xl relative overflow-hidden group shadow-2xl">
+          <div className="absolute inset-0 z-0 opacity-[0.2] bg-cover bg-center transition-transform duration-1000 group-hover:scale-105"
+            style={{ backgroundImage: "url('https://images.unsplash.com/photo-1614200187524-dc4b892acf16?q=80&w=1600&auto=format&fit=crop')" }} />
+          <div className="absolute inset-0 z-0 bg-gradient-to-r from-[#0a0a0c] via-[#0a0a0c]/85 to-transparent" />
+          
+          <Link href="/editorial" className="relative z-10 flex flex-col p-10 lg:p-14 min-h-[420px] justify-between">
+            <div>
+              <div className="flex items-center gap-3 mb-6">
+                <span className="bg-orange-600 text-white text-[12px] font-black italic px-4 py-2 uppercase tracking-widest shadow-md">Premium Analysis</span>
+                <span className="text-[11px] uppercase tracking-[0.3em] font-black text-zinc-500 border border-zinc-800 px-4 py-2 rounded-full bg-black/40 backdrop-blur-sm">Issue 03</span>
+              </div>
+              <h2 className="text-5xl lg:text-6xl xl:text-7xl font-black italic uppercase tracking-tighter leading-[0.95] group-hover:text-white transition-colors duration-200 mb-8">
+                McLaren, <br />Regulations<br />&amp; <span className="text-orange-500">Miami</span>
+              </h2>
+            </div>
+
+            <div className="flex flex-col lg:flex-row items-start lg:items-end justify-between gap-8">
+              <blockquote className="border-l-4 border-orange-600 pl-6 group-hover:border-orange-400 transition-colors flex-1 max-w-2xl">
+                <Quote size={26} className="text-orange-600/60 mb-4" />
+                <p className="text-lg text-zinc-300 italic leading-relaxed font-light">"Stella made it very clear we would start on the backfoot, but hopefully we should have a stable platform to upgrade on going forward."</p>
+              </blockquote>
+              
+              <div className="flex items-center gap-3 text-orange-500 text-[12px] font-black italic uppercase tracking-widest group-hover:gap-6 transition-all duration-300 whitespace-nowrap shrink-0">
+                Read Full Analysis <ChevronRight size={20} />
+              </div>
+            </div>
+          </Link>
+        </div>
+      </div>
+
+      {/* ── BIGGEST MOVERS SECTION (CENTER STAGE) ── */}
+      <div className="container mx-auto px-6 max-w-[1400px] mb-12">
+        <div className="bg-[#0a0a0c] border border-zinc-800/80 rounded-3xl overflow-hidden shadow-2xl">
+          <TileHeader label="Biggest Movers This Weekend" icon={Zap}
+            extra={<span className="text-[10px] font-mono text-zinc-600">Δ ELO change</span>}
+          />
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 p-8">
+            {/* TOP GAINERS */}
+            <div>
+              <h3 className="text-lg font-black uppercase tracking-widest text-green-500 mb-5 flex items-center gap-2">
+                <TrendingUp size={18} /> Top Gainers
+              </h3>
+              <div className="flex flex-col gap-3">
+                {sortedDrivers.filter(d => (d.change ?? 0) > 0).slice(0, 3).map((d) => {
+                  const tc = TEAM_COLORS[d.team.toLowerCase()] || '#8a8a94'
+                  const changeVal = d.change ?? 0
+                  const last = d.driver.split(' ').pop()
+                  
+                  return (
+                    <div key={d.driver} className="flex items-center gap-4 p-5 bg-[#111116] rounded-xl border border-zinc-800/60 hover:border-green-500/40 transition-all group">
+                      <div className="w-2 h-14 rounded-full shrink-0" style={{ backgroundColor: tc }} />
+                      <div className="flex-1">
+                        <p className="text-base font-black italic uppercase text-white">{last}</p>
+                        <p className="text-[10px] text-zinc-500 uppercase tracking-widest font-bold mt-1.5" style={{ color: tc }}>{d.team}</p>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-xl font-black font-mono text-white">{d.elo.toLocaleString()}</p>
+                        <p className="text-sm font-black text-green-500 mt-2 flex items-center gap-1.5">
+                          <TrendingUp size={16} />
+                          +{changeVal}
+                        </p>
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+            </div>
+
+            {/* TOP LOSERS */}
+            <div>
+              <h3 className="text-lg font-black uppercase tracking-widest text-red-500 mb-5 flex items-center gap-2">
+                <TrendingDown size={18} /> Top Losers
+              </h3>
+              <div className="flex flex-col gap-3">
+                {sortedDrivers.filter(d => (d.change ?? 0) < 0).slice(0, 3).map((d) => {
+                  const tc = TEAM_COLORS[d.team.toLowerCase()] || '#8a8a94'
+                  const changeVal = d.change ?? 0
+                  const last = d.driver.split(' ').pop()
+                  
+                  return (
+                    <div key={d.driver} className="flex items-center gap-4 p-5 bg-[#111116] rounded-xl border border-zinc-800/60 hover:border-red-500/40 transition-all group">
+                      <div className="w-2 h-14 rounded-full shrink-0" style={{ backgroundColor: tc }} />
+                      <div className="flex-1">
+                        <p className="text-base font-black italic uppercase text-white">{last}</p>
+                        <p className="text-[10px] text-zinc-500 uppercase tracking-widest font-bold mt-1.5" style={{ color: tc }}>{d.team}</p>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-xl font-black font-mono text-white">{d.elo.toLocaleString()}</p>
+                        <p className="text-sm font-black text-red-500 mt-2 flex items-center gap-1.5">
+                          <TrendingDown size={16} />
+                          {changeVal}
+                        </p>
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* ── SUPPORTING SECTIONS BELOW ── */}
       <div className="container mx-auto px-6 max-w-[1400px]">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
 
-          {/* LEFT COLUMN - ELO RANKINGS (NOW PROMINENT) */}
+          {/* LEFT COLUMN - ELO RANKINGS */}
           <div className="lg:col-span-6 flex flex-col gap-6">
             
             {/* LARGE ELO RANKINGS CARD */}
@@ -291,11 +396,11 @@ export default function Home() {
 
           </div>
 
-          {/* RIGHT COLUMN - GRAPH & EXTRAS */}
+          {/* RIGHT COLUMN - GRAPH */}
           <div className="lg:col-span-6 flex flex-col gap-6">
             
             {/* TRAJECTORY GRAPH */}
-            <div className="bg-[#0a0a0c] border border-zinc-800/80 rounded-3xl flex flex-col shadow-2xl overflow-hidden min-h-[380px]">
+            <div className="bg-[#0a0a0c] border border-zinc-800/80 rounded-3xl flex flex-col shadow-2xl overflow-hidden flex-1">
               <TileHeader label="Season Trajectory" icon={Crosshair} 
                 extra={<span className="text-[10px] font-mono text-zinc-600">{updated ? `synced ${updated}` : 'live'}</span>}
               />
@@ -318,7 +423,7 @@ export default function Home() {
               </div>
 
               {/* Graph Container */}
-              <div className="flex-1 relative pt-6 pr-6 pb-2 min-h-[280px]">
+              <div className="flex-1 relative pt-6 pr-6 pb-2 min-h-[350px]">
                 {loading ? (
                   <div className="absolute inset-0 flex items-center justify-center font-mono text-xs uppercase italic text-zinc-700 tracking-widest animate-pulse">Connecting to Telemetry...</div>
                 ) : (
@@ -340,36 +445,6 @@ export default function Home() {
                   </>
                 )}
               </div>
-            </div>
-
-            {/* EDITORIAL CARD */}
-            <div className="bg-[#0a0a0c] border border-zinc-800/80 rounded-3xl relative overflow-hidden group min-h-[220px] shadow-2xl">
-              <div className="absolute inset-0 z-0 opacity-[0.15] bg-cover bg-center transition-transform duration-1000 group-hover:scale-105"
-                style={{ backgroundImage: "url('https://images.unsplash.com/photo-1614200187524-dc4b892acf16?q=80&w=1600&auto=format&fit=crop')" }} />
-              <div className="absolute inset-0 z-0 bg-gradient-to-r from-[#0a0a0c] via-[#0a0a0c]/90 to-transparent" />
-              
-              <Link href="/editorial" className="relative z-10 flex flex-col p-8 h-full justify-between">
-                <div>
-                  <div className="flex items-center gap-3 mb-4">
-                    <span className="bg-orange-600 text-white text-[10px] font-black italic px-3 py-1.5 uppercase tracking-widest shadow-md">Premium Analysis</span>
-                    <span className="text-[10px] uppercase tracking-[0.3em] font-black text-zinc-500 border border-zinc-800 px-3 py-1.5 rounded-full bg-black/40 backdrop-blur-sm">Issue 03</span>
-                  </div>
-                  <h2 className="text-3xl md:text-4xl font-black italic uppercase tracking-tighter leading-[0.95] group-hover:text-white transition-colors duration-200">
-                    McLaren, Regulations &amp; <span className="text-orange-500">Miami</span>
-                  </h2>
-                </div>
-
-                <div className="flex items-end justify-between mt-6 gap-4">
-                  <blockquote className="border-l-2 border-orange-600 pl-4 group-hover:border-orange-400 transition-colors flex-1">
-                    <Quote size={16} className="text-orange-600/60 mb-2" />
-                    <p className="text-sm text-zinc-300 italic leading-relaxed">"Stella made it very clear we would start on the backfoot, but hopefully we should have a stable platform to upgrade on going forward."</p>
-                  </blockquote>
-                  
-                  <div className="flex items-center gap-2 text-orange-500 text-[11px] font-black italic uppercase tracking-widest group-hover:gap-4 transition-all duration-300 whitespace-nowrap shrink-0">
-                    Read <ChevronRight size={16} />
-                  </div>
-                </div>
-              </Link>
             </div>
 
           </div>

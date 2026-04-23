@@ -23,6 +23,9 @@ const TEAM_COLORS: Record<string, string> = {
   'sauber': '#52E252', 'haas': '#B6BABD', 'cadillac': '#C8A951',
 }
 
+// Fallback image if Motorsport fails
+const FALLBACK_IMAGE = 'https://images.unsplash.com/photo-1552820728-8ac41f1ce891?w=500&h=600&fit=crop'
+
 const RACE_FLAGS: Record<string, string> = {
   'Australian GP': '🇦🇺', 'Chinese GP': '🇨🇳', 'Japanese GP': '🇯🇵',
   'Miami GP': '🇺🇸', 'Canadian GP': '🇨🇦', 'Monaco GP': '🇲🇨',
@@ -31,16 +34,6 @@ const RACE_FLAGS: Record<string, string> = {
   'Italian GP': '🇮🇹', 'Spanish GP (Madrid)': '🇪🇸', 'Azerbaijan GP': '🇦🇿',
   'Singapore GP': '🇸🇬', 'United States GP': '🇺🇸', 'Mexico City GP': '🇲🇽',
   'São Paulo GP': '🇧🇷', 'Las Vegas GP': '🇺🇸', 'Qatar GP': '🇶🇦', 'Abu Dhabi GP': '🇦🇪',
-}
-
-// Driver image URLs - can be updated with real F1 photos
-const DRIVER_IMAGES: Record<string, string> = {
-  'Charles Leclerc': 'https://images.unsplash.com/photo-1552820728-8ac41f1ce891?w=500&h=600&fit=crop',
-  'Oscar Piastri': 'https://images.unsplash.com/photo-1614162692292-7ac56d7f7f1e?w=500&h=600&fit=crop',
-  'Lando Norris': 'https://images.unsplash.com/photo-1552820728-8ac41f1ce891?w=500&h=600&fit=crop',
-  'Max Verstappen': 'https://images.unsplash.com/photo-1614200187524-dc4b892acf16?w=500&h=600&fit=crop',
-  'Yuki Tsunoda': 'https://images.unsplash.com/photo-1552820728-8ac41f1ce891?w=500&h=600&fit=crop',
-  'George Russell': 'https://images.unsplash.com/photo-1614162692292-7ac56d7f7f1e?w=500&h=600&fit=crop',
 }
 
 const RACE_CALENDAR = [
@@ -116,22 +109,65 @@ const TileHeader = ({ label, icon: Icon, extra }: { label: string; icon: any; ex
   </div>
 )
 
-// Driver Card Component
+// Driver Card Component with auto-fetched Wikipedia images
 const DriverCard = ({ driver, isGainer }: { driver: Driver; isGainer: boolean }) => {
   const tc = TEAM_COLORS[driver.team.toLowerCase()] || '#8a8a94'
   const changeVal = driver.change ?? 0
   const last = driver.driver.split(' ').pop()
   const first = driver.driver.split(' ').slice(0, -1).join(' ')
-  const imageUrl = DRIVER_IMAGES[driver.driver] || 'https://images.unsplash.com/photo-1552820728-8ac41f1ce891?w=500&h=600&fit=crop'
   
+  const [imageUrl, setImageUrl] = useState<string | null>(null)
+  const [imageError, setImageError] = useState(false)
+
+  useEffect(() => {
+    const fetchWikiImage = async () => {
+      try {
+        // Handle common CSV name variations to match Wikipedia exact titles
+        const searchName = driver.driver === 'Yuuki Tsunoda' ? 'Yuki Tsunoda' : driver.driver;
+
+        // Fetch page image from Wikipedia API (CORS friendly via origin=*)
+        const res = await fetch(
+          `https://en.wikipedia.org/w/api.php?action=query&titles=${encodeURIComponent(searchName)}&prop=pageimages&format=json&pithumbsize=600&origin=*`
+        );
+        const data = await res.json();
+        const pages = data.query?.pages;
+        
+        if (!pages) throw new Error("No pages found");
+
+        const pageId = Object.keys(pages)[0];
+        
+        // If a valid page and thumbnail exist, use it
+        if (pageId !== '-1' && pages[pageId].thumbnail?.source) {
+          setImageUrl(pages[pageId].thumbnail.source);
+        } else {
+          throw new Error("No image found on Wikipedia");
+        }
+      } catch (err) {
+        console.warn(`Failed to fetch image for ${driver.driver}`, err);
+        setImageUrl(FALLBACK_IMAGE);
+      }
+    };
+
+    fetchWikiImage();
+  }, [driver.driver]);
+
+  // Use fallback if it's still loading, errored out, or failed the wiki fetch
+  const displayImage = imageError || !imageUrl ? FALLBACK_IMAGE : imageUrl;
+
   return (
     <div className={`group relative overflow-hidden rounded-2xl border border-zinc-800/60 hover:border-zinc-600 transition-all duration-300 h-full flex flex-col bg-[#111116]`}>
       {/* Image Background */}
       <div className="relative h-48 overflow-hidden bg-[#0a0a0c]">
+        {/* Skeleton loader while fetching */}
+        {!imageUrl && (
+          <div className="absolute inset-0 bg-zinc-800/50 animate-pulse" />
+        )}
+        
         <img 
-          src={imageUrl} 
+          src={displayImage}
           alt={driver.driver}
-          className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500 opacity-40 group-hover:opacity-60"
+          onError={() => setImageError(true)}
+          className={`w-full h-full object-cover group-hover:scale-110 transition-transform duration-500 opacity-40 group-hover:opacity-60 ${!imageUrl ? 'invisible' : 'visible'}`}
         />
         {/* Overlay Gradient */}
         <div className="absolute inset-0 bg-gradient-to-b from-transparent via-[#111116]/40 to-[#111116]" />
@@ -302,9 +338,13 @@ export default function Home() {
               <TrendingUp size={20} /> Top Gainers
             </h3>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              {sortedDrivers.filter(d => (d.change ?? 0) > 0).slice(0, 4).map((d) => (
-                <DriverCard key={d.driver} driver={d} isGainer={true} />
-              ))}
+              {loading ? (
+                Array(4).fill(null).map((_, i) => <div key={i} className="h-80 bg-[#111116] rounded-2xl animate-pulse" />)
+              ) : (
+                sortedDrivers.filter(d => (d.change ?? 0) > 0).slice(0, 4).map((d) => (
+                  <DriverCard key={d.driver} driver={d} isGainer={true} />
+                ))
+              )}
             </div>
           </div>
 
@@ -314,9 +354,13 @@ export default function Home() {
               <TrendingDown size={20} /> Top Losers
             </h3>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              {sortedDrivers.filter(d => (d.change ?? 0) < 0).slice(0, 4).map((d) => (
-                <DriverCard key={d.driver} driver={d} isGainer={false} />
-              ))}
+              {loading ? (
+                Array(4).fill(null).map((_, i) => <div key={i} className="h-80 bg-[#111116] rounded-2xl animate-pulse" />)
+              ) : (
+                sortedDrivers.filter(d => (d.change ?? 0) < 0).slice(0, 4).map((d) => (
+                  <DriverCard key={d.driver} driver={d} isGainer={false} />
+                ))
+              )}
             </div>
           </div>
         </div>

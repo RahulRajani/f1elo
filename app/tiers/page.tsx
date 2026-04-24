@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState, useMemo } from "react"
+import Link from "next/link"
 import Papa from "papaparse"
 import { TrendingUp, TrendingDown, Search, ChevronUp, ChevronDown, ChevronsUpDown, Activity, BarChart2, Layers } from "lucide-react"
 
@@ -43,12 +44,6 @@ type SortCol = keyof Driver
 const getTeamColor = (team: string | undefined): string =>
   TEAM_COLORS[team?.toLowerCase() ?? ''] ?? '#8a8a94'
 
-/**
- * Header matcher — strict priority:
- * 1. Exact match (case-insensitive, trimmed)
- * 2. Starts-with match
- * 3. Includes — ONLY for terms longer than 5 chars to avoid false positives on short words
- */
 function makeFind(keys: string[]) {
   const n = (s: string) => s.toLowerCase().trim()
   return (...terms: string[]): string => {
@@ -61,7 +56,6 @@ function makeFind(keys: string[]) {
   }
 }
 
-/** Reject values that aren't plausible ELO numbers (e.g. race positions) */
 function parseEloField(raw: string, fallback: number): number {
   const v = parseInt(raw)
   return (v > 1000 && v < 4000) ? v : fallback
@@ -90,7 +84,6 @@ function SortIndicator({ col, sort }: { col: SortCol; sort: { col: SortCol; dir:
     : <ChevronDown size={10} style={{ color: '#f97316', marginLeft: 3 }} />
 }
 
-/** Form bar: the sheet's 0–10 rating rendered as a colour-coded progress bar */
 function FormBar({ value, color }: { value: number; color: string }) {
   const pct      = Math.min(100, Math.max(0, (value / 10) * 100))
   const barColor = value >= 8 ? '#22c55e' : value >= 6 ? color : value >= 4 ? '#f97316' : '#ef4444'
@@ -127,8 +120,6 @@ export default function App() {
         const keys = Object.keys(rows[0])
         const find = makeFind(keys)
 
-        console.log('[DPI] Raw headers:', keys)
-
         const COL_DRIVER  = find('driver')
         const COL_TEAM    = find('team')
         const COL_ELO     = find('elo')
@@ -138,8 +129,6 @@ export default function App() {
         const COL_PEAK    = find('highest rating', 'highestrating')
         const COL_LOW     = find('lowest rating', 'lowestrating')
         const COL_FORM    = find('form')
-
-        console.log('[DPI] Mapped columns:', { COL_DRIVER, COL_TEAM, COL_ELO, COL_CHANGE, COL_AVG, COL_IMPLIED, COL_PEAK, COL_LOW, COL_FORM })
 
         const parsed: Driver[] = rows
           .filter(r => r[COL_DRIVER]?.trim())
@@ -256,28 +245,42 @@ export default function App() {
                       const medalColor = pos === 1 ? '#FBB924' : pos === 2 ? '#9CA3AF' : '#CD7F32'
                       const medalBg    = pos === 1 ? 'rgba(251,191,36,0.12)' : pos === 2 ? 'rgba(156,163,175,0.1)' : 'rgba(205,127,50,0.1)'
                       return (
-                        <div key={d.driver} style={{
-                          width: isP1 ? 230 : 195, position: 'relative',
-                          background: 'linear-gradient(160deg, #111116, #0d0d11)',
-                          border: `1px solid ${isP1 ? 'rgba(249,115,22,0.2)' : 'rgba(255,255,255,0.06)'}`,
-                          borderRadius: 22, padding: isP1 ? '30px 22px 22px' : '22px 18px 18px',
-                          overflow: 'hidden', textAlign: 'center',
-                          boxShadow: isP1 ? '0 20px 60px -10px rgba(249,115,22,0.12)' : 'none',
-                        }}>
-                          <div style={{ position: 'absolute', inset: 0, background: `radial-gradient(ellipse 80% 60% at 50% -10%, ${color}12, transparent)`, pointerEvents: 'none' }} />
-                          <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 3, background: `linear-gradient(90deg, transparent, ${color}, transparent)` }} />
-                          <div style={{ width: isP1 ? 46 : 38, height: isP1 ? 46 : 38, borderRadius: '50%', background: medalBg, border: `1.5px solid ${medalColor}50`, display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 14px', fontSize: isP1 ? 20 : 16, fontWeight: 900, fontStyle: 'italic', color: medalColor }}>{pos}</div>
-                          <div style={{ marginBottom: 12 }}><DriverName name={d.driver} size={isP1 ? 13 : 11} lastSize={isP1 ? 22 : 17} /></div>
-                          <div style={{ fontSize: 8, fontWeight: 800, letterSpacing: '0.25em', textTransform: 'uppercase', color, opacity: 0.85, marginBottom: 14 }}>{d.team}</div>
-                          <div style={{ fontSize: isP1 ? 30 : 24, fontFamily: 'monospace', fontWeight: 900, color: '#fff', letterSpacing: '-0.02em', lineHeight: 1 }}>{d.elo.toLocaleString()}</div>
-                          <div style={{ fontSize: 8, letterSpacing: '0.4em', color: '#3f3f46', fontWeight: 800, textTransform: 'uppercase', marginTop: 3 }}>ELO RATING</div>
-                          {d.change !== 0 && (
-                            <div style={{ display: 'inline-flex', alignItems: 'center', gap: 3, marginTop: 12, fontSize: 10, fontFamily: 'monospace', fontWeight: 800, color: d.change > 0 ? '#22c55e' : '#ef4444', background: d.change > 0 ? 'rgba(34,197,94,0.1)' : 'rgba(239,68,68,0.1)', padding: '3px 9px', borderRadius: 99, border: `1px solid ${d.change > 0 ? 'rgba(34,197,94,0.2)' : 'rgba(239,68,68,0.2)'}` }}>
-                              {d.change > 0 ? <TrendingUp size={9} /> : <TrendingDown size={9} />}
-                              {d.change > 0 ? `+${d.change}` : d.change}
-                            </div>
-                          )}
-                        </div>
+                        <Link key={d.driver} href={`/driver/${encodeURIComponent(d.driver)}`}
+                          style={{ textDecoration: 'none', color: 'inherit', cursor: 'pointer', display: 'block', transition: 'transform 0.3s', transform: 'hover' }}>
+                          <div style={{
+                            width: isP1 ? 230 : 195, position: 'relative',
+                            background: 'linear-gradient(160deg, #111116, #0d0d11)',
+                            border: `1px solid ${isP1 ? 'rgba(249,115,22,0.2)' : 'rgba(255,255,255,0.06)'}`,
+                            borderRadius: 22, padding: isP1 ? '30px 22px 22px' : '22px 18px 18px',
+                            overflow: 'hidden', textAlign: 'center',
+                            boxShadow: isP1 ? '0 20px 60px -10px rgba(249,115,22,0.12)' : 'none',
+                            transition: 'all 0.3s ease', cursor: 'pointer'
+                          }}
+                          onMouseEnter={(e) => {
+                            const el = e.currentTarget as HTMLDivElement
+                            el.style.borderColor = isP1 ? 'rgba(249,115,22,0.4)' : 'rgba(255,255,255,0.12)'
+                            el.style.transform = 'translateY(-4px)'
+                          }}
+                          onMouseLeave={(e) => {
+                            const el = e.currentTarget as HTMLDivElement
+                            el.style.borderColor = isP1 ? 'rgba(249,115,22,0.2)' : 'rgba(255,255,255,0.06)'
+                            el.style.transform = 'translateY(0)'
+                          }}>
+                            <div style={{ position: 'absolute', inset: 0, background: `radial-gradient(ellipse 80% 60% at 50% -10%, ${color}12, transparent)`, pointerEvents: 'none' }} />
+                            <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 3, background: `linear-gradient(90deg, transparent, ${color}, transparent)` }} />
+                            <div style={{ width: isP1 ? 46 : 38, height: isP1 ? 46 : 38, borderRadius: '50%', background: medalBg, border: `1.5px solid ${medalColor}50`, display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 14px', fontSize: isP1 ? 20 : 16, fontWeight: 900, fontStyle: 'italic', color: medalColor }}>{pos}</div>
+                            <div style={{ marginBottom: 12 }}><DriverName name={d.driver} size={isP1 ? 13 : 11} lastSize={isP1 ? 22 : 17} /></div>
+                            <div style={{ fontSize: 8, fontWeight: 800, letterSpacing: '0.25em', textTransform: 'uppercase', color, opacity: 0.85, marginBottom: 14 }}>{d.team}</div>
+                            <div style={{ fontSize: isP1 ? 30 : 24, fontFamily: 'monospace', fontWeight: 900, color: '#fff', letterSpacing: '-0.02em', lineHeight: 1 }}>{d.elo.toLocaleString()}</div>
+                            <div style={{ fontSize: 8, letterSpacing: '0.4em', color: '#3f3f46', fontWeight: 800, textTransform: 'uppercase', marginTop: 3 }}>ELO RATING</div>
+                            {d.change !== 0 && (
+                              <div style={{ display: 'inline-flex', alignItems: 'center', gap: 3, marginTop: 12, fontSize: 10, fontFamily: 'monospace', fontWeight: 800, color: d.change > 0 ? '#22c55e' : '#ef4444', background: d.change > 0 ? 'rgba(34,197,94,0.1)' : 'rgba(239,68,68,0.1)', padding: '3px 9px', borderRadius: 99, border: `1px solid ${d.change > 0 ? 'rgba(34,197,94,0.2)' : 'rgba(239,68,68,0.2)'}` }}>
+                                {d.change > 0 ? <TrendingUp size={9} /> : <TrendingDown size={9} />}
+                                {d.change > 0 ? `+${d.change}` : d.change}
+                              </div>
+                            )}
+                          </div>
+                        </Link>
                       )
                     })}
               </div>
@@ -333,7 +336,7 @@ export default function App() {
                             <tr key={d.driver}
                               onMouseEnter={() => setHovered(d.driver)}
                               onMouseLeave={() => setHovered(null)}
-                              style={{ borderTop: '1px solid rgba(255,255,255,0.03)', background: isHov ? 'rgba(255,255,255,0.02)' : 'transparent', transition: 'background 0.1s', cursor: 'default' }}>
+                              style={{ borderTop: '1px solid rgba(255,255,255,0.03)', background: isHov ? 'rgba(255,255,255,0.02)' : 'transparent', transition: 'background 0.1s', cursor: 'pointer' }}>
 
                               <td style={{ padding: '13px 14px 13px 24px', width: 60 }}>
                                 {isTop
@@ -344,13 +347,15 @@ export default function App() {
                               </td>
 
                               <td style={{ padding: '13px 14px', minWidth: 185 }}>
-                                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                                  <div style={{ width: 3, height: 30, background: color, borderRadius: 99, flexShrink: 0, opacity: isHov ? 1 : 0.7 }} />
-                                  <div>
-                                    <DriverName name={d.driver} size={11} lastSize={14} />
-                                    <div style={{ fontSize: 8, fontWeight: 700, letterSpacing: '0.2em', textTransform: 'uppercase', color, opacity: 0.7, marginTop: 1 }}>{d.team}</div>
+                                <Link href={`/driver/${encodeURIComponent(d.driver)}`} style={{ textDecoration: 'none', color: 'inherit' }}>
+                                  <div style={{ display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer' }}>
+                                    <div style={{ width: 3, height: 30, background: color, borderRadius: 99, flexShrink: 0, opacity: isHov ? 1 : 0.7, transition: 'opacity 0.2s' }} />
+                                    <div>
+                                      <DriverName name={d.driver} size={11} lastSize={14} />
+                                      <div style={{ fontSize: 8, fontWeight: 700, letterSpacing: '0.2em', textTransform: 'uppercase', color, opacity: 0.7, marginTop: 1 }}>{d.team}</div>
+                                    </div>
                                   </div>
-                                </div>
+                                </Link>
                               </td>
 
                               <td style={{ padding: '13px 14px', textAlign: 'right', fontFamily: 'monospace', fontSize: 15, fontWeight: 900, color: isTop ? '#fff' : '#d4d4d8', whiteSpace: 'nowrap' }}>
@@ -433,25 +438,27 @@ export default function App() {
                             const color = getTeamColor(d.team)
                             const isHov = hovered === d.driver
                             return (
-                              <div key={d.driver}
-                                onMouseEnter={() => setHovered(d.driver)}
-                                onMouseLeave={() => setHovered(null)}
-                                style={{ display: 'flex', alignItems: 'center', gap: 10, background: isHov ? 'rgba(255,255,255,0.04)' : '#111116', border: `1px solid ${isHov ? color + '40' : 'rgba(255,255,255,0.05)'}`, borderRadius: 12, padding: '10px 14px', width: 220, cursor: 'default', transition: 'border-color 0.2s, background 0.15s', position: 'relative', overflow: 'hidden' }}>
-                                {isHov && <div style={{ position: 'absolute', inset: 0, background: `radial-gradient(ellipse at left, ${color}10, transparent 70%)`, pointerEvents: 'none' }} />}
-                                <div style={{ width: 3, height: 36, background: color, borderRadius: 99, flexShrink: 0 }} />
-                                <div style={{ flex: 1, minWidth: 0 }}>
-                                  <div style={{ marginBottom: 2 }}><DriverName name={d.driver} size={10} lastSize={14} /></div>
-                                  <div style={{ fontSize: 8, fontWeight: 700, letterSpacing: '0.15em', textTransform: 'uppercase', color, opacity: 0.65 }}>{d.team}</div>
+                              <Link key={d.driver} href={`/driver/${encodeURIComponent(d.driver)}`} style={{ textDecoration: 'none', color: 'inherit' }}>
+                                <div
+                                  onMouseEnter={() => setHovered(d.driver)}
+                                  onMouseLeave={() => setHovered(null)}
+                                  style={{ display: 'flex', alignItems: 'center', gap: 10, background: isHov ? 'rgba(255,255,255,0.04)' : '#111116', border: `1px solid ${isHov ? color + '40' : 'rgba(255,255,255,0.05)'}`, borderRadius: 12, padding: '10px 14px', width: 220, cursor: 'pointer', transition: 'border-color 0.2s, background 0.15s', position: 'relative', overflow: 'hidden' }}>
+                                  {isHov && <div style={{ position: 'absolute', inset: 0, background: `radial-gradient(ellipse at left, ${color}10, transparent 70%)`, pointerEvents: 'none' }} />}
+                                  <div style={{ width: 3, height: 36, background: color, borderRadius: 99, flexShrink: 0 }} />
+                                  <div style={{ flex: 1, minWidth: 0 }}>
+                                    <div style={{ marginBottom: 2 }}><DriverName name={d.driver} size={10} lastSize={14} /></div>
+                                    <div style={{ fontSize: 8, fontWeight: 700, letterSpacing: '0.15em', textTransform: 'uppercase', color, opacity: 0.65 }}>{d.team}</div>
+                                  </div>
+                                  <div style={{ textAlign: 'right', flexShrink: 0 }}>
+                                    <div style={{ fontSize: 16, fontWeight: 900, fontStyle: 'italic', fontFamily: 'monospace', color: '#fff', lineHeight: 1 }}>{d.elo.toLocaleString()}</div>
+                                    {d.change !== 0 && (
+                                      <div style={{ fontSize: 9, fontFamily: 'monospace', fontWeight: 800, color: d.change > 0 ? '#22c55e' : '#ef4444', marginTop: 2 }}>
+                                        {d.change > 0 ? `+${d.change}` : d.change}
+                                      </div>
+                                    )}
+                                  </div>
                                 </div>
-                                <div style={{ textAlign: 'right', flexShrink: 0 }}>
-                                  <div style={{ fontSize: 16, fontWeight: 900, fontStyle: 'italic', fontFamily: 'monospace', color: '#fff', lineHeight: 1 }}>{d.elo.toLocaleString()}</div>
-                                  {d.change !== 0 && (
-                                    <div style={{ fontSize: 9, fontFamily: 'monospace', fontWeight: 800, color: d.change > 0 ? '#22c55e' : '#ef4444', marginTop: 2 }}>
-                                      {d.change > 0 ? `+${d.change}` : d.change}
-                                    </div>
-                                  )}
-                                </div>
-                              </div>
+                              </Link>
                             )
                           })}
                         </div>

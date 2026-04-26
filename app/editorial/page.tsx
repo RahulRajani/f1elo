@@ -1,174 +1,248 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { 
-  Activity, 
-  BatteryWarning, 
-  Car, 
-  Flag, 
-  Gauge, 
-  TrendingUp, 
+  Trophy,
+  Flag,
+  Zap,
   AlertTriangle,
-  ChevronRight
+  ChevronRight,
+  Award
 } from 'lucide-react';
 
+interface RaceDetails {
+  race: string;
+  country: string;
+  winner: string;
+  summary: string;
+  highlights: string[];
+}
+
 export default function ArticlePage() {
+  const [expandedYear, setExpandedYear] = useState<string | null>('2026');
+
+  const races: Record<string, RaceDetails> = {
+    '2026': {
+      race: 'Japan',
+      country: '🇯🇵',
+      winner: 'Antonelli',
+      summary: 'We are only 3 races into the 2026 season, and I have made my opinions very clear on these regulations in a previous article. However, I think there were positives from this race. There was a genuine battle for the lead between Piastri and Russell, and there was more action than the processions we had in the ground effect era.',
+      highlights: ['Piastri vs Russell battle', 'Mercedes vulnerability', 'More overtaking action', 'Bearman crash drama']
+    },
+    '2025': {
+      race: 'Brazil',
+      country: '🇧🇷',
+      winner: 'Norris',
+      summary: 'Brazil had almost everything you wanted from a race. We had multiple strategies, lots of overtakes, different strategies, controversy and safety cars. While Norris did end up winning relatively comfortably, there was drama everywhere you looked.',
+      highlights: ['Antonelli career-best', 'Verstappen pit lane recovery', 'Multi-car incident Turn 1', '3 car battle Piastri vs Russell']
+    },
+    '2024': {
+      race: 'Silverstone',
+      country: '🇬🇧',
+      winner: 'Hamilton',
+      summary: 'Silverstone very rarely fails to deliver. You cannot go wrong with a mixed conditions race. You also had various battles for the lead, with about 4 drivers at various points looking like the favourite to win.',
+      highlights: ['Mixed conditions drama', 'Tyre strategy gambles', 'Multiple lead battles', 'Hamilton victory after drought']
+    },
+    '2023': {
+      race: 'Las Vegas',
+      country: '🇺🇸',
+      winner: 'Leclerc',
+      summary: 'Las Vegas in its first year was destined to be a good race because none of the drivers knew it. We had a mixed up grid, crashes in bizarre places, more overtakes than what felt like the entire 2025 season and an actual battle for the lead.',
+      highlights: ['Leclerc vs Verstappen duel', 'Perez 11th to 2nd', 'Unpredictable racing', 'Last lap Leclerc overtake']
+    },
+    '2022': {
+      race: 'Bahrain',
+      country: '🇧🇭',
+      winner: 'Leclerc',
+      summary: 'The battle between Leclerc and Verstappen was some of the best racing in Formula 1 history. The constant planning and execution from both to try and keep hold of first place was outstanding.',
+      highlights: ['Leclerc vs Verstappen epic', 'Magnussen P5 return', 'Zhou debut points', 'Peak ground effect potential']
+    },
+    '2021': {
+      race: 'Brazil',
+      country: '🇧🇷',
+      winner: 'Verstappen',
+      summary: 'This was the peak of the title battle between Hamilton and Verstappen. Hamilton fought back from 10th on the grid, making some great moves, with the highlight coming when he caught up to the top 3.',
+      highlights: ['Hamilton 10th to battle', 'Perez strong defence', 'Hamilton vs Verstappen battle', 'Controversial but epic']
+    },
+    '2020': {
+      race: 'Sakhir',
+      country: '🇧🇭',
+      winner: 'Perez',
+      summary: 'In a year dominated by Mercedes, Sakhir was a glimpse of how good it could be if they were not really there. We had Perez\'s first ever F1 win after 190 races, driving from P18 to victory.',
+      highlights: ['Russell Mercedes debut shock', 'Perez pit lane recovery', 'Multiple safety cars', 'Ocon first podium']
+    }
+  };
+
+  const yearOrder = ['2026', '2025', '2024', '2023', '2022', '2021', '2020'];
+
   return (
-    <div className="min-h-screen bg-zinc-950 text-zinc-300 font-sans selection:bg-orange-500 selection:text-white">
+    <div className="min-h-screen bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950 text-zinc-100 font-sans selection:bg-orange-500 selection:text-white overflow-x-hidden">
       
-      {/* NAVIGATION - Glassmorphism Sticky Header */}
-      <nav className="fixed top-0 w-full z-50 bg-zinc-950/70 backdrop-blur-md border-b border-zinc-800">
+      {/* NAVIGATION */}
+      <nav className="fixed top-0 w-full z-50 bg-slate-950/80 backdrop-blur-xl border-b border-orange-500/20">
         <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Flag className="text-orange-500" size={24} />
             <span className="text-xl font-black italic tracking-tighter text-white">F1<span className="text-orange-500">ELO</span></span>
           </div>
           <div className="hidden md:flex items-center gap-6 text-xs font-bold uppercase tracking-widest text-zinc-400">
-            <a href="#" className="hover:text-white transition-colors">Cool Gadgets</a>
-            <a href="#" className="hover:text-white transition-colors">Updates</a>
-            <a href="#" className="hover:text-white transition-colors">2026 Previews</a>
-            <a href="#" className="hover:text-white transition-colors">2026 Reviews</a>
-            <a href="#" className="text-white border-b-2 border-orange-500 pb-1">About</a>
-            <a href="#" className="hover:text-white transition-colors">Driver Tier List</a>
-            <a href="#" className="hover:text-white transition-colors">Archive</a>
+            <a href="#" className="hover:text-orange-400 transition-colors">Dashboard</a>
+            <a href="#" className="text-white border-b-2 border-orange-500 pb-1">Analysis</a>
+            <a href="#" className="hover:text-orange-400 transition-colors">Archive</a>
           </div>
         </div>
       </nav>
 
-      {/* HERO SECTION - Telemetry Grid Vibe */}
-      <header className="relative pt-32 pb-20 overflow-hidden">
-        {/* Abstract Background Grid */}
-        <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:24px_24px]"></div>
-        <div className="absolute inset-0 bg-gradient-to-t from-zinc-950 via-transparent to-transparent"></div>
+      {/* HERO SECTION */}
+      <header className="relative pt-32 pb-24 overflow-hidden">
+        {/* Animated background */}
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_80%_at_50%_-20%,rgba(251,146,60,0.15),rgba(51,65,85,0))]" />
+        <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808008_1px,transparent_1px),linear-gradient(to_bottom,#80808008_1px,transparent_1px)] bg-[size:40px_40px]" />
         
-        <div className="relative max-w-4xl mx-auto px-6 z-10">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-orange-500/10 border border-orange-500/20 text-orange-400 text-xs font-mono font-semibold mb-6">
-            <Activity size={14} /> Analysis & Opinion
+        <div className="relative max-w-5xl mx-auto px-6 z-10">
+          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-orange-500/10 border border-orange-500/30 text-orange-400 text-xs font-mono font-bold mb-8 backdrop-blur-sm">
+            <Trophy size={14} /> 
+            <span>Hall of Fame Analysis</span>
           </div>
-          <h1 className="text-5xl md:text-7xl font-black uppercase italic tracking-tighter text-white leading-[0.9] mb-6">
-            The State of the Grid: <br />
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-400 to-orange-600">
-              McLaren, Regulations,
-            </span><br />
-            and the Road to Miami
+          
+          <h1 className="text-6xl md:text-8xl font-black uppercase italic tracking-tighter text-white leading-[0.95] mb-6 drop-shadow-2xl">
+            The Best F1<br />
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-400 via-orange-500 to-red-500">
+              Races of My Life
+            </span>
           </h1>
           
-          <div className="flex items-center gap-4 mt-8 border-t border-zinc-800 pt-6">
-            <div className="w-12 h-12 rounded-full bg-gradient-to-br from-zinc-800 to-zinc-900 border border-zinc-700 flex items-center justify-center">
-              <Car className="text-zinc-400" size={20} />
+          <p className="text-lg text-zinc-300 max-w-2xl leading-relaxed mb-8 font-light">
+            A journey through 22 years of Formula 1. From 2005 to 2026, I'm breaking down the greatest races I've witnessed, analyzed without bias, to showcase what makes this sport truly magical.
+          </p>
+          
+          <div className="flex items-center gap-4 border-t border-zinc-700/50 pt-6">
+            <div className="w-12 h-12 rounded-full bg-gradient-to-br from-orange-500 to-orange-600 border border-orange-400/50 flex items-center justify-center">
+              <Award className="text-white" size={20} />
             </div>
             <div>
               <p className="text-white font-bold text-sm">@FullTimeMclarenFan</p>
-              <p className="text-zinc-500 text-xs font-mono">Published • 2026 Season</p>
+              <p className="text-zinc-400 text-xs font-mono">Published • Spring Break Special</p>
             </div>
           </div>
         </div>
       </header>
 
-      {/* ARTICLE CONTENT */}
-      <main className="max-w-4xl mx-auto px-6 pb-32">
-        <article className="space-y-16 text-lg leading-relaxed text-zinc-400">
+      {/* MAIN CONTENT */}
+      <main className="max-w-5xl mx-auto px-6 pb-32">
+        
+        {/* INTRO SECTION */}
+        <section className="mb-20 p-8 rounded-2xl bg-gradient-to-br from-zinc-800/30 to-transparent border border-zinc-700/40 backdrop-blur-sm">
+          <p className="text-lg text-zinc-300 leading-relaxed mb-6">
+            As the F1 spring break comes to a temporary end next weekend, I think it's a good time to go through every year I've been alive (2005-2026) and run through what I believe are the best races from each year. While I don't have my biases towards Jenson Button as a driver and McLaren as a team, I will be objectively looking at what races were the most entertaining to watch as a neutral.
+          </p>
+          <p className="text-zinc-400 italic">Because no one really thinks races like Singapore 2024 are the peak of this sport's potential.</p>
+        </section>
+
+        {/* TIMELINE */}
+        <div className="space-y-4 relative">
+          {/* Vertical line */}
+          <div className="absolute left-0 top-0 bottom-0 w-px bg-gradient-to-b from-orange-500/50 via-orange-500/20 to-transparent" />
           
-          {/* SECTION 1: MCLAREN */}
-          <section className="space-y-6">
-            <div className="flex items-center gap-3 text-white border-b border-zinc-800 pb-4">
-              <TrendingUp className="text-orange-500" />
-              <h2 className="text-3xl font-black uppercase italic tracking-tight">McLaren: A Teetering Start</h2>
-            </div>
+          {yearOrder.map((year, idx) => {
+            const race = races[year];
+            const isExpanded = expandedYear === year;
             
-            <p>
-              We'll start at McLaren, and from the team's perspective, it's been an inconsistent start to the season. We were probably <strong className="text-white">4th best in Australia, 3rd best in China and 2nd best in Japan</strong> (so let's hope we'll be quickest by Miami).
-            </p>
-            
-            <p>
-              Obviously, the main talking point has to be <span className="text-orange-400 font-semibold bg-orange-500/10 px-2 py-0.5 rounded">reliability</span>. I think we've had a problem in almost every session this year due to learning about the Mercedes power unit every week, so I'm hoping now we are 3 races in we can reduce the number of issues we have and actually start more races. On the aero side, Stella made it very clear we would start on the backfoot but hopefully we should have a stable platform to upgrade on going forward.
-            </p>
-            
-            <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-6 my-8 shadow-2xl">
-              <h3 className="text-sm font-mono text-zinc-500 uppercase tracking-widest mb-4">Driver Telemetry</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="border-l-2 border-orange-500 pl-4">
-                  <h4 className="text-white font-bold text-xl uppercase italic">Piastri</h4>
-                  <p className="text-sm mt-2">Completed one race and was the best driver on the grid, but missed out in Australia and China.</p>
+            return (
+              <div key={year} className="relative">
+                {/* Timeline dot */}
+                <div className="absolute -left-[18px] top-8 w-9 h-9 bg-slate-900 border-2 border-orange-500 rounded-full flex items-center justify-center cursor-pointer hover:scale-110 transition-transform group"
+                  onClick={() => setExpandedYear(isExpanded ? null : year)}>
+                  <span className="text-xs font-black text-orange-400">{idx + 1}</span>
+                  <div className="absolute inset-0 rounded-full bg-orange-500/20 group-hover:bg-orange-500/40 transition-all animate-pulse" />
                 </div>
-                <div className="border-l-2 border-yellow-500 pl-4">
-                  <h4 className="text-white font-bold text-xl uppercase italic">Norris</h4>
-                  <p className="text-sm mt-2">More racing done, but severely lacks practice laps, leaving him further off the pace than he should be.</p>
+
+                {/* Race Card */}
+                <div 
+                  onClick={() => setExpandedYear(isExpanded ? null : year)}
+                  className={`ml-8 cursor-pointer group transition-all duration-500 ${isExpanded ? 'scale-100' : 'hover:scale-105'}`}
+                >
+                  <div className={`rounded-2xl border transition-all duration-500 overflow-hidden ${
+                    isExpanded 
+                      ? 'bg-gradient-to-br from-orange-900/40 to-slate-900/40 border-orange-500/60 shadow-2xl shadow-orange-500/20' 
+                      : 'bg-slate-800/40 border-zinc-700/40 hover:border-orange-500/40 hover:bg-slate-800/60'
+                  }`}>
+                    
+                    {/* Header */}
+                    <div className="p-6 border-b border-zinc-700/40 bg-gradient-to-r from-slate-800/50 to-transparent">
+                      <div className="flex items-start justify-between">
+                        <div>
+                          <span className="inline-block text-4xl mb-3">{race.country}</span>
+                          <div>
+                            <h3 className="text-5xl font-black italic uppercase text-white mb-2">{year}</h3>
+                            <p className="text-2xl font-bold text-orange-400">{race.race} Grand Prix</p>
+                            <p className="text-xs text-zinc-400 mt-2 font-mono">Winner: <span className="text-white font-bold">{race.winner}</span></p>
+                          </div>
+                        </div>
+                        <ChevronRight size={28} className={`text-orange-500 transition-transform duration-500 ${isExpanded ? 'rotate-90' : ''}`} />
+                      </div>
+                    </div>
+
+                    {/* Expanded Content */}
+                    {isExpanded && (
+                      <div className="p-8 space-y-6 animate-in fade-in duration-300">
+                        <p className="text-lg text-zinc-300 leading-relaxed font-light">
+                          {race.summary}
+                        </p>
+
+                        {/* Highlights Grid */}
+                        <div>
+                          <h4 className="text-sm font-bold uppercase tracking-widest text-orange-400 mb-4 flex items-center gap-2">
+                            <Zap size={16} /> Race Highlights
+                          </h4>
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                            {race.highlights.map((highlight, i) => (
+                              <div key={i} className="flex items-center gap-3 p-3 rounded-lg bg-orange-500/10 border border-orange-500/20">
+                                <div className="w-2 h-2 rounded-full bg-orange-500 flex-shrink-0" />
+                                <span className="text-sm text-zinc-200">{highlight}</span>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+
+                        {/* Year-specific note */}
+                        {year === '2024' && (
+                          <div className="flex gap-3 p-4 rounded-lg bg-red-500/10 border border-red-500/20 text-red-300 text-sm">
+                            <AlertTriangle size={18} className="flex-shrink-0 mt-0.5" />
+                            <p><span className="font-bold">Admin Note:</span> Brazil was 100% robbed here. Are we serious?</p>
+                          </div>
+                        )}
+                        {year === '2021' && (
+                          <div className="flex gap-3 p-4 rounded-lg bg-red-500/10 border border-red-500/20 text-red-300 text-sm">
+                            <AlertTriangle size={18} className="flex-shrink-0 mt-0.5" />
+                            <p><span className="font-bold">Admin Note:</span> Abu Dhabi is right there! Most viewed F1 race of all time...</p>
+                          </div>
+                        )}
+                        {year === '2020' && (
+                          <div className="flex gap-3 p-4 rounded-lg bg-red-500/10 border border-red-500/20 text-red-300 text-sm">
+                            <AlertTriangle size={18} className="flex-shrink-0 mt-0.5" />
+                            <p><span className="font-bold">Admin Note:</span> Monza was clearly the best race of the year. This race was pretty much the Perez show.</p>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
-            </div>
-            
-            <p>
-              If he can have a clean weekend, he should be back up there competing for good positions. Compared to previous new regulations, this has been a much more positive start and hopefully we can be fighting for wins again soon.
-            </p>
-          </section>
+            );
+          })}
+        </div>
 
-          {/* SECTION 2: REGULATIONS */}
-          <section className="space-y-6">
-            <div className="flex items-center gap-3 text-white border-b border-zinc-800 pb-4">
-              <Gauge className="text-blue-500" />
-              <h2 className="text-3xl font-black uppercase italic tracking-tight">The New Regulations: A Step Backward?</h2>
-            </div>
-            
-            <p>
-              As for these new regulations, I have a lot of thoughts about them. Firstly, qualifying is abysmal. I know the ground effect cars were some of the best qualifying cars of all time, but the step down in quality is far larger than I could've imagined.
-            </p>
-            
-            {/* Highlight Metric Card */}
-            <div className="flex items-center gap-6 bg-blue-950/20 border border-blue-900/30 rounded-xl p-6">
-              <BatteryWarning className="text-blue-500 w-12 h-12 flex-shrink-0" />
-              <div>
-                <p className="text-white font-medium">The way the battery works makes for a product that I believe isn't worth watching.</p>
-                <p className="text-blue-400 font-mono text-sm mt-2">Cars on push laps are losing <strong className="text-white text-lg">50 kph</strong> due to "super clipping."</p>
-              </div>
-            </div>
-
-            <p>
-              But the main event in Formula One is what we really watch this sport for. And I have very mixed thoughts on this too. I think the aero side of the regulations are a positive improvement. Smaller cars make it so it isn't impossible to make overtakes and allows for more wheel-to-wheel action, like the Ferraris in China.
-            </p>
-            <p>
-              However, the artificial nature of these regulations make DRS look like a standard part of racing rather than a gimmick. The engine (specifically the battery) is the major downside to these regulations. Yes, there are more overtakes, but they're purely down to battery saving rather than driver skill. Even in the DRS era, overtakes were being made at the end of corners. Most of these new overtakes take place halfway down the straights, and the driver is usually repassed immediately due to wasting their battery.
-            </p>
-          </section>
-
-          {/* SECTION 3: FIA DILEMMA */}
-          <section className="space-y-6">
-            <div className="flex items-center gap-3 text-white border-b border-zinc-800 pb-4">
-              <AlertTriangle className="text-red-500" />
-              <h2 className="text-3xl font-black uppercase italic tracking-tight">The FIA’s Dilemma</h2>
-            </div>
-            
-            <p>
-              The FIA looked at the complaints about the lack of overtakes and ignored any nuance regarding people's issues. The solution should be to get rid of the battery, or at least significantly reduce its impact from 50% to like 25%. People don't care if the cars are 10 seconds slower than 2026; fans just want to see the best racing possible, and I believe these regulations aren't getting the best out of the drivers and therefore we aren't getting the best racing we can.
-            </p>
-
-            <blockquote className="border-l-4 border-red-600 bg-red-950/20 p-6 rounded-r-xl my-8">
-              <p className="text-zinc-300 italic">
-                "There are moments (like the Ferraris in China), but there were also moments in the GE era which was universally disliked. And then you have the fact that these cars have insane overspeed which is incredibly dangerous, as seen in the <strong className="text-red-400">50g Bearman crash</strong> in Japan."
-              </p>
-            </blockquote>
-
-            <p>
-              Considering the step forward the FIA made in the aero, I believe they undid all that good work with an engine which is nothing short of awful.
-            </p>
-          </section>
-
-          {/* SECTION 4: CONCLUSION */}
-          <section className="space-y-6 bg-zinc-900/50 p-8 rounded-2xl border border-zinc-800/50 backdrop-blur-sm mt-12">
-            <h2 className="text-2xl font-black uppercase italic tracking-tight text-white">Looking Ahead</h2>
-            <p>
-              These are just my opinions and if you enjoy these regs, more power to you. I never want to go into an F1 season wanting the cars to be bad, and I have tried to see the positives, but unfortunately, I think these regulations aren't going to create a product worthy of F1. I really hope I'm either wrong or they make changes because I don't enjoy disliking the cars.
-            </p>
-            <p>
-              I will still watch and make posts, and obviously still be incredibly biased, because I still love F1. I just want it to be the best it possibly can.
-            </p>
-            
-            <button className="mt-6 flex items-center gap-2 bg-orange-500 hover:bg-orange-600 text-white font-bold uppercase tracking-wider text-sm px-6 py-3 rounded-full transition-all hover:scale-105 active:scale-95">
-              Read More Analysis <ChevronRight size={18} />
-            </button>
-          </section>
-
-        </article>
+        {/* CLOSING SECTION */}
+        <section className="mt-24 p-8 rounded-2xl bg-gradient-to-r from-slate-800/50 to-orange-900/20 border border-orange-500/20 backdrop-blur-sm">
+          <h2 className="text-3xl font-black uppercase italic tracking-tight text-white mb-6">The Journey Continues</h2>
+          <p className="text-lg text-zinc-300 leading-relaxed mb-6">
+            So that's all for the 2020's section, and coming soon we've got the 2010's analysis. Let's hope it's actually accurate this time..
+          </p>
+          
+          <button className="mt-8 flex items-center gap-2 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-red-500 text-white font-black uppercase tracking-wider text-sm px-8 py-4 rounded-full transition-all hover:scale-105 active:scale-95 shadow-lg shadow-orange-500/40">
+            Back to Dashboard <ChevronRight size={18} />
+          </button>
+        </section>
       </main>
-      
     </div>
   );
 }

@@ -5,7 +5,7 @@ import Papa from 'papaparse'
 import Link from 'next/link'
 import {
   Quote, Trophy, Activity, ChevronRight, TrendingUp, TrendingDown,
-  Crosshair, BarChart2, Zap, Flame, Target
+  Crosshair, BarChart2, Zap, Flame, Target, Zap as ZapIcon
 } from 'lucide-react'
 import {
   LineChart, Line, XAxis, YAxis, Tooltip,
@@ -327,6 +327,54 @@ export default function Home() {
         </div>
       </section>
 
+      {/* ── PREMIUM EDITORIAL CARD - FEATURED AT TOP ── */}
+      <div className="container mx-auto px-6 max-w-[1400px] mb-16">
+        <Link href="/editorial" className="group block relative overflow-hidden rounded-2xl border-2 border-orange-500/40 hover:border-orange-500/80 transition-all duration-500">
+          {/* Background with overlay */}
+          <div className="absolute inset-0 bg-gradient-to-r from-slate-900 via-orange-950/30 to-slate-900" />
+          <div className="absolute inset-0 opacity-0 group-hover:opacity-20 transition-opacity duration-500"
+            style={{ backgroundImage: "url('https://images.unsplash.com/photo-1614200187524-dc4b892acf16?q=80&w=1600&auto=format&fit=crop')", backgroundSize: 'cover', backgroundPosition: 'center' }} />
+          
+          {/* Animated accent line */}
+          <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-orange-500 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+          
+          <div className="relative z-10 p-12 lg:p-16 backdrop-blur-sm">
+            <div className="grid lg:grid-cols-2 gap-12 items-center">
+              {/* Left: Content */}
+              <div>
+                <span className="inline-block bg-gradient-to-r from-orange-600 to-orange-500 text-white text-[11px] font-black italic px-4 py-2 uppercase tracking-widest rounded shadow-lg shadow-orange-500/40 mb-6">📊 Hall of Fame Analysis</span>
+                
+                <h2 className="text-5xl lg:text-6xl font-black italic uppercase tracking-tighter leading-[0.95] mb-6 text-white group-hover:text-orange-300 transition-colors">
+                  The Best F1 <br />
+                  <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-400 via-orange-500 to-red-500">Races of My Life</span>
+                </h2>
+                
+                <p className="text-lg text-zinc-300 mb-8 leading-relaxed font-light max-w-lg">
+                  A comprehensive journey through 22 years of Formula 1. From 2005 to 2026, I've handpicked the greatest races, analyzed objectively, to showcase what makes this sport truly magical.
+                </p>
+                
+                <div className="flex items-center gap-3 text-orange-400 text-[11px] font-black italic uppercase tracking-widest group-hover:gap-6 transition-all">
+                  Explore Timeline <ChevronRight size={18} />
+                </div>
+              </div>
+
+              {/* Right: Race Year Grid */}
+              <div className="grid grid-cols-3 gap-4">
+                {['2026🇯🇵', '2025🇧🇷', '2024🇬🇧', '2023🇺🇸', '2022🇧🇭', '2021🇧🇷', '2020🇧🇭'].map((year, i) => {
+                  const [yr, flag] = [year.slice(0, 4), year.slice(4)];
+                  return (
+                    <div key={i} className="flex flex-col items-center justify-center p-4 rounded-lg bg-orange-500/10 border border-orange-500/20 group-hover:bg-orange-500/20 group-hover:border-orange-500/40 transition-all">
+                      <span className="text-2xl mb-2">{flag}</span>
+                      <span className="text-sm font-black text-orange-400">{yr}</span>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+        </Link>
+      </div>
+
       {/* ── BIGGEST MOVERS ── */}
       <div className="container mx-auto px-6 max-w-[1400px] mb-16">
         <div className="mb-8 flex items-center gap-3">
@@ -478,27 +526,6 @@ export default function Home() {
               </div>
             </div>
           </div>
-        </div>
-
-        {/* PREMIUM EDITORIAL CARD */}
-        <div className="mt-8 mb-8">
-          <Link href="/editorial" className="group block bg-gradient-to-r from-black via-orange-950/10 to-black border border-orange-500/20 rounded-xl overflow-hidden relative hover:border-orange-500/40 transition-all duration-300">
-            <div className="absolute inset-0 opacity-20 group-hover:opacity-30 transition-opacity"
-              style={{ backgroundImage: "url('https://images.unsplash.com/photo-1614200187524-dc4b892acf16?q=80&w=1600&auto=format&fit=crop')", backgroundSize: 'cover', backgroundPosition: 'center' }} />
-            <div className="absolute inset-0 bg-gradient-to-r from-black via-black/80 to-transparent" />
-            
-            <div className="relative z-10 p-10 lg:p-14">
-              <div className="mb-6">
-                <span className="inline-block bg-orange-600 text-white text-[11px] font-black italic px-4 py-2 uppercase tracking-widest rounded shadow-lg">Premium Analysis</span>
-              </div>
-              <h2 className="text-5xl lg:text-6xl font-black italic uppercase tracking-tighter leading-[0.95] mb-6 text-white group-hover:text-orange-300 transition-colors">
-                McLaren, Regulations &amp; <span className="text-orange-500">Miami</span>
-              </h2>
-              <div className="flex items-center gap-3 text-orange-400 text-[11px] font-black italic uppercase tracking-widest group-hover:gap-6 transition-all">
-                Read Analysis <ChevronRight size={18} />
-              </div>
-            </div>
-          </Link>
         </div>
       </div>
 

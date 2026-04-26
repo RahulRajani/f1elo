@@ -31,49 +31,49 @@ export default function ArticlePage() {
       race: 'Japan',
       country: '🇯🇵',
       winner: 'Antonelli',
-      summary: 'We are only 3 races into the 2026 season, and I have made my opinions very clear on these regulations in a previous article. However, I think there were positives from this race. There was a genuine battle for the lead between Piastri and Russell, and there was more action than the processions we had in the ground effect era.',
+      summary: 'We are only 3 races into the 2026 season, and I have made my opinions very clear on these regulations in a previous article. However, I think there were positives from this race. There was a genuine battle for the lead between Piastri and Russell, and there was more action than the processions we had in the ground effect era. It was also the first race where Mercedes looked slightly vulnerable for an extended period, which makes for a better race. However, Antonelli pulled away after the safety car and moves did become limited in the points outside of Hamilton falling away. We also had the Bearman crash which was a bad look on the regulations, even if Colapinto could\'ve definitely done slightly better. If this is the best race come the end of the year, it would\'ve been an extremely disappointing year.',
       highlights: ['Piastri vs Russell battle', 'Mercedes vulnerability', 'More overtaking action', 'Bearman crash drama']
     },
     '2025': {
       race: 'Brazil',
       country: '🇧🇷',
       winner: 'Norris',
-      summary: 'Brazil had almost everything you wanted from a race. We had multiple strategies, lots of overtakes, different strategies, controversy and safety cars. While Norris did end up winning relatively comfortably, there was drama everywhere you looked.',
+      summary: 'I said this list wouldn\'t be made of just McLaren wins, but in a year where we won 14 out of the 24 races, it was more than likely that one of ours would\'ve been the best. Brazil had almost everything you wanted from a race. We had multiple strategies, lots of overtakes, different strategies, controversy and safety cars. While Norris did end up winning the race relatively comfortably in the end, there was drama everywhere you looked. You had Bortoleto crashing out early, you had Hamilton drop down the order, you had the 3 car turn 1 crash between Antonelli, Leclerc and Piastri, and you had Verstappen getting an early puncture. And this was all before lap 10. As well as all this drama, you had the 3 men on the podium all performing at an elite level. Norris controlled the entire weekend and earned maximum points. Antonelli drove the best race of his career (even after his 2 wins) and held on to 2nd place. Finally, there was Verstappen who drove the race of the season, coming from the pit lane in P19 to finishing within a few tenths of Antonelli, making it the 2nd year in a row he drove from the back to the front in Brazil. You also had Piastri chasing Russell to the line, Bearman performing miracles in the Haas to finish miles ahead of the rest of the midfield, and then every other driver finishing within a couple of seconds of each other to the line. While races like Britain and Australia had their exciting moments, Brazil was just an epic race from start to finish, and proved to the world that it is one of the best racing tracks in the world.',
       highlights: ['Antonelli career-best', 'Verstappen pit lane recovery', 'Multi-car incident Turn 1', '3 car battle Piastri vs Russell']
     },
     '2024': {
       race: 'Silverstone',
       country: '🇬🇧',
       winner: 'Hamilton',
-      summary: 'Silverstone very rarely fails to deliver. You cannot go wrong with a mixed conditions race. You also had various battles for the lead, with about 4 drivers at various points looking like the favourite to win.',
+      summary: 'This year felt like it would\'ve had way more exciting races, but outside of some Verstappen controversies, I find myself struggling to find great races. However, Silverstone very rarely fails to deliver. Firstly, you cannot go wrong with a mixed conditions race. You also had various battles for the lead, with about 4 drivers at various points looking like the favourite to win. You also had interesting tyre strategies, with it being a gamble in the last stint as no one knew the best tyre. And while I\'m not taking non racing moments into account, Hamilton winning another race after so long was a pretty cool moment for the neutral. I think what makes this race so good was McLaren constantly shooting themselves in the foot (unfortunately). If that was a team that had been at the front more consistently over the previous years, it would\'ve been a 1-2 for us. However, our blunders made for an exciting chase to the line between Verstappen and Hamilton. Behind the front pack, you had Perez and Leclerc forgetting how to drive, Aston Martin getting double points (which would be a miracle today) and Hulkenberg performing miracles in what was, at the time, a slightly underwhelming Haas (it would get better throughout the season). Just a very good race for anyone who wasn\'t a McLaren or Ferrari fan.',
       highlights: ['Mixed conditions drama', 'Tyre strategy gambles', 'Multiple lead battles', 'Hamilton victory after drought']
     },
     '2023': {
       race: 'Las Vegas',
       country: '🇺🇸',
-      winner: 'Verstappen',
-      summary: 'Las Vegas in its first year was destined to be a good race because none of the drivers knew it. We had a mixed up grid, crashes in bizarre places, more overtakes than what felt like the entire 2025 season and an actual battle for the lead.',
+      winner: 'Leclerc',
+      summary: 'Automatically, people would think that Singapore was the best race of 2023 as it was the only non Red Bull win of the year, but overall the racing wasn\'t particularly great. My pick for this year was a race I didn\'t watch for quite a while after it happened. Las Vegas in its first year was destined to be a good race because none of the drivers knew it. We had a mixed up grid, crashes in bizarre places, more overtakes than what felt like the entire 2025 season and an actual battle for the lead. Leclerc and Verstappen put on a show worthy of Sin City. Perez also had a great performance, going from 11th to within a couple of seconds of the lead. You had the Alpines performing miracles. You had the McLarens struggle to figure out how to get the tyres working. Stroll actually had a good race, even if he benefited from a Russell penalty. Verstappen also had to overcome the penalty he got at the start. And of course, you had the phenomenal last lap overtake by Leclerc on Perez to steal 2nd at the end. In what was a lacklustre season overall, this was definitely a shining light.',
       highlights: ['Leclerc vs Verstappen duel', 'Perez 11th to 2nd', 'Unpredictable racing', 'Last lap Leclerc overtake']
     },
     '2022': {
       race: 'Bahrain',
       country: '🇧🇭',
       winner: 'Leclerc',
-      summary: 'The battle between Leclerc and Verstappen was some of the best racing in Formula 1 history. The constant planning and execution from both to try and keep hold of first place was outstanding.',
+      summary: 'There are 2 stand out races for me in 2022, and it was very close between Bahrain and Saudi Arabia. However, I think the edge just about goes to the opening race. This race showed us the potential that never was with these regulations. The battle between Leclerc and Verstappen was some of the best racing in Formula 1 history. The constant planning and execution from both to try and keep hold of first place was outstanding, and the only downside was the Red Bulls giving out at the end. We had the phenomenal return of Magnussen, who achieved P5 for the team who just finished at the back in every race the previous year. You had points for the Alfa Romeos, including Zhou getting points on his debut and all the racing was very close between different groups from start to finish. It showed us what ground effect was capable of, and it such a shame that due to the development of these cars and the increase in dirty air that we never got to see more incredible races like this.',
       highlights: ['Leclerc vs Verstappen epic', 'Magnussen P5 return', 'Zhou debut points', 'Peak ground effect potential']
     },
     '2021': {
       race: 'Brazil',
       country: '🇧🇷',
       winner: 'Verstappen',
-      summary: 'This was the peak of the title battle between Hamilton and Verstappen. Hamilton fought back from 10th on the grid, making some great moves, with the highlight coming when he caught up to the top 3.',
+      summary: 'While I\'d love to put Monza on this list, the racing after the crash was not the most entertaining. So for that reason, I have to go for Brazil. This (alongside Saudi Arabia) was the peak of the title battle between Hamilton and Verstappen, which for me is the deciding factor for why this is the best race of 2021 because the rest of the racing behind those 2 wasn\'t actually that great. This race you had Hamilton have to fight back from 10th on the grid, and he did it in style, making some great moves along the way, but the highlight came when he caught up to the top 3, with Perez putting up a strong defence for a bit and then the battle with Verstappen. Was it controversial? Definitely. Was it epic? Absolutely. This year these 2 really knew how to put on a show, and this showed it perfectly, with Verstappen pushing every limit possible to stop Hamilton while Hamilton did everything he could to drive around these obstacles. Behind them it wasn\'t the most thrilling (like most of the year) but there was a great recovery drive from Norris after the lap 1 puncture. 2021 was very memorable for its key moments, but the racing wasn\'t as good as many would make it out to be.',
       highlights: ['Hamilton 10th to battle', 'Perez strong defence', 'Hamilton vs Verstappen battle', 'Controversial but epic']
     },
     '2020': {
       race: 'Sakhir',
       country: '🇧🇭',
       winner: 'Perez',
-      summary: 'In a year dominated by Mercedes, Sakhir was a glimpse of how good it could be if they were not really there. We had Perez\'s first ever F1 win after 190 races, driving from P18 to victory.',
+      summary: 'While the person running this website would be desperate for me to say Monza this year, I think the clear answer is Sakhir. In a year dominated by Mercedes (and Verstappen to an extent), this race was a glimpse of how good it could be if they weren\'t really there. The outer layout for Bahrain, while short, provided great racing. We had the lap 1 crash that took out Verstappen and Leclerc, and left Perez at the back. We had Sainz battling the Mercedes of Bottas at the start. We had various safety cars which changed the destination of this race multiple times. You can\'t talk about this race without mentioning Russell and Perez. Russell had spent his entire career at the back, but 1 race in that Mercedes and it looked like he\'d been there his whole life. While his pace was potentially overrated, the fact he was able to hold his own in a foreign car is still extremely impressive. Unfortunately for him, Mercedes fumbling the pit stops, while very entertaining for us, meant that Russell was unable to fight for the win despite leading a large percentage of this race. And of course, this race is most remembered for the drive Perez pulled off. After lap 1, he was 18th and last, but throughout the course of the race, he gradually gained all those positions back and took his first ever F1 win after 190 races. However, he drove like he had been winning his entire career. Was he lucky with safety car timings and the Mercedes pit stops? Yes, but you can\'t have a lucky race after being spun out on lap 1. Behind the battle for the win, there were some interesting battles between Norris and Albon, Ocon achieving his first ever podium, multiple rookies on the grid after Grosjean and Hamilton pulled out, and the Mercedes drivers trying their best to limit the damage as best as possible. A chaotic and extremely fun race in what was a pretty miserable year.',
       highlights: ['Russell Mercedes debut shock', 'Perez pit lane recovery', 'Multiple safety cars', 'Ocon first podium']
     }
   };
@@ -244,8 +244,7 @@ export default function ArticlePage() {
           <p className="text-lg text-zinc-300 leading-relaxed mb-6">
           </p>
           <p className="text-zinc-400">
-            The 2010s and earlier years coming soon. 
-          </p>
+            The 2010s and earlier years coming soon. </p>
           
           <a href="https://www.f1elo.me" className="mt-8 inline-flex items-center gap-2 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-red-500 text-white font-black uppercase tracking-wider text-sm px-8 py-4 rounded-full transition-all hover:scale-105 active:scale-95 shadow-lg shadow-orange-500/40">
             Back to Main Site <ChevronRight size={18} />

@@ -333,7 +333,7 @@ export default function Home() {
           {/* Background with overlay */}
           <div className="absolute inset-0 bg-gradient-to-r from-slate-900 via-orange-950/30 to-slate-900" />
           <div className="absolute inset-0 opacity-0 group-hover:opacity-20 transition-opacity duration-500"
-            style={{ backgroundImage: "url('https://images.unsplash.com/photo-1614200187524-dc4b892acf16?q=80&w=1600&auto=format&fit=crop')", backgroundSize: 'cover', backgroundPosition: 'center' }} />
+            style={{ backgroundImage: "url('https://www.racefans.net/wp-content/uploads/2026/03/racefansdotnet-24-03-28-06-02-31-1-2803JapanSat-1.jpg')", backgroundSize: 'cover', backgroundPosition: 'center' }} />
           
           {/* Animated accent line */}
           <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-orange-500 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />

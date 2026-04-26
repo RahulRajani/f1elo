@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import { 
+  Activity, 
   Trophy,
   Flag,
   Zap,
@@ -10,7 +11,7 @@ import {
   Award
 } from 'lucide-react';
 
-interface RaceDetails {
+interface Race {
   race: string;
   country: string;
   winner: string;
@@ -18,10 +19,14 @@ interface RaceDetails {
   highlights: string[];
 }
 
+interface RacesRecord {
+  [key: string]: Race;
+}
+
 export default function ArticlePage() {
   const [expandedYear, setExpandedYear] = useState<string | null>('2026');
 
-  const races: Record<string, RaceDetails> = {
+  const races: RacesRecord = {
     '2026': {
       race: 'Japan',
       country: '🇯🇵',
@@ -196,7 +201,7 @@ export default function ArticlePage() {
                             <Zap size={16} /> Race Highlights
                           </h4>
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                            {race.highlights.map((highlight, i) => (
+                            {race.highlights.map((highlight: string, i: number) => (
                               <div key={i} className="flex items-center gap-3 p-3 rounded-lg bg-orange-500/10 border border-orange-500/20">
                                 <div className="w-2 h-2 rounded-full bg-orange-500 flex-shrink-0" />
                                 <span className="text-sm text-zinc-200">{highlight}</span>
@@ -237,12 +242,15 @@ export default function ArticlePage() {
         <section className="mt-24 p-8 rounded-2xl bg-gradient-to-r from-slate-800/50 to-orange-900/20 border border-orange-500/20 backdrop-blur-sm">
           <h2 className="text-3xl font-black uppercase italic tracking-tight text-white mb-6">The Journey Continues</h2>
           <p className="text-lg text-zinc-300 leading-relaxed mb-6">
-            So that's all for the 2020's section, and coming soon we've got the 2010's analysis. Let's hope it's actually accurate this time..
+            From the glory days of the ground effect era to the controversial regulations of 2026, Formula 1 has given us moments that define generations. Every race tells a story—some of heartbreak, some of triumph, but all of them iconic in their own way.
+          </p>
+          <p className="text-zinc-400">
+            The 2010s and earlier years coming soon. Stay tuned for more deep dives into the races that shaped F1 history.
           </p>
           
-          <button className="mt-8 flex items-center gap-2 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-red-500 text-white font-black uppercase tracking-wider text-sm px-8 py-4 rounded-full transition-all hover:scale-105 active:scale-95 shadow-lg shadow-orange-500/40">
-            Back to Dashboard <ChevronRight size={18} />
-          </button>
+          <a href="https://www.f1elo.me" className="mt-8 inline-flex items-center gap-2 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-red-500 text-white font-black uppercase tracking-wider text-sm px-8 py-4 rounded-full transition-all hover:scale-105 active:scale-95 shadow-lg shadow-orange-500/40">
+            Back to Main Site <ChevronRight size={18} />
+          </a>
         </section>
       </main>
     </div>

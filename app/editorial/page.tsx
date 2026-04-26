@@ -51,7 +51,7 @@ export default function ArticlePage() {
     '2023': {
       race: 'Las Vegas',
       country: '🇺🇸',
-      winner: 'Leclerc',
+      winner: 'Verstappen',
       summary: 'Las Vegas in its first year was destined to be a good race because none of the drivers knew it. We had a mixed up grid, crashes in bizarre places, more overtakes than what felt like the entire 2025 season and an actual battle for the lead.',
       highlights: ['Leclerc vs Verstappen duel', 'Perez 11th to 2nd', 'Unpredictable racing', 'Last lap Leclerc overtake']
     },
@@ -242,10 +242,9 @@ export default function ArticlePage() {
         <section className="mt-24 p-8 rounded-2xl bg-gradient-to-r from-slate-800/50 to-orange-900/20 border border-orange-500/20 backdrop-blur-sm">
           <h2 className="text-3xl font-black uppercase italic tracking-tight text-white mb-6">The Journey Continues</h2>
           <p className="text-lg text-zinc-300 leading-relaxed mb-6">
-            From the glory days of the ground effect era to the controversial regulations of 2026, Formula 1 has given us moments that define generations. Every race tells a story—some of heartbreak, some of triumph, but all of them iconic in their own way.
           </p>
           <p className="text-zinc-400">
-            The 2010s and earlier years coming soon. Stay tuned for more deep dives into the races that shaped F1 history.
+            The 2010s and earlier years coming soon. 
           </p>
           
           <a href="https://www.f1elo.me" className="mt-8 inline-flex items-center gap-2 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-red-500 text-white font-black uppercase tracking-wider text-sm px-8 py-4 rounded-full transition-all hover:scale-105 active:scale-95 shadow-lg shadow-orange-500/40">

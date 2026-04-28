@@ -1,21 +1,20 @@
 'use client'
 
-import React, { useEffect, useState, useMemo } from 'react'
+import React, { useEffect, useState } from 'react'
 import Papa from 'papaparse'
 import Link from 'next/link'
 import {
-  ChevronLeft, Trophy, TrendingUp, TrendingDown, Award, 
-  BarChart3, Zap, Target, Share2, Download, X, AlertCircle
+  ChevronRight, TrendingUp, TrendingDown, BarChart3, List
 } from 'lucide-react'
 import {
-  LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid
+  LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid,
+  BarChart, Bar, Cell
 } from 'recharts'
-import { User } from 'lucide-react'
 
 const SHEET_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vS3Ia2YO0T2yMBlPlOLOMUCgWnT0IzT-hNqKscWJT1SqqyE5INYObl3BEP7pdmaKJI3fzJQILj7BUV6/pub?gid=1401420857&single=true&output=csv"
 
 const TEAM_COLORS: Record<string, string> = {
-  'mercedes': '#00D2BE', 'ferrari': '#E80020', 'red bull': '#061D42',
+  'mercedes': '#00D2BE', 'ferrari': '#E80020', 'red bull': '#1E3050',
   'mclaren': '#FF8000', 'aston martin': '#006F62', 'alpine': '#0090FF',
   'williams': '#005AFF', 'racing bulls': '#1634CC', 'vcarb': '#1634CC',
   'sauber': '#52E252', 'haas': '#B6BABD', 'cadillac': '#C8A951',
@@ -35,41 +34,27 @@ interface DriverData {
   podiums: { first: number; second: number; third: number }
 }
 
-const CustomTooltip = ({ active, payload, label }: any) => {
-  if (active && payload?.length) {
-    return (
-      <div className="bg-black/90 border border-orange-500/40 rounded-lg p-3 shadow-2xl backdrop-blur-md">
-        <p className="text-orange-400 text-[10px] font-black uppercase tracking-widest mb-2">{label}</p>
-        <div className="flex justify-between gap-4">
-          <span className="font-bold text-sm" style={{ color: payload[0].color }}>ELO</span>
-          <span className="text-white font-mono text-sm">{Math.round(payload[0].value)}</span>
-        </div>
-      </div>
-    )
-  }
-  return null
+interface TierGroup {
+  tier: string
+  minElo: number
+  maxElo: number
+  color: string
+  drivers: DriverData[]
 }
 
-export default function DriverProfile({ params }: { params: { name?: string } }) {
-  // FIX: Safely handle undefined parameters
-  const driverName = params?.name ? decodeURIComponent(params.name) : null
-  
-  const [driver, setDriver] = useState<DriverData | null>(null)
-  const [allDrivers, setAllDrivers] = useState<DriverData[]>([])
+export default function RankingsPage() {
+  const [view, setView] = useState<'leaderboard' | 'tiers'>('leaderboard')
+  const [drivers, setDrivers] = useState<DriverData[]>([])
+  const [tiers, setTiers] = useState<TierGroup[]>([])
+  const [distributionData, setDistributionData] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [imageUrl, setImageUrl] = useState<string | null>(null)
-  const [imageError, setImageError] = useState(false)
-  const [compareOpen, setCompareOpen] = useState(false)
-  const [compareDriver, setCompareDriver] = useState<DriverData | null>(null)
+  const [selectedDriver, setSelectedDriver] = useState<DriverData | null>(null)
 
-  // Fetch data from Google Sheet
   useEffect(() => {
     const fetchData = async () => {
       try {
         setLoading(true)
-        setError(null)
-
         await new Promise(resolve => {
           Papa.parse(SHEET_URL + '&cachebust=' + Date.now(), {
             download: true,
@@ -78,12 +63,8 @@ export default function DriverProfile({ params }: { params: { name?: string } })
             complete: (results) => {
               try {
                 const rows = results.data as Record<string, string>[]
-                
-                if (!rows || rows.length === 0) {
-                  throw new Error('No data found in spreadsheet')
-                }
+                if (!rows || rows.length === 0) throw new Error('No data found')
 
-                // Find column keys
                 const find = (row: Record<string, string>, ...names: string[]) => {
                   for (const n of names) {
                     const m = Object.keys(row).find(k => k.toLowerCase().trim() === n.toLowerCase().trim())
@@ -102,9 +83,7 @@ export default function DriverProfile({ params }: { params: { name?: string } })
                 const LOW_KEY = find(fr, 'low', 'lowest rating') || ''
                 const FORM_KEY = find(fr, 'form') || ''
 
-                if (!DRIVER_KEY || !ELO_KEY) {
-                  throw new Error('Could not find required columns in spreadsheet')
-                }
+                if (!DRIVER_KEY || !ELO_KEY) throw new Error('Missing required columns')
 
                 const raceColumns = Object.keys(fr).filter(k => /^\d{2}\s[A-Z]{2,4}_1$/.test(k.trim()))
 
@@ -136,31 +115,40 @@ export default function DriverProfile({ params }: { params: { name?: string } })
                   .sort((a, b) => b.elo - a.elo)
                   .map((d, i) => ({ ...d, rank: i + 1 }))
 
-                setAllDrivers(parsed)
+                setDrivers(parsed)
+                if (parsed.length > 0) setSelectedDriver(parsed[0])
 
-                // Find the specific driver only if driverName is specified
-                if (driverName) {
-                  const found = parsed.find(d => 
-                    d.driver.toLowerCase() === driverName.toLowerCase()
-                  )
+                // Create tier groupings
+                const tierDefinitions = [
+                  { tier: 'S', minElo: 1820, color: '#dc2626' },
+                  { tier: 'A', minElo: 1750, color: '#ea580c' },
+                  { tier: 'B', minElo: 1700, color: '#16a34a' },
+                  { tier: 'C', minElo: 1650, color: '#2563eb' },
+                  { tier: 'D', minElo: 1600, color: '#9333ea' },
+                  { tier: 'E', minElo: 0, color: '#64748b' }
+                ]
 
-                  if (found) {
-                    setDriver(found)
-                    fetchDriverImage(found.driver)
-                  } else {
-                    // Try partial match as fallback
-                    const partial = parsed.find(d =>
-                      d.driver.toLowerCase().includes(driverName.toLowerCase()) ||
-                      driverName.toLowerCase().includes(d.driver.toLowerCase())
-                    )
-                    if (partial) {
-                      setDriver(partial)
-                      fetchDriverImage(partial.driver)
-                    } else {
-                      setError(`Driver "${driverName}" not found. Available drivers: ${parsed.map(d => d.driver).join(', ').substring(0, 100)}...`)
-                    }
+                const tierGroups: TierGroup[] = tierDefinitions.map((def, idx) => {
+                  const maxElo = idx === 0 ? Infinity : tierDefinitions[idx - 1].minElo
+                  const driversInTier = parsed.filter(d => d.elo >= def.minElo && d.elo < maxElo)
+                  return {
+                    tier: def.tier,
+                    minElo: def.minElo,
+                    maxElo,
+                    color: def.color,
+                    drivers: driversInTier
                   }
-                }
+                })
+
+                setTiers(tierGroups)
+
+                const distribution = tierGroups.map(t => ({
+                  tier: t.tier,
+                  count: t.drivers.length,
+                  color: t.color,
+                  percentage: ((t.drivers.length / parsed.length) * 100).toFixed(1)
+                }))
+                setDistributionData(distribution)
               } catch (err) {
                 setError(err instanceof Error ? err.message : 'Failed to parse data')
               } finally {
@@ -169,138 +157,27 @@ export default function DriverProfile({ params }: { params: { name?: string } })
               }
             },
             error: (err) => {
-              setError(`Failed to load spreadsheet: ${err.message}`)
+              setError(`Failed to load data: ${err.message}`)
               setLoading(false)
               resolve(null)
             }
           })
         })
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'Unknown error occurred')
+        setError(err instanceof Error ? err.message : 'Unknown error')
         setLoading(false)
       }
     }
 
     fetchData()
-  }, [driverName])
+  }, [])
 
-  const fetchDriverImage = async (driverName: string) => {
-    try {
-      const searchName = driverName === 'Yuuki Tsunoda' ? 'Yuki Tsunoda' : driverName
-      const res = await fetch(
-        `https://en.wikipedia.org/w/api.php?action=query&titles=${encodeURIComponent(searchName)}&prop=pageimages&format=json&pithumbsize=800&origin=*`,
-        { signal: AbortSignal.timeout(5000) }
-      )
-      const data = await res.json()
-      const pages = data.query?.pages
-      const pageId = Object.keys(pages)[0]
-      if (pageId !== '-1' && pages[pageId].thumbnail?.source) {
-        setImageUrl(pages[pageId].thumbnail.source)
-      } else {
-        setImageError(true)
-      }
-    } catch (err) {
-      setImageError(true)
-    }
-  }
-
-  // Show leaderboard if no driver specified
-  if (!driverName && allDrivers.length > 0) {
+  if (loading) {
     return (
-      <div className="min-h-screen bg-black text-zinc-100 font-sans pb-24 selection:bg-orange-500/30">
-        <style>{`
-          @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Syne:wght@400;500;600;700;800&display=swap');
-          body { font-family: 'Inter', sans-serif; }
-          h1, h2, h3, h4, h5, h6 { font-family: 'Syne', sans-serif; }
-        `}</style>
-
-        {/* HEADER */}
-        <div className="sticky top-0 z-40 bg-black/80 backdrop-blur-md border-b border-zinc-800/50">
-          <div className="container mx-auto px-6 py-6 max-w-6xl">
-            <h1 className="text-4xl font-black italic uppercase tracking-tighter text-white">🏁 F1 ELO Rankings</h1>
-            <p className="text-zinc-400 text-sm mt-2">2026 Season Standings</p>
-          </div>
-        </div>
-
-        <div className="container mx-auto px-6 py-12 max-w-6xl">
-          {/* Tier Legend */}
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 mb-12">
-            {[
-              { label: 'S', desc: 'Benchmark', color: '#ff3b3b' },
-              { label: 'A', desc: 'Elite', color: '#ff9500' },
-              { label: 'B', desc: 'Upper Mid', color: '#34c759' },
-              { label: 'C', desc: 'Midfield', color: '#007aff' },
-              { label: 'D', desc: 'Lower Mid', color: '#af52de' },
-              { label: 'E', desc: 'Backmarker', color: '#636366' },
-            ].map(tier => (
-              <div key={tier.label} className="text-center">
-                <div 
-                  className="w-12 h-12 rounded-lg flex items-center justify-center text-white font-black text-lg mx-auto mb-2 shadow-lg"
-                  style={{ background: `linear-gradient(135deg, ${tier.color}, ${tier.color}dd)` }}
-                >
-                  {tier.label}
-                </div>
-                <p className="text-xs font-bold text-zinc-400">{tier.desc}</p>
-              </div>
-            ))}
-          </div>
-
-          {/* Rankings Table */}
-          <div className="space-y-2">
-            {allDrivers.map((d) => {
-              const getTier = (elo: number) => {
-                if (elo >= 1820) return { label: 'S', color: '#ff3b3b' }
-                if (elo >= 1750) return { label: 'A', color: '#ff9500' }
-                if (elo >= 1700) return { label: 'B', color: '#34c759' }
-                if (elo >= 1650) return { label: 'C', color: '#007aff' }
-                if (elo >= 1600) return { label: 'D', color: '#af52de' }
-                return { label: 'E', color: '#636366' }
-              }
-              const tier = getTier(d.elo)
-              const tc = TEAM_COLORS[d.team.toLowerCase()] || '#8a8a94'
-
-              return (
-                <Link key={d.driver} href={`/drivers/${encodeURIComponent(d.driver)}`}>
-                  <div className="bg-gradient-to-r from-zinc-900/50 to-black border border-zinc-700/30 hover:border-orange-500/50 hover:bg-zinc-900/80 rounded-lg p-4 transition-all cursor-pointer group">
-                    <div className="flex items-center gap-4">
-                      {/* Rank */}
-                      <div className="text-2xl font-black text-orange-500 w-12 text-center">#{d.rank}</div>
-
-                      {/* Tier Badge */}
-                      <div 
-                        className="w-12 h-12 rounded-lg flex items-center justify-center text-white font-black text-lg flex-shrink-0 shadow-lg"
-                        style={{ background: `linear-gradient(135deg, ${tier.color}, ${tier.color}dd)` }}
-                      >
-                        {tier.label}
-                      </div>
-
-                      {/* Driver Info */}
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2 mb-1">
-                          <p className="text-lg font-black uppercase group-hover:text-orange-400 transition-colors">{d.driver}</p>
-                          <div className="w-2 h-2 rounded-full" style={{ backgroundColor: tc }} />
-                          <p className="text-xs font-bold text-zinc-500 uppercase">{d.team}</p>
-                        </div>
-                        <p className="text-xs text-zinc-600">Peak: {d.peak} | Avg: {d.avg.toFixed(0)}</p>
-                      </div>
-
-                      {/* Stats */}
-                      <div className="flex items-center gap-6 text-right">
-                        <div>
-                          <p className="text-2xl font-black font-mono text-white">{d.elo}</p>
-                          <p className="text-[10px] text-zinc-500 uppercase tracking-wider">ELO</p>
-                        </div>
-                        <div className={`flex items-center gap-1 ${d.change > 0 ? 'text-green-400' : d.change < 0 ? 'text-red-400' : 'text-zinc-600'}`}>
-                          {d.change > 0 ? <TrendingUp size={16} /> : d.change < 0 ? <TrendingDown size={16} /> : null}
-                          <span className="font-bold text-sm">{d.change > 0 ? '+' : ''}{d.change}</span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </Link>
-              )
-            })}
-          </div>
+      <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-12 h-12 border-2 border-slate-400 border-t-red-600 rounded-full animate-spin mx-auto mb-4" />
+          <p className="text-slate-300 text-sm font-medium">Loading rankings...</p>
         </div>
       </div>
     )
@@ -308,289 +185,296 @@ export default function DriverProfile({ params }: { params: { name?: string } })
 
   if (error) {
     return (
-      <div className="min-h-screen bg-black flex items-center justify-center p-4">
-        <div className="max-w-md w-full">
-          <div className="flex gap-4 items-start p-6 bg-red-500/10 border border-red-500/30 rounded-xl">
-            <AlertCircle className="text-red-400 flex-shrink-0 mt-1" size={20} />
-            <div>
-              <h3 className="text-red-400 font-bold mb-2">Error Loading Profile</h3>
-              <p className="text-red-300/80 text-sm mb-4">{error}</p>
-              <Link href="/" className="inline-block px-4 py-2 bg-orange-600 hover:bg-orange-500 text-white text-sm font-bold rounded-lg transition-colors">
-                ← Back to Rankings
-              </Link>
-            </div>
-          </div>
+      <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 flex items-center justify-center p-4">
+        <div className="bg-slate-800/50 border border-slate-700 rounded-lg p-6 max-w-md">
+          <p className="text-red-400 text-sm font-medium mb-4">{error}</p>
+          <Link href="/" className="inline-block px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-sm font-medium rounded transition-colors">
+            Back Home
+          </Link>
         </div>
       </div>
     )
   }
-
-  if (loading || !driver) {
-    return (
-      <div className="min-h-screen bg-black flex items-center justify-center">
-        <div className="text-center">
-          <div className="w-16 h-16 border-3 border-orange-500 border-t-transparent rounded-full animate-spin mx-auto mb-6" />
-          <p className="text-zinc-400 uppercase tracking-widest text-sm font-bold">Loading {driverName || 'profile'}...</p>
-          <p className="text-zinc-600 text-xs mt-3">Fetching driver data from spreadsheet</p>
-        </div>
-      </div>
-    )
-  }
-
-  const tc = TEAM_COLORS[driver.team.toLowerCase()] || '#8a8a94'
-  const last = driver.driver.split(' ').pop()
-  const first = driver.driver.split(' ').slice(0, -1).join(' ')
-
-  const getTier = (elo: number) => {
-    if (elo >= 1820) return { label: 'S', desc: 'Benchmark', color: '#ff3b3b' }
-    if (elo >= 1750) return { label: 'A', desc: 'Elite', color: '#ff9500' }
-    if (elo >= 1700) return { label: 'B', desc: 'Upper Mid', color: '#34c759' }
-    if (elo >= 1650) return { label: 'C', desc: 'Midfield', color: '#007aff' }
-    if (elo >= 1600) return { label: 'D', desc: 'Lower Mid', color: '#af52de' }
-    return { label: 'E', desc: 'Backmarker', color: '#636366' }
-  }
-
-  const tier = getTier(driver.elo)
 
   return (
-    <div className="min-h-screen bg-black text-zinc-100 font-sans pb-24 selection:bg-orange-500/30">
+    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 text-slate-100">
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Syne:wght@400;500;600;700;800&display=swap');
-        body { font-family: 'Inter', sans-serif; }
-        h1, h2, h3, h4, h5, h6 { font-family: 'Syne', sans-serif; }
-        .no-scrollbar::-webkit-scrollbar { display: none; }
-        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Crimson+Text:ital@0;1&display=swap');
+        body { font-family: 'Outfit', sans-serif; }
+        h1, h2, h3, h4, h5, h6 { font-family: 'Crimson Text', serif; font-weight: 700; }
       `}</style>
 
-      {/* ── HEADER WITH BACK BUTTON ── */}
-      <div className="sticky top-0 z-40 bg-black/80 backdrop-blur-md border-b border-zinc-800/50">
-        <div className="container mx-auto px-6 py-4 flex items-center justify-between">
-          <Link href="/" className="flex items-center gap-2 text-zinc-400 hover:text-white transition-colors">
-            <ChevronLeft size={20} />
-            <span className="text-sm font-bold uppercase tracking-widest">Back</span>
+      {/* Navigation */}
+      <div className="sticky top-0 z-40 bg-slate-950/80 backdrop-blur-sm border-b border-slate-800">
+        <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
+          <Link href="/" className="text-2xl font-bold text-white hover:text-slate-300 transition-colors">
+            F1 ELO
           </Link>
-          <div className="flex items-center gap-3">
-            <button className="p-2 hover:bg-zinc-800 rounded-lg transition-colors">
-              <Share2 size={18} className="text-zinc-400" />
+          <div className="flex items-center gap-1 bg-slate-800/50 p-1 rounded-lg border border-slate-700">
+            <button
+              onClick={() => setView('leaderboard')}
+              className={`flex items-center gap-2 px-4 py-2 rounded transition-all font-medium text-sm ${
+                view === 'leaderboard'
+                  ? 'bg-slate-700 text-white'
+                  : 'text-slate-400 hover:text-slate-300'
+              }`}
+            >
+              <List size={16} />
+              Leaderboard
             </button>
-            <button className="p-2 hover:bg-zinc-800 rounded-lg transition-colors">
-              <Download size={18} className="text-zinc-400" />
+            <button
+              onClick={() => setView('tiers')}
+              className={`flex items-center gap-2 px-4 py-2 rounded transition-all font-medium text-sm ${
+                view === 'tiers'
+                  ? 'bg-slate-700 text-white'
+                  : 'text-slate-400 hover:text-slate-300'
+              }`}
+            >
+              <BarChart3 size={16} />
+              Tier Distribution
             </button>
           </div>
         </div>
       </div>
 
-      <div className="container mx-auto px-6 py-12 max-w-5xl">
-        
-        {/* ── HERO SECTION ── */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-12">
-          {/* Left: Image & Meta */}
-          <div className="lg:col-span-1">
-            <div className="relative overflow-hidden rounded-2xl bg-gradient-to-b from-zinc-800 to-black border border-zinc-700/50 shadow-xl mb-6 aspect-[3/4]">
-              {imageError || !imageUrl ? (
-                <div className="w-full h-full flex items-center justify-center" style={{ background: `linear-gradient(135deg, ${tc}30 0%, transparent 100%)` }}>
-                  <User size={100} className="text-zinc-700/30" />
-                </div>
-              ) : (
-                <img src={imageUrl} alt={driver.driver} className="w-full h-full object-cover object-top" />
-              )}
-              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent" />
-              
-              {/* Tier badge */}
-              <div className="absolute top-4 right-4 flex flex-col items-center gap-2">
-                <div 
-                  className="w-16 h-16 rounded-xl flex items-center justify-center text-white font-black italic text-2xl shadow-2xl"
-                  style={{ background: `linear-gradient(135deg, ${tier.color}, ${tier.color}dd)`, boxShadow: `0 0 20px ${tier.color}60` }}
-                >
-                  {tier.label}
-                </div>
-                <span className="text-[10px] font-black uppercase tracking-widest text-center px-2 text-zinc-300">{tier.desc}</span>
-              </div>
-            </div>
-
-            {/* Quick Stats */}
-            <div className="space-y-3">
-              <div className="bg-gradient-to-br from-zinc-900/80 to-black border border-zinc-700/50 rounded-xl p-4">
-                <p className="text-[10px] text-zinc-500 uppercase tracking-widest font-bold mb-2">Peak ELO</p>
-                <p className="text-3xl font-black font-mono text-green-400">{driver.peak.toLocaleString()}</p>
-              </div>
-              <div className="bg-gradient-to-br from-zinc-900/80 to-black border border-zinc-700/50 rounded-xl p-4">
-                <p className="text-[10px] text-zinc-500 uppercase tracking-widest font-bold mb-2">Low ELO</p>
-                <p className="text-3xl font-black font-mono text-red-400">{driver.low.toLocaleString()}</p>
-              </div>
-              <div className="bg-gradient-to-br from-zinc-900/80 to-black border border-zinc-700/50 rounded-xl p-4">
-                <p className="text-[10px] text-zinc-500 uppercase tracking-widest font-bold mb-2">Season Avg</p>
-                <p className="text-3xl font-black font-mono text-orange-400">{driver.avg.toFixed(0)}</p>
-              </div>
-            </div>
+      {/* LEADERBOARD VIEW */}
+      {view === 'leaderboard' && (
+        <div className="max-w-7xl mx-auto px-6 py-12">
+          {/* Header */}
+          <div className="mb-12">
+            <h1 className="text-5xl font-bold text-white mb-2">Leaderboard</h1>
+            <p className="text-slate-400 text-base">2026 Formula 1 ELO Ratings</p>
           </div>
 
-          {/* Right: Name & Stats */}
-          <div className="lg:col-span-2 flex flex-col justify-between">
-            <div>
-              <p className="text-sm text-zinc-500 uppercase tracking-widest font-bold mb-2">{first}</p>
-              <h1 className="text-6xl font-black italic uppercase tracking-tighter mb-3 text-white">{last}</h1>
-              <div className="flex items-center gap-4 mb-6">
-                <div className="w-3 h-12 rounded-full" style={{ backgroundColor: tc }} />
-                <div>
-                  <p className="text-sm font-bold uppercase tracking-widest" style={{ color: tc }}>{driver.team}</p>
-                  <p className="text-[10px] text-zinc-500 uppercase tracking-widest mt-1">Rank #{driver.rank}</p>
-                </div>
-              </div>
-            </div>
-
-            {/* Main Stats Grid */}
-            <div className="grid grid-cols-2 gap-4">
-              <div className="bg-gradient-to-br from-zinc-900/80 to-black border border-zinc-700/50 rounded-xl p-6">
-                <p className="text-[10px] text-zinc-500 uppercase tracking-widest font-bold mb-3">Current ELO</p>
-                <p className="text-5xl font-black font-mono text-white mb-2">{driver.elo.toLocaleString()}</p>
-                <div className={`flex items-center gap-2 text-sm font-bold ${driver.change > 0 ? 'text-green-400' : driver.change < 0 ? 'text-red-400' : 'text-zinc-600'}`}>
-                  {driver.change > 0 ? <TrendingUp size={16} /> : driver.change < 0 ? <TrendingDown size={16} /> : null}
-                  <span>{driver.change > 0 ? '+' : ''}{driver.change}</span>
-                </div>
-              </div>
-
-              <div className="bg-gradient-to-br from-zinc-900/80 to-black border border-zinc-700/50 rounded-xl p-6">
-                <p className="text-[10px] text-zinc-500 uppercase tracking-widest font-bold mb-3">Form Rating</p>
-                <p className="text-5xl font-black font-mono text-orange-400 mb-2">{driver.form.toFixed(1)}</p>
-                <p className="text-[10px] text-zinc-500 uppercase tracking-widest">out of 10</p>
-              </div>
-            </div>
-
-            {/* Podiums */}
-            <div className="mt-6 flex gap-4">
-              <div className="flex-1 bg-gradient-to-br from-amber-900/20 to-black border border-amber-700/30 rounded-xl p-5 text-center">
-                <Trophy size={24} className="mx-auto mb-2 text-amber-400" />
-                <p className="text-3xl font-black font-mono text-amber-400">{driver.podiums.first}</p>
-                <p className="text-[9px] text-amber-600 uppercase tracking-widest font-bold mt-1">1st Place</p>
-              </div>
-              <div className="flex-1 bg-gradient-to-br from-gray-600/20 to-black border border-gray-500/30 rounded-xl p-5 text-center">
-                <Award size={24} className="mx-auto mb-2 text-gray-300" />
-                <p className="text-3xl font-black font-mono text-gray-300">{driver.podiums.second}</p>
-                <p className="text-[9px] text-gray-500 uppercase tracking-widest font-bold mt-1">2nd Place</p>
-              </div>
-              <div className="flex-1 bg-gradient-to-br from-orange-900/20 to-black border border-orange-700/30 rounded-xl p-5 text-center">
-                <Zap size={24} className="mx-auto mb-2 text-orange-400" />
-                <p className="text-3xl font-black font-mono text-orange-400">{driver.podiums.third}</p>
-                <p className="text-[9px] text-orange-600 uppercase tracking-widest font-bold mt-1">3rd Place</p>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* ── ELO CHART ── */}
-        {driver.history.length > 0 && (
-          <div className="bg-gradient-to-br from-zinc-900/80 to-black border border-zinc-700/50 rounded-xl shadow-xl overflow-hidden mb-12">
-            <div className="px-6 py-5 border-b border-zinc-700/40 bg-black/40 flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <BarChart3 size={18} className="text-orange-500" />
-                <span className="text-[11px] font-black uppercase tracking-[0.3em] text-zinc-300">ELO Rating Over Time</span>
-              </div>
-              <span className="text-[10px] font-mono text-zinc-500">2026 Season</span>
-            </div>
-
-            <div className="relative w-full h-[400px] py-6 px-6">
-              <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={driver.history} margin={{ top: 10, right: 20, left: -10, bottom: 10 }}>
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#27272a" opacity={0.3} />
-                  <XAxis dataKey="race" stroke="#52525b" tick={{ fill: '#71717a', fontSize: 10 }} axisLine={false} tickLine={false} />
-                  <YAxis domain={['dataMin - 15', 'dataMax + 15']} stroke="#52525b" tick={{ fill: '#71717a', fontSize: 10 }} axisLine={false} tickLine={false} width={50} />
-                  <Tooltip content={<CustomTooltip />} />
-                  <Line type="monotone" dataKey="elo" stroke={tc} strokeWidth={3} dot={false} activeDot={{ r: 6, fill: tc }} connectNulls isAnimationActive={false} />
-                </LineChart>
-              </ResponsiveContainer>
-            </div>
-          </div>
-        )}
-
-        {/* ── COMPARISON ── */}
-        <div className="bg-gradient-to-br from-zinc-900/80 to-black border border-zinc-700/50 rounded-xl shadow-xl p-6">
-          <div className="flex items-center justify-between mb-6">
-            <h3 className="text-xl font-black uppercase tracking-wider flex items-center gap-2">
-              <Target size={20} className="text-orange-500" />
-              Compare Drivers
-            </h3>
-            <button
-              onClick={() => setCompareOpen(!compareOpen)}
-              className="px-4 py-2 bg-orange-600 hover:bg-orange-500 text-white text-sm font-black uppercase rounded-lg transition-colors"
-            >
-              {compareOpen ? 'Close' : 'Select Driver'}
-            </button>
-          </div>
-
-          {compareOpen && (
-            <div className="max-h-[300px] overflow-y-auto no-scrollbar grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2 mb-6 p-4 bg-black/40 rounded-lg">
-              {allDrivers.filter(d => d.driver !== driver.driver).map(d => (
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            {/* Drivers List */}
+            <div className="lg:col-span-2 space-y-2">
+              {drivers.map((driver) => (
                 <button
-                  key={d.driver}
-                  onClick={() => {
-                    setCompareDriver(d)
-                    setCompareOpen(false)
-                  }}
-                  className="p-3 bg-zinc-800/50 hover:bg-orange-600/30 border border-zinc-700/50 hover:border-orange-500/50 rounded-lg transition-all text-left"
+                  key={driver.driver}
+                  onClick={() => setSelectedDriver(driver)}
+                  className={`w-full group transition-all duration-200 ${
+                    selectedDriver?.driver === driver.driver
+                      ? 'bg-slate-800/80 border-slate-700'
+                      : 'bg-slate-800/30 border-slate-800 hover:bg-slate-800/60 hover:border-slate-700'
+                  } border rounded-lg p-4`}
                 >
-                  <p className="text-xs font-bold text-white truncate">{d.driver.split(' ').pop()}</p>
-                  <p className="text-[10px] text-zinc-500 truncate">{d.team}</p>
-                  <p className="text-sm font-mono font-black text-orange-400 mt-1">{d.elo}</p>
+                  <div className="flex items-center justify-between gap-4">
+                    <div className="flex items-center gap-4 flex-1 min-w-0">
+                      {/* Rank */}
+                      <div className="text-2xl font-bold text-slate-500 w-8 text-right flex-shrink-0">
+                        {driver.rank}
+                      </div>
+
+                      {/* Driver Info */}
+                      <div className="flex-1 min-w-0">
+                        <p className="text-base font-semibold text-white truncate group-hover:text-slate-100">
+                          {driver.driver}
+                        </p>
+                        <p className="text-xs text-slate-500 mt-1">{driver.team}</p>
+                      </div>
+                    </div>
+
+                    {/* Stats */}
+                    <div className="flex items-center gap-6 flex-shrink-0">
+                      <div className="text-right">
+                        <p className="text-2xl font-bold text-white">{driver.elo}</p>
+                        <p className="text-xs text-slate-500 mt-1">ELO</p>
+                      </div>
+                      <div className={`flex items-center gap-1 px-3 py-1 rounded ${
+                        driver.change > 0 ? 'bg-emerald-500/10' : driver.change < 0 ? 'bg-red-500/10' : 'bg-slate-700/30'
+                      }`}>
+                        {driver.change > 0 ? (
+                          <TrendingUp size={14} className="text-emerald-500" />
+                        ) : driver.change < 0 ? (
+                          <TrendingDown size={14} className="text-red-500" />
+                        ) : null}
+                        <span className={`text-xs font-semibold ${
+                          driver.change > 0 ? 'text-emerald-500' : driver.change < 0 ? 'text-red-500' : 'text-slate-500'
+                        }`}>
+                          {driver.change > 0 ? '+' : ''}{driver.change}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
                 </button>
               ))}
             </div>
-          )}
 
-          {compareDriver && (
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              {/* Current Driver */}
-              <div className="bg-black/40 border border-orange-500/30 rounded-lg p-4">
-                <p className="text-sm font-black uppercase mb-3 text-orange-400">You</p>
-                <div className="space-y-3">
-                  <div className="flex justify-between items-center">
-                    <span className="text-xs text-zinc-500 uppercase font-bold">ELO</span>
-                    <span className="text-lg font-black font-mono text-white">{driver.elo}</span>
+            {/* Driver Details Sidebar */}
+            {selectedDriver && (
+              <div className="lg:col-span-1 h-fit sticky top-24">
+                <div className="bg-slate-800/50 border border-slate-700 rounded-lg p-6 space-y-6">
+                  {/* Header */}
+                  <div>
+                    <p className="text-xs text-slate-500 uppercase tracking-widest font-semibold mb-2">
+                      {selectedDriver.team}
+                    </p>
+                    <h2 className="text-3xl font-bold text-white">{selectedDriver.driver}</h2>
                   </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-xs text-zinc-500 uppercase font-bold">Peak</span>
-                    <span className="text-lg font-black font-mono text-green-400">{driver.peak}</span>
+
+                  {/* Main Stats */}
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <p className="text-xs text-slate-500 uppercase tracking-widest font-semibold mb-2">
+                        Current ELO
+                      </p>
+                      <p className="text-3xl font-bold text-white">{selectedDriver.elo}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-slate-500 uppercase tracking-widest font-semibold mb-2">
+                        Peak
+                      </p>
+                      <p className="text-3xl font-bold text-emerald-500">{selectedDriver.peak}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-slate-500 uppercase tracking-widest font-semibold mb-2">
+                        Average
+                      </p>
+                      <p className="text-3xl font-bold text-blue-500">{selectedDriver.avg.toFixed(0)}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-slate-500 uppercase tracking-widest font-semibold mb-2">
+                        Form
+                      </p>
+                      <p className="text-3xl font-bold text-amber-500">{selectedDriver.form.toFixed(1)}</p>
+                    </div>
                   </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-xs text-zinc-500 uppercase font-bold">Form</span>
-                    <span className="text-lg font-black font-mono text-orange-400">{driver.form.toFixed(1)}</span>
-                  </div>
+
+                  {/* Chart */}
+                  {selectedDriver.history.length > 0 && (
+                    <div className="pt-4 border-t border-slate-700">
+                      <p className="text-xs text-slate-500 uppercase tracking-widest font-semibold mb-4">
+                        ELO Trend
+                      </p>
+                      <ResponsiveContainer width="100%" height={180}>
+                        <LineChart data={selectedDriver.history} margin={{ top: 5, right: 0, left: -25, bottom: 5 }}>
+                          <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#334155" opacity={0.2} />
+                          <XAxis dataKey="race" tick={{ fill: '#94a3b8', fontSize: 10 }} axisLine={false} tickLine={false} />
+                          <YAxis domain={['dataMin - 15', 'dataMax + 15']} tick={{ fill: '#94a3b8', fontSize: 10 }} axisLine={false} tickLine={false} width={35} />
+                          <Tooltip contentStyle={{ background: '#1e293b', border: '1px solid #475569', borderRadius: '6px' }} />
+                          <Line type="monotone" dataKey="elo" stroke={TEAM_COLORS[selectedDriver.team.toLowerCase()] || '#94a3b8'} strokeWidth={2} dot={false} />
+                        </LineChart>
+                      </ResponsiveContainer>
+                    </div>
+                  )}
+
+                  {/* View Full Profile */}
+                  <Link href={`/drivers/${encodeURIComponent(selectedDriver.driver)}`}>
+                    <button className="w-full bg-red-600 hover:bg-red-700 text-white font-semibold py-2 rounded transition-colors flex items-center justify-center gap-2 text-sm">
+                      View Full Profile
+                      <ChevronRight size={16} />
+                    </button>
+                  </Link>
                 </div>
               </div>
+            )}
+          </div>
+        </div>
+      )}
 
-              {/* Comparison Driver */}
-              <div className="bg-black/40 border border-zinc-700/50 rounded-lg p-4">
-                <div className="flex items-center justify-between mb-3">
-                  <p className="text-sm font-black uppercase text-zinc-400">{compareDriver.driver.split(' ').pop()}</p>
-                  <button onClick={() => setCompareDriver(null)} className="text-zinc-500 hover:text-white">
-                    <X size={16} />
-                  </button>
+      {/* TIER DISTRIBUTION VIEW */}
+      {view === 'tiers' && (
+        <div className="max-w-7xl mx-auto px-6 py-12">
+          {/* Header */}
+          <div className="mb-12">
+            <h1 className="text-5xl font-bold text-white mb-2">Tier Distribution</h1>
+            <p className="text-slate-400 text-base">Driver rankings by skill tier (2026 season)</p>
+          </div>
+
+          {/* Distribution Chart */}
+          <div className="bg-slate-800/50 border border-slate-700 rounded-lg p-8 mb-12">
+            <h2 className="text-xl font-bold text-white mb-6">Distribution</h2>
+            <ResponsiveContainer width="100%" height={300}>
+              <BarChart data={distributionData} margin={{ top: 20, right: 30, left: 0, bottom: 20 }}>
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#334155" opacity={0.2} />
+                <XAxis dataKey="tier" stroke="#94a3b8" tick={{ fill: '#cbd5e1', fontSize: 12, fontWeight: 500 }} axisLine={false} tickLine={false} />
+                <YAxis stroke="#94a3b8" tick={{ fill: '#cbd5e1', fontSize: 12 }} axisLine={false} tickLine={false} />
+                <Tooltip
+                  contentStyle={{ background: '#1e293b', border: '1px solid #475569', borderRadius: '6px', color: '#e2e8f0' }}
+                  formatter={(value) => [`${value} drivers`, 'Count']}
+                />
+                <Bar dataKey="count" radius={[8, 8, 0, 0]}>
+                  {distributionData.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={entry.color} opacity={0.8} />
+                  ))}
+                </Bar>
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+
+          {/* Tiers Grid */}
+          <div className="space-y-8">
+            {tiers.map((tierGroup) => (
+              <div key={tierGroup.tier}>
+                {/* Tier Header */}
+                <div className="mb-4 flex items-center gap-4">
+                  <div
+                    className="w-12 h-12 rounded-lg flex items-center justify-center text-white font-bold text-2xl shadow-lg"
+                    style={{ backgroundColor: tierGroup.color }}
+                  >
+                    {tierGroup.tier}
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-bold text-white">{tierGroup.tier} Tier</h3>
+                    <p className="text-sm text-slate-400">
+                      {tierGroup.drivers.length} driver{tierGroup.drivers.length !== 1 ? 's' : ''} ({tierGroup.drivers.length > 0 ? ((tierGroup.drivers.length / (tiers.reduce((sum, t) => sum + t.drivers.length, 0))) * 100).toFixed(0) : 0}%)
+                    </p>
+                  </div>
                 </div>
-                <div className="space-y-3">
-                  <div className="flex justify-between items-center">
-                    <span className="text-xs text-zinc-500 uppercase font-bold">ELO</span>
-                    <span className={`text-lg font-black font-mono ${compareDriver.elo > driver.elo ? 'text-green-400' : 'text-red-400'}`}>
-                      {compareDriver.elo} {compareDriver.elo > driver.elo ? '+' : '-'}{Math.abs(compareDriver.elo - driver.elo)}
-                    </span>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-xs text-zinc-500 uppercase font-bold">Peak</span>
-                    <span className={`text-lg font-black font-mono ${compareDriver.peak > driver.peak ? 'text-green-400' : 'text-red-400'}`}>
-                      {compareDriver.peak}
-                    </span>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-xs text-zinc-500 uppercase font-bold">Form</span>
-                    <span className={`text-lg font-black font-mono ${compareDriver.form > driver.form ? 'text-green-400' : 'text-red-400'}`}>
-                      {compareDriver.form.toFixed(1)}
-                    </span>
-                  </div>
+
+                {/* Drivers in Tier */}
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                  {tierGroup.drivers.length > 0 ? (
+                    tierGroup.drivers.map((driver) => (
+                      <Link key={driver.driver} href={`/drivers/${encodeURIComponent(driver.driver)}`}>
+                        <div className="bg-slate-800/30 hover:bg-slate-800/60 border border-slate-700 hover:border-slate-600 rounded-lg p-4 transition-all group cursor-pointer">
+                          <div className="flex items-start justify-between gap-3 mb-2">
+                            <div>
+                              <p className="font-semibold text-white group-hover:text-slate-100 transition-colors text-sm">
+                                {driver.driver}
+                              </p>
+                              <p className="text-xs text-slate-500">{driver.team}</p>
+                            </div>
+                            <span className="text-lg font-bold text-white flex-shrink-0">{driver.elo}</span>
+                          </div>
+                          <div className="flex gap-2 text-xs">
+                            <span className="text-slate-400">Peak: <span className="text-slate-200 font-medium">{driver.peak}</span></span>
+                            <span className="text-slate-400">Avg: <span className="text-slate-200 font-medium">{driver.avg.toFixed(0)}</span></span>
+                          </div>
+                        </div>
+                      </Link>
+                    ))
+                  ) : (
+                    <div className="col-span-full py-6 text-center text-slate-500 text-sm">
+                      No drivers in this tier
+                    </div>
+                  )}
                 </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Tier Explanation */}
+          <div className="mt-16 pt-12 border-t border-slate-800">
+            <h2 className="text-2xl font-bold text-white mb-6">Tier Definitions</h2>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div className="bg-slate-800/30 border border-slate-700 rounded-lg p-6">
+                <div className="text-xl font-bold text-red-500 mb-2">S & A</div>
+                <p className="text-sm text-slate-300">World-class performers. Consistently outperform peer groups with elite racecraft.</p>
+              </div>
+              <div className="bg-slate-800/30 border border-slate-700 rounded-lg p-6">
+                <div className="text-xl font-bold text-emerald-500 mb-2">B & C</div>
+                <p className="text-sm text-slate-300">Capable professionals demonstrating solid performance. Strong technical abilities.</p>
+              </div>
+              <div className="bg-slate-800/30 border border-slate-700 rounded-lg p-6">
+                <div className="text-xl font-bold text-slate-400 mb-2">D & E</div>
+                <p className="text-sm text-slate-300">Developing drivers with potential. Varied skill levels within the field.</p>
               </div>
             </div>
-          )}
+          </div>
         </div>
-      </div>
+      )}
     </div>
   )
 }

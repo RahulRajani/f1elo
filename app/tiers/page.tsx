@@ -5,8 +5,7 @@ import Papa from 'papaparse'
 import Link from 'next/link'
 import { ChevronRight, TrendingUp, TrendingDown, BarChart3, List, Zap } from 'lucide-react'
 import {
-  LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid,
-  BarChart, Bar, Cell
+  BarChart, Bar, Cell, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer
 } from 'recharts'
 
 const SHEET_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vS3Ia2YO0T2yMBlPlOLOMUCgWnT0IzT-hNqKscWJT1SqqyE5INYObl3BEP7pdmaKJI3fzJQILj7BUV6/pub?gid=1401420857&single=true&output=csv"
@@ -39,15 +38,15 @@ interface TierGroup {
 
 // Calculate form from last 3 races
 const calculateForm = (history: { race: string; elo: number }[]) => {
-  if (history.length === 0) return 0
+  if (history.length < 3) return 0
   const last3 = history.slice(-3)
   const avg = last3.reduce((sum, h) => sum + h.elo, 0) / last3.length
-  // Normalize to 0-10 scale (assuming 1500 is baseline, 1800 is perfect)
-  return Math.max(0, Math.min(10, ((avg - 1500) / 30)))
+  // Formula: (avg_elo - 1100) / 32, capped at 0-10
+  return Math.max(0, Math.min(10, (avg - 1100) / 32))
 }
 
-// Natural clustering algorithm for tiers
-const clusterDriversByElo = (drivers: DriverData[]) => {
+// Natural clustering with tier size cap
+const clusterDriversByElo = (drivers: DriverData[], maxTierSize: number = 5) => {
   if (drivers.length === 0) return []
   
   const sorted = [...drivers].sort((a, b) => b.elo - a.elo)
@@ -56,8 +55,10 @@ const clusterDriversByElo = (drivers: DriverData[]) => {
   
   for (let i = 1; i < sorted.length; i++) {
     const eloGap = sorted[i - 1].elo - sorted[i].elo
-    // If gap is > 30 ELO points, it's a natural tier boundary
-    if (eloGap > 30) {
+    const tierFull = currentCluster.length >= maxTierSize
+    
+    // New tier if: gap > 30 ELO OR tier is at max size
+    if ((eloGap > 30 && currentCluster.length >= 2) || tierFull) {
       clusters.push(currentCluster)
       currentCluster = [sorted[i]]
     } else {
@@ -66,10 +67,10 @@ const clusterDriversByElo = (drivers: DriverData[]) => {
   }
   clusters.push(currentCluster)
   
-  const tierLabels = ['S', 'A', 'B', 'C', 'D', 'E', 'F', 'G']
+  const tierLabels = ['S', 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H']
   const tierColors = [
     '#dc2626', '#ea580c', '#16a34a', '#2563eb',
-    '#9333ea', '#64748b', '#475569', '#1f2937'
+    '#9333ea', '#64748b', '#475569', '#1f2937', '#111827'
   ]
   
   return clusters.map((cluster, idx) => ({
@@ -120,10 +121,19 @@ export default function RankingsPage() {
 
                 if (!DRIVER_KEY || !ELO_KEY) throw new Error('Missing required columns')
 
-                // Find all race columns
-                const raceColumns = Object.keys(fr)
+                // Find all race columns (format: "XX ABC" where XX is number, ABC is location code)
+                let raceColumns = Object.keys(fr)
                   .filter(k => /^\d{2}\s[A-Z]{2,4}/.test(k.trim()))
                   .sort()
+
+                // Filter out garbage data: only keep races where at least 50% of drivers have data
+                raceColumns = raceColumns.filter(col => {
+                  const filledCells = rows.filter(r => {
+                    const val = r[col]
+                    return val && val.trim() && !isNaN(parseInt(val))
+                  }).length
+                  return filledCells / rows.length >= 0.5
+                })
 
                 const parsed: DriverData[] = rows
                   .filter(r => r[DRIVER_KEY]?.trim())
@@ -153,8 +163,8 @@ export default function RankingsPage() {
                 setDrivers(parsed)
                 if (parsed.length > 0) setSelectedDriver(parsed[0])
 
-                // Create natural tier clusters
-                const tierGroups = clusterDriversByElo(parsed)
+                // Create natural tier clusters with size cap
+                const tierGroups = clusterDriversByElo(parsed, 5)
                 setTiers(tierGroups)
 
                 const distribution = tierGroups.map(t => ({
@@ -350,7 +360,7 @@ export default function RankingsPage() {
                       </p>
                     </div>
                     <div className="flex items-baseline gap-2">
-                      <p className="text-4xl font-black text-orange-500">{selectedDriver.form.toFixed(1)}</p>
+                      <p className="text-4xl font-black text-orange-500">{selectedDriver.form.toFixed(2)}</p>
                       <p className="text-sm text-slate-500">/10</p>
                     </div>
                     <div className="mt-3 h-1 bg-orange-600/20 rounded-full overflow-hidden">
@@ -467,7 +477,7 @@ export default function RankingsPage() {
                         </div>
                         <div className="flex gap-3 text-xs font-bold">
                           <span className="text-slate-400">Change: <span className={driver.change > 0 ? 'text-emerald-500' : driver.change < 0 ? 'text-red-500' : 'text-slate-500'}>{driver.change > 0 ? '+' : ''}{driver.change}</span></span>
-                          <span className="text-slate-400">Form: <span className="text-orange-500">{driver.form.toFixed(1)}</span></span>
+                          <span className="text-slate-400">Form: <span className="text-orange-500">{driver.form.toFixed(2)}</span></span>
                         </div>
                       </div>
                     </Link>

@@ -3,9 +3,7 @@
 import React, { useEffect, useState } from 'react'
 import Papa from 'papaparse'
 import Link from 'next/link'
-import {
-  ChevronRight, TrendingUp, TrendingDown, BarChart3, List
-} from 'lucide-react'
+import { ChevronRight, TrendingUp, TrendingDown, BarChart3, List, Zap } from 'lucide-react'
 import {
   LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid,
   BarChart, Bar, Cell
@@ -26,9 +24,6 @@ interface DriverData {
   team: string
   elo: number
   change: number
-  avg: number
-  peak: number
-  low: number
   form: number
   history: { race: string; elo: number }[]
   podiums: { first: number; second: number; third: number }
@@ -36,10 +31,54 @@ interface DriverData {
 
 interface TierGroup {
   tier: string
-  minElo: number
-  maxElo: number
   color: string
   drivers: DriverData[]
+  minElo: number
+  maxElo: number
+}
+
+// Calculate form from last 3 races
+const calculateForm = (history: { race: string; elo: number }[]) => {
+  if (history.length === 0) return 0
+  const last3 = history.slice(-3)
+  const avg = last3.reduce((sum, h) => sum + h.elo, 0) / last3.length
+  // Normalize to 0-10 scale (assuming 1500 is baseline, 1800 is perfect)
+  return Math.max(0, Math.min(10, ((avg - 1500) / 30)))
+}
+
+// Natural clustering algorithm for tiers
+const clusterDriversByElo = (drivers: DriverData[]) => {
+  if (drivers.length === 0) return []
+  
+  const sorted = [...drivers].sort((a, b) => b.elo - a.elo)
+  const clusters: DriverData[][] = []
+  let currentCluster: DriverData[] = [sorted[0]]
+  
+  for (let i = 1; i < sorted.length; i++) {
+    const eloGap = sorted[i - 1].elo - sorted[i].elo
+    // If gap is > 30 ELO points, it's a natural tier boundary
+    if (eloGap > 30) {
+      clusters.push(currentCluster)
+      currentCluster = [sorted[i]]
+    } else {
+      currentCluster.push(sorted[i])
+    }
+  }
+  clusters.push(currentCluster)
+  
+  const tierLabels = ['S', 'A', 'B', 'C', 'D', 'E', 'F', 'G']
+  const tierColors = [
+    '#dc2626', '#ea580c', '#16a34a', '#2563eb',
+    '#9333ea', '#64748b', '#475569', '#1f2937'
+  ]
+  
+  return clusters.map((cluster, idx) => ({
+    tier: tierLabels[idx] || `T${idx + 1}`,
+    color: tierColors[idx] || '#64748b',
+    drivers: cluster,
+    minElo: Math.min(...cluster.map(d => d.elo)),
+    maxElo: Math.max(...cluster.map(d => d.elo))
+  }))
 }
 
 export default function RankingsPage() {
@@ -78,14 +117,13 @@ export default function RankingsPage() {
                 const DRIVER_KEY = find(fr, 'driver') || ''
                 const ELO_KEY = find(fr, 'elo') || ''
                 const CHANGE_KEY = find(fr, 'last change', 'change') || ''
-                const AVG_KEY = find(fr, 'season average', 'avg') || ''
-                const PEAK_KEY = find(fr, 'peak', 'highest rating') || ''
-                const LOW_KEY = find(fr, 'low', 'lowest rating') || ''
-                const FORM_KEY = find(fr, 'form') || ''
 
                 if (!DRIVER_KEY || !ELO_KEY) throw new Error('Missing required columns')
 
-                const raceColumns = Object.keys(fr).filter(k => /^\d{2}\s[A-Z]{2,4}_1$/.test(k.trim()))
+                // Find all race columns
+                const raceColumns = Object.keys(fr)
+                  .filter(k => /^\d{2}\s[A-Z]{2,4}/.test(k.trim()))
+                  .sort()
 
                 const parsed: DriverData[] = rows
                   .filter(r => r[DRIVER_KEY]?.trim())
@@ -93,7 +131,7 @@ export default function RankingsPage() {
                     const elo = parseInt(r[ELO_KEY]) || 1500
                     const history = raceColumns
                       .map(col => ({
-                        race: col.trim().replace('_1', '').substring(3),
+                        race: col.trim().substring(0, 7),
                         elo: parseInt(r[col]) || 0
                       }))
                       .filter(h => h.elo > 500)
@@ -104,10 +142,7 @@ export default function RankingsPage() {
                       team: r[TEAM_KEY]?.trim() || 'Unknown',
                       elo,
                       change: CHANGE_KEY ? (parseInt(r[CHANGE_KEY]) || 0) : 0,
-                      avg: AVG_KEY ? (parseFloat(r[AVG_KEY]) || 0) : 0,
-                      peak: PEAK_KEY ? (parseInt(r[PEAK_KEY]) || elo) : elo,
-                      low: LOW_KEY ? (parseInt(r[LOW_KEY]) || 0) : 0,
-                      form: FORM_KEY ? (parseFloat(r[FORM_KEY]) || 0) : 0,
+                      form: calculateForm(history),
                       history,
                       podiums: { first: 0, second: 0, third: 0 }
                     }
@@ -118,35 +153,14 @@ export default function RankingsPage() {
                 setDrivers(parsed)
                 if (parsed.length > 0) setSelectedDriver(parsed[0])
 
-                // Create tier groupings
-                const tierDefinitions = [
-                  { tier: 'S', minElo: 1820, color: '#dc2626' },
-                  { tier: 'A', minElo: 1750, color: '#ea580c' },
-                  { tier: 'B', minElo: 1700, color: '#16a34a' },
-                  { tier: 'C', minElo: 1650, color: '#2563eb' },
-                  { tier: 'D', minElo: 1600, color: '#9333ea' },
-                  { tier: 'E', minElo: 0, color: '#64748b' }
-                ]
-
-                const tierGroups: TierGroup[] = tierDefinitions.map((def, idx) => {
-                  const maxElo = idx === 0 ? Infinity : tierDefinitions[idx - 1].minElo
-                  const driversInTier = parsed.filter(d => d.elo >= def.minElo && d.elo < maxElo)
-                  return {
-                    tier: def.tier,
-                    minElo: def.minElo,
-                    maxElo,
-                    color: def.color,
-                    drivers: driversInTier
-                  }
-                })
-
+                // Create natural tier clusters
+                const tierGroups = clusterDriversByElo(parsed)
                 setTiers(tierGroups)
 
                 const distribution = tierGroups.map(t => ({
                   tier: t.tier,
                   count: t.drivers.length,
-                  color: t.color,
-                  percentage: ((t.drivers.length / parsed.length) * 100).toFixed(1)
+                  color: t.color
                 }))
                 setDistributionData(distribution)
               } catch (err) {
@@ -174,10 +188,10 @@ export default function RankingsPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 flex items-center justify-center">
+      <div className="min-h-screen bg-black flex items-center justify-center">
         <div className="text-center">
-          <div className="w-12 h-12 border-2 border-slate-400 border-t-red-600 rounded-full animate-spin mx-auto mb-4" />
-          <p className="text-slate-300 text-sm font-medium">Loading rankings...</p>
+          <div className="w-12 h-12 border-3 border-orange-500 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+          <p className="text-orange-500 text-sm font-bold uppercase tracking-widest">Loading rankings...</p>
         </div>
       </div>
     )
@@ -185,10 +199,10 @@ export default function RankingsPage() {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 flex items-center justify-center p-4">
-        <div className="bg-slate-800/50 border border-slate-700 rounded-lg p-6 max-w-md">
-          <p className="text-red-400 text-sm font-medium mb-4">{error}</p>
-          <Link href="/" className="inline-block px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-sm font-medium rounded transition-colors">
+      <div className="min-h-screen bg-black flex items-center justify-center p-4">
+        <div className="bg-orange-500/10 border border-orange-500/30 rounded-lg p-6 max-w-md">
+          <p className="text-orange-500 text-sm font-medium mb-4">{error}</p>
+          <Link href="/" className="inline-block px-4 py-2 bg-orange-600 hover:bg-orange-700 text-white text-sm font-bold rounded transition-colors">
             Back Home
           </Link>
         </div>
@@ -197,26 +211,26 @@ export default function RankingsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 text-slate-100">
+    <div className="min-h-screen bg-black text-white">
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Crimson+Text:ital@0;1&display=swap');
-        body { font-family: 'Outfit', sans-serif; }
-        h1, h2, h3, h4, h5, h6 { font-family: 'Crimson Text', serif; font-weight: 700; }
+        @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Syne:wght@600;700;800&display=swap');
+        body { font-family: 'Space Grotesk', sans-serif; }
+        h1, h2, h3, h4, h5, h6 { font-family: 'Syne', sans-serif; font-weight: 700; }
       `}</style>
 
       {/* Navigation */}
-      <div className="sticky top-0 z-40 bg-slate-950/80 backdrop-blur-sm border-b border-slate-800">
-        <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
-          <Link href="/" className="text-2xl font-bold text-white hover:text-slate-300 transition-colors">
-            F1 ELO
+      <div className="sticky top-0 z-40 bg-black/90 backdrop-blur-md border-b border-orange-500/20">
+        <div className="max-w-7xl mx-auto px-6 py-5 flex items-center justify-between">
+          <Link href="/" className="text-2xl font-black text-white hover:text-orange-500 transition-colors">
+            F1 <span className="text-orange-600">ELO</span>
           </Link>
-          <div className="flex items-center gap-1 bg-slate-800/50 p-1 rounded-lg border border-slate-700">
+          <div className="flex items-center gap-2 bg-black/50 border border-orange-500/30 p-1 rounded-lg">
             <button
               onClick={() => setView('leaderboard')}
-              className={`flex items-center gap-2 px-4 py-2 rounded transition-all font-medium text-sm ${
+              className={`flex items-center gap-2 px-4 py-2 rounded font-bold text-sm uppercase tracking-wider transition-all ${
                 view === 'leaderboard'
-                  ? 'bg-slate-700 text-white'
-                  : 'text-slate-400 hover:text-slate-300'
+                  ? 'bg-orange-600 text-white shadow-lg shadow-orange-600/50'
+                  : 'text-orange-500/70 hover:text-orange-500'
               }`}
             >
               <List size={16} />
@@ -224,14 +238,14 @@ export default function RankingsPage() {
             </button>
             <button
               onClick={() => setView('tiers')}
-              className={`flex items-center gap-2 px-4 py-2 rounded transition-all font-medium text-sm ${
+              className={`flex items-center gap-2 px-4 py-2 rounded font-bold text-sm uppercase tracking-wider transition-all ${
                 view === 'tiers'
-                  ? 'bg-slate-700 text-white'
-                  : 'text-slate-400 hover:text-slate-300'
+                  ? 'bg-orange-600 text-white shadow-lg shadow-orange-600/50'
+                  : 'text-orange-500/70 hover:text-orange-500'
               }`}
             >
               <BarChart3 size={16} />
-              Tier Distribution
+              Tiers
             </button>
           </div>
         </div>
@@ -242,58 +256,54 @@ export default function RankingsPage() {
         <div className="max-w-7xl mx-auto px-6 py-12">
           {/* Header */}
           <div className="mb-12">
-            <h1 className="text-5xl font-bold text-white mb-2">Leaderboard</h1>
-            <p className="text-slate-400 text-base">2026 Formula 1 ELO Ratings</p>
+            <h1 className="text-6xl font-black text-white mb-2 italic">LEADERBOARD</h1>
+            <p className="text-orange-500 font-bold uppercase tracking-widest text-sm">2026 Formula 1 ELO Ratings</p>
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             {/* Drivers List */}
-            <div className="lg:col-span-2 space-y-2">
+            <div className="lg:col-span-2 space-y-3">
               {drivers.map((driver) => (
                 <button
                   key={driver.driver}
                   onClick={() => setSelectedDriver(driver)}
-                  className={`w-full group transition-all duration-200 ${
+                  className={`w-full group transition-all duration-200 border-2 rounded-lg p-5 text-left ${
                     selectedDriver?.driver === driver.driver
-                      ? 'bg-slate-800/80 border-slate-700'
-                      : 'bg-slate-800/30 border-slate-800 hover:bg-slate-800/60 hover:border-slate-700'
-                  } border rounded-lg p-4`}
+                      ? 'bg-orange-600/20 border-orange-600 shadow-lg shadow-orange-600/30'
+                      : 'bg-transparent border-orange-500/20 hover:border-orange-500/50 hover:bg-orange-500/5'
+                  }`}
                 >
-                  <div className="flex items-center justify-between gap-4">
+                  <div className="flex items-center justify-between gap-6">
                     <div className="flex items-center gap-4 flex-1 min-w-0">
                       {/* Rank */}
-                      <div className="text-2xl font-bold text-slate-500 w-8 text-right flex-shrink-0">
-                        {driver.rank}
+                      <div className="text-3xl font-black text-orange-600 w-10 flex-shrink-0">
+                        #{driver.rank}
                       </div>
 
                       {/* Driver Info */}
                       <div className="flex-1 min-w-0">
-                        <p className="text-base font-semibold text-white truncate group-hover:text-slate-100">
+                        <p className="text-lg font-black text-white truncate group-hover:text-orange-400">
                           {driver.driver}
                         </p>
-                        <p className="text-xs text-slate-500 mt-1">{driver.team}</p>
+                        <p className="text-xs text-orange-500/60 mt-1 uppercase tracking-wider font-bold">{driver.team}</p>
                       </div>
                     </div>
 
                     {/* Stats */}
                     <div className="flex items-center gap-6 flex-shrink-0">
                       <div className="text-right">
-                        <p className="text-2xl font-bold text-white">{driver.elo}</p>
-                        <p className="text-xs text-slate-500 mt-1">ELO</p>
+                        <p className="text-3xl font-black text-white">{driver.elo}</p>
+                        <p className="text-xs text-orange-500/60 mt-1 uppercase font-bold">ELO</p>
                       </div>
-                      <div className={`flex items-center gap-1 px-3 py-1 rounded ${
-                        driver.change > 0 ? 'bg-emerald-500/10' : driver.change < 0 ? 'bg-red-500/10' : 'bg-slate-700/30'
+                      <div className={`flex items-center gap-2 px-3 py-2 rounded font-bold ${
+                        driver.change > 0 ? 'bg-emerald-500/20 text-emerald-500' : driver.change < 0 ? 'bg-red-500/20 text-red-500' : 'bg-slate-500/10 text-slate-500'
                       }`}>
                         {driver.change > 0 ? (
-                          <TrendingUp size={14} className="text-emerald-500" />
+                          <TrendingUp size={16} />
                         ) : driver.change < 0 ? (
-                          <TrendingDown size={14} className="text-red-500" />
+                          <TrendingDown size={16} />
                         ) : null}
-                        <span className={`text-xs font-semibold ${
-                          driver.change > 0 ? 'text-emerald-500' : driver.change < 0 ? 'text-red-500' : 'text-slate-500'
-                        }`}>
-                          {driver.change > 0 ? '+' : ''}{driver.change}
-                        </span>
+                        <span>{driver.change > 0 ? '+' : ''}{driver.change}</span>
                       </div>
                     </div>
                   </div>
@@ -304,66 +314,75 @@ export default function RankingsPage() {
             {/* Driver Details Sidebar */}
             {selectedDriver && (
               <div className="lg:col-span-1 h-fit sticky top-24">
-                <div className="bg-slate-800/50 border border-slate-700 rounded-lg p-6 space-y-6">
+                <div className="bg-orange-600/10 border-2 border-orange-600/30 rounded-lg p-6 space-y-6">
                   {/* Header */}
                   <div>
-                    <p className="text-xs text-slate-500 uppercase tracking-widest font-semibold mb-2">
+                    <p className="text-xs text-orange-500 uppercase tracking-widest font-black mb-2">
                       {selectedDriver.team}
                     </p>
-                    <h2 className="text-3xl font-bold text-white">{selectedDriver.driver}</h2>
+                    <h2 className="text-4xl font-black text-white">{selectedDriver.driver}</h2>
                   </div>
 
                   {/* Main Stats */}
                   <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <p className="text-xs text-slate-500 uppercase tracking-widest font-semibold mb-2">
-                        Current ELO
+                    <div className="bg-black/40 border border-orange-500/20 rounded-lg p-4">
+                      <p className="text-xs text-orange-500 uppercase tracking-widest font-bold mb-2">
+                        Current
                       </p>
-                      <p className="text-3xl font-bold text-white">{selectedDriver.elo}</p>
+                      <p className="text-3xl font-black text-white">{selectedDriver.elo}</p>
                     </div>
-                    <div>
-                      <p className="text-xs text-slate-500 uppercase tracking-widest font-semibold mb-2">
-                        Peak
+                    <div className="bg-black/40 border border-orange-500/20 rounded-lg p-4">
+                      <p className="text-xs text-orange-500 uppercase tracking-widest font-bold mb-2">
+                        Change
                       </p>
-                      <p className="text-3xl font-bold text-emerald-500">{selectedDriver.peak}</p>
-                    </div>
-                    <div>
-                      <p className="text-xs text-slate-500 uppercase tracking-widest font-semibold mb-2">
-                        Average
+                      <p className={`text-3xl font-black ${selectedDriver.change > 0 ? 'text-emerald-500' : selectedDriver.change < 0 ? 'text-red-500' : 'text-slate-500'}`}>
+                        {selectedDriver.change > 0 ? '+' : ''}{selectedDriver.change}
                       </p>
-                      <p className="text-3xl font-bold text-blue-500">{selectedDriver.avg.toFixed(0)}</p>
-                    </div>
-                    <div>
-                      <p className="text-xs text-slate-500 uppercase tracking-widest font-semibold mb-2">
-                        Form
-                      </p>
-                      <p className="text-3xl font-bold text-amber-500">{selectedDriver.form.toFixed(1)}</p>
                     </div>
                   </div>
 
-                  {/* Chart */}
-                  {selectedDriver.history.length > 0 && (
-                    <div className="pt-4 border-t border-slate-700">
-                      <p className="text-xs text-slate-500 uppercase tracking-widest font-semibold mb-4">
-                        ELO Trend
+                  {/* Form Rating */}
+                  <div className="bg-black/40 border border-orange-500/20 rounded-lg p-4">
+                    <div className="flex items-center gap-2 mb-3">
+                      <Zap size={16} className="text-orange-500" />
+                      <p className="text-xs text-orange-500 uppercase tracking-widest font-bold">
+                        Form (Last 3 Races)
                       </p>
-                      <ResponsiveContainer width="100%" height={180}>
-                        <LineChart data={selectedDriver.history} margin={{ top: 5, right: 0, left: -25, bottom: 5 }}>
-                          <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#334155" opacity={0.2} />
-                          <XAxis dataKey="race" tick={{ fill: '#94a3b8', fontSize: 10 }} axisLine={false} tickLine={false} />
-                          <YAxis domain={['dataMin - 15', 'dataMax + 15']} tick={{ fill: '#94a3b8', fontSize: 10 }} axisLine={false} tickLine={false} width={35} />
-                          <Tooltip contentStyle={{ background: '#1e293b', border: '1px solid #475569', borderRadius: '6px' }} />
-                          <Line type="monotone" dataKey="elo" stroke={TEAM_COLORS[selectedDriver.team.toLowerCase()] || '#94a3b8'} strokeWidth={2} dot={false} />
-                        </LineChart>
-                      </ResponsiveContainer>
+                    </div>
+                    <div className="flex items-baseline gap-2">
+                      <p className="text-4xl font-black text-orange-500">{selectedDriver.form.toFixed(1)}</p>
+                      <p className="text-sm text-slate-500">/10</p>
+                    </div>
+                    <div className="mt-3 h-1 bg-orange-600/20 rounded-full overflow-hidden">
+                      <div 
+                        className="h-full bg-gradient-to-r from-orange-500 to-red-500 rounded-full transition-all"
+                        style={{ width: `${(selectedDriver.form / 10) * 100}%` }}
+                      />
+                    </div>
+                  </div>
+
+                  {/* Recent Races */}
+                  {selectedDriver.history.length > 0 && (
+                    <div className="bg-black/40 border border-orange-500/20 rounded-lg p-4">
+                      <p className="text-xs text-orange-500 uppercase tracking-widest font-bold mb-3">
+                        Recent Races
+                      </p>
+                      <div className="space-y-2">
+                        {selectedDriver.history.slice(-5).reverse().map((race, idx) => (
+                          <div key={idx} className="flex items-center justify-between text-sm">
+                            <span className="text-slate-400">{race.race}</span>
+                            <span className="font-bold text-white">{race.elo}</span>
+                          </div>
+                        ))}
+                      </div>
                     </div>
                   )}
 
                   {/* View Full Profile */}
                   <Link href={`/drivers/${encodeURIComponent(selectedDriver.driver)}`}>
-                    <button className="w-full bg-red-600 hover:bg-red-700 text-white font-semibold py-2 rounded transition-colors flex items-center justify-center gap-2 text-sm">
-                      View Full Profile
-                      <ChevronRight size={16} />
+                    <button className="w-full bg-orange-600 hover:bg-orange-700 text-white font-black py-3 rounded-lg transition-all flex items-center justify-center gap-2 uppercase tracking-widest text-sm shadow-lg shadow-orange-600/30">
+                      Full Profile
+                      <ChevronRight size={18} />
                     </button>
                   </Link>
                 </div>
@@ -378,25 +397,26 @@ export default function RankingsPage() {
         <div className="max-w-7xl mx-auto px-6 py-12">
           {/* Header */}
           <div className="mb-12">
-            <h1 className="text-5xl font-bold text-white mb-2">Tier Distribution</h1>
-            <p className="text-slate-400 text-base">Driver rankings by skill tier (2026 season)</p>
+            <h1 className="text-6xl font-black text-white mb-2 italic">TIER DISTRIBUTION</h1>
+            <p className="text-orange-500 font-bold uppercase tracking-widest text-sm">Natural ELO Clustering (2026)</p>
           </div>
 
           {/* Distribution Chart */}
-          <div className="bg-slate-800/50 border border-slate-700 rounded-lg p-8 mb-12">
-            <h2 className="text-xl font-bold text-white mb-6">Distribution</h2>
-            <ResponsiveContainer width="100%" height={300}>
+          <div className="bg-orange-600/10 border-2 border-orange-600/30 rounded-lg p-8 mb-12">
+            <h2 className="text-2xl font-black text-white mb-8 uppercase">Distribution</h2>
+            <ResponsiveContainer width="100%" height={320}>
               <BarChart data={distributionData} margin={{ top: 20, right: 30, left: 0, bottom: 20 }}>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#334155" opacity={0.2} />
-                <XAxis dataKey="tier" stroke="#94a3b8" tick={{ fill: '#cbd5e1', fontSize: 12, fontWeight: 500 }} axisLine={false} tickLine={false} />
-                <YAxis stroke="#94a3b8" tick={{ fill: '#cbd5e1', fontSize: 12 }} axisLine={false} tickLine={false} />
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#ea580c" opacity={0.1} />
+                <XAxis dataKey="tier" stroke="#ea580c" tick={{ fill: '#ea580c', fontSize: 13, fontWeight: 700 }} axisLine={false} tickLine={false} />
+                <YAxis stroke="#ea580c" tick={{ fill: '#ea580c', fontSize: 13 }} axisLine={false} tickLine={false} />
                 <Tooltip
-                  contentStyle={{ background: '#1e293b', border: '1px solid #475569', borderRadius: '6px', color: '#e2e8f0' }}
+                  contentStyle={{ background: '#1a1a1a', border: '2px solid #ea580c', borderRadius: '8px', color: '#fff' }}
                   formatter={(value) => [`${value} drivers`, 'Count']}
+                  labelStyle={{ color: '#ea580c', fontWeight: 'bold' }}
                 />
-                <Bar dataKey="count" radius={[8, 8, 0, 0]}>
+                <Bar dataKey="count" radius={[10, 10, 0, 0]}>
                   {distributionData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={entry.color} opacity={0.8} />
+                    <Cell key={`cell-${index}`} fill={entry.color} />
                   ))}
                 </Bar>
               </BarChart>
@@ -404,74 +424,57 @@ export default function RankingsPage() {
           </div>
 
           {/* Tiers Grid */}
-          <div className="space-y-8">
+          <div className="space-y-10">
             {tiers.map((tierGroup) => (
               <div key={tierGroup.tier}>
                 {/* Tier Header */}
-                <div className="mb-4 flex items-center gap-4">
+                <div className="mb-6 flex items-center gap-4">
                   <div
-                    className="w-12 h-12 rounded-lg flex items-center justify-center text-white font-bold text-2xl shadow-lg"
+                    className="w-14 h-14 rounded-lg flex items-center justify-center text-white font-black text-3xl shadow-lg"
                     style={{ backgroundColor: tierGroup.color }}
                   >
                     {tierGroup.tier}
                   </div>
                   <div>
-                    <h3 className="text-lg font-bold text-white">{tierGroup.tier} Tier</h3>
-                    <p className="text-sm text-slate-400">
-                      {tierGroup.drivers.length} driver{tierGroup.drivers.length !== 1 ? 's' : ''} ({tierGroup.drivers.length > 0 ? ((tierGroup.drivers.length / (tiers.reduce((sum, t) => sum + t.drivers.length, 0))) * 100).toFixed(0) : 0}%)
+                    <h3 className="text-2xl font-black text-white uppercase">{tierGroup.tier} Tier</h3>
+                    <p className="text-sm text-orange-500 font-bold uppercase tracking-wider mt-1">
+                      {tierGroup.drivers.length} driver{tierGroup.drivers.length !== 1 ? 's' : ''} • {tierGroup.minElo}-{tierGroup.maxElo} ELO
                     </p>
                   </div>
                 </div>
 
                 {/* Drivers in Tier */}
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-                  {tierGroup.drivers.length > 0 ? (
-                    tierGroup.drivers.map((driver) => (
-                      <Link key={driver.driver} href={`/drivers/${encodeURIComponent(driver.driver)}`}>
-                        <div className="bg-slate-800/30 hover:bg-slate-800/60 border border-slate-700 hover:border-slate-600 rounded-lg p-4 transition-all group cursor-pointer">
-                          <div className="flex items-start justify-between gap-3 mb-2">
-                            <div>
-                              <p className="font-semibold text-white group-hover:text-slate-100 transition-colors text-sm">
-                                {driver.driver}
-                              </p>
-                              <p className="text-xs text-slate-500">{driver.team}</p>
-                            </div>
-                            <span className="text-lg font-bold text-white flex-shrink-0">{driver.elo}</span>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {tierGroup.drivers.map((driver) => (
+                    <Link key={driver.driver} href={`/drivers/${encodeURIComponent(driver.driver)}`}>
+                      <div className={`border-2 rounded-lg p-5 transition-all group cursor-pointer h-full ${
+                        tierGroup.color === '#dc2626' ? 'bg-red-500/10 border-red-500/30 hover:border-red-500/60' :
+                        tierGroup.color === '#ea580c' ? 'bg-orange-500/10 border-orange-500/30 hover:border-orange-500/60' :
+                        tierGroup.color === '#16a34a' ? 'bg-green-500/10 border-green-500/30 hover:border-green-500/60' :
+                        tierGroup.color === '#2563eb' ? 'bg-blue-500/10 border-blue-500/30 hover:border-blue-500/60' :
+                        'bg-slate-500/10 border-slate-500/30 hover:border-slate-500/60'
+                      }`}>
+                        <div className="flex items-start justify-between gap-3 mb-3">
+                          <div>
+                            <p className="font-black text-white group-hover:text-orange-400 transition-colors text-base">
+                              {driver.driver}
+                            </p>
+                            <p className="text-xs text-orange-500 font-bold uppercase mt-1">{driver.team}</p>
                           </div>
-                          <div className="flex gap-2 text-xs">
-                            <span className="text-slate-400">Peak: <span className="text-slate-200 font-medium">{driver.peak}</span></span>
-                            <span className="text-slate-400">Avg: <span className="text-slate-200 font-medium">{driver.avg.toFixed(0)}</span></span>
-                          </div>
+                          <span className="text-2xl font-black flex-shrink-0" style={{ color: tierGroup.color }}>
+                            {driver.elo}
+                          </span>
                         </div>
-                      </Link>
-                    ))
-                  ) : (
-                    <div className="col-span-full py-6 text-center text-slate-500 text-sm">
-                      No drivers in this tier
-                    </div>
-                  )}
+                        <div className="flex gap-3 text-xs font-bold">
+                          <span className="text-slate-400">Change: <span className={driver.change > 0 ? 'text-emerald-500' : driver.change < 0 ? 'text-red-500' : 'text-slate-500'}>{driver.change > 0 ? '+' : ''}{driver.change}</span></span>
+                          <span className="text-slate-400">Form: <span className="text-orange-500">{driver.form.toFixed(1)}</span></span>
+                        </div>
+                      </div>
+                    </Link>
+                  ))}
                 </div>
               </div>
             ))}
-          </div>
-
-          {/* Tier Explanation */}
-          <div className="mt-16 pt-12 border-t border-slate-800">
-            <h2 className="text-2xl font-bold text-white mb-6">Tier Definitions</h2>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <div className="bg-slate-800/30 border border-slate-700 rounded-lg p-6">
-                <div className="text-xl font-bold text-red-500 mb-2">S & A</div>
-                <p className="text-sm text-slate-300">World-class performers. Consistently outperform peer groups with elite racecraft.</p>
-              </div>
-              <div className="bg-slate-800/30 border border-slate-700 rounded-lg p-6">
-                <div className="text-xl font-bold text-emerald-500 mb-2">B & C</div>
-                <p className="text-sm text-slate-300">Capable professionals demonstrating solid performance. Strong technical abilities.</p>
-              </div>
-              <div className="bg-slate-800/30 border border-slate-700 rounded-lg p-6">
-                <div className="text-xl font-bold text-slate-400 mb-2">D & E</div>
-                <p className="text-sm text-slate-300">Developing drivers with potential. Varied skill levels within the field.</p>
-              </div>
-            </div>
           </div>
         </div>
       )}

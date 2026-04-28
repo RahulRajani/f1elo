@@ -65,13 +65,6 @@ export default function DriverProfile({ params }: { params: { name?: string } })
 
   // Fetch data from Google Sheet
   useEffect(() => {
-    // FIX: Check if driverName exists before fetching
-    if (!driverName) {
-      setError('No driver specified. Please select a driver from the rankings.')
-      setLoading(false)
-      return
-    }
-
     const fetchData = async () => {
       try {
         setLoading(true)
@@ -145,25 +138,27 @@ export default function DriverProfile({ params }: { params: { name?: string } })
 
                 setAllDrivers(parsed)
 
-                // Find the specific driver (case-insensitive)
-                const found = parsed.find(d => 
-                  d.driver.toLowerCase() === driverName.toLowerCase()
-                )
-
-                if (found) {
-                  setDriver(found)
-                  fetchDriverImage(found.driver)
-                } else {
-                  // Try partial match as fallback
-                  const partial = parsed.find(d =>
-                    d.driver.toLowerCase().includes(driverName.toLowerCase()) ||
-                    driverName.toLowerCase().includes(d.driver.toLowerCase())
+                // Find the specific driver only if driverName is specified
+                if (driverName) {
+                  const found = parsed.find(d => 
+                    d.driver.toLowerCase() === driverName.toLowerCase()
                   )
-                  if (partial) {
-                    setDriver(partial)
-                    fetchDriverImage(partial.driver)
+
+                  if (found) {
+                    setDriver(found)
+                    fetchDriverImage(found.driver)
                   } else {
-                    setError(`Driver "${driverName}" not found. Available drivers: ${parsed.map(d => d.driver).join(', ').substring(0, 100)}...`)
+                    // Try partial match as fallback
+                    const partial = parsed.find(d =>
+                      d.driver.toLowerCase().includes(driverName.toLowerCase()) ||
+                      driverName.toLowerCase().includes(d.driver.toLowerCase())
+                    )
+                    if (partial) {
+                      setDriver(partial)
+                      fetchDriverImage(partial.driver)
+                    } else {
+                      setError(`Driver "${driverName}" not found. Available drivers: ${parsed.map(d => d.driver).join(', ').substring(0, 100)}...`)
+                    }
                   }
                 }
               } catch (err) {

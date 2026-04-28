@@ -50,8 +50,9 @@ const CustomTooltip = ({ active, payload, label }: any) => {
   return null
 }
 
-export default function DriverProfile({ params }: { params: { name: string } }) {
-  const driverName = decodeURIComponent(params.name)
+export default function DriverProfile({ params }: { params: { name?: string } }) {
+  // FIX: Safely handle undefined parameters
+  const driverName = params?.name ? decodeURIComponent(params.name) : null
   
   const [driver, setDriver] = useState<DriverData | null>(null)
   const [allDrivers, setAllDrivers] = useState<DriverData[]>([])
@@ -64,6 +65,13 @@ export default function DriverProfile({ params }: { params: { name: string } }) 
 
   // Fetch data from Google Sheet
   useEffect(() => {
+    // FIX: Check if driverName exists before fetching
+    if (!driverName) {
+      setError('No driver specified. Please select a driver from the rankings.')
+      setLoading(false)
+      return
+    }
+
     const fetchData = async () => {
       try {
         setLoading(true)
@@ -225,7 +233,7 @@ export default function DriverProfile({ params }: { params: { name: string } }) 
       <div className="min-h-screen bg-black flex items-center justify-center">
         <div className="text-center">
           <div className="w-16 h-16 border-3 border-orange-500 border-t-transparent rounded-full animate-spin mx-auto mb-6" />
-          <p className="text-zinc-400 uppercase tracking-widest text-sm font-bold">Loading {driverName}...</p>
+          <p className="text-zinc-400 uppercase tracking-widest text-sm font-bold">Loading {driverName || 'profile'}...</p>
           <p className="text-zinc-600 text-xs mt-3">Fetching driver data from spreadsheet</p>
         </div>
       </div>

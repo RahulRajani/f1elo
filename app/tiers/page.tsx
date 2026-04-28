@@ -209,6 +209,108 @@ export default function DriverProfile({ params }: { params: { name?: string } })
     }
   }
 
+  // Show leaderboard if no driver specified
+  if (!driverName && allDrivers.length > 0) {
+    return (
+      <div className="min-h-screen bg-black text-zinc-100 font-sans pb-24 selection:bg-orange-500/30">
+        <style>{`
+          @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Syne:wght@400;500;600;700;800&display=swap');
+          body { font-family: 'Inter', sans-serif; }
+          h1, h2, h3, h4, h5, h6 { font-family: 'Syne', sans-serif; }
+        `}</style>
+
+        {/* HEADER */}
+        <div className="sticky top-0 z-40 bg-black/80 backdrop-blur-md border-b border-zinc-800/50">
+          <div className="container mx-auto px-6 py-6 max-w-6xl">
+            <h1 className="text-4xl font-black italic uppercase tracking-tighter text-white">🏁 F1 ELO Rankings</h1>
+            <p className="text-zinc-400 text-sm mt-2">2026 Season Standings</p>
+          </div>
+        </div>
+
+        <div className="container mx-auto px-6 py-12 max-w-6xl">
+          {/* Tier Legend */}
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 mb-12">
+            {[
+              { label: 'S', desc: 'Benchmark', color: '#ff3b3b' },
+              { label: 'A', desc: 'Elite', color: '#ff9500' },
+              { label: 'B', desc: 'Upper Mid', color: '#34c759' },
+              { label: 'C', desc: 'Midfield', color: '#007aff' },
+              { label: 'D', desc: 'Lower Mid', color: '#af52de' },
+              { label: 'E', desc: 'Backmarker', color: '#636366' },
+            ].map(tier => (
+              <div key={tier.label} className="text-center">
+                <div 
+                  className="w-12 h-12 rounded-lg flex items-center justify-center text-white font-black text-lg mx-auto mb-2 shadow-lg"
+                  style={{ background: `linear-gradient(135deg, ${tier.color}, ${tier.color}dd)` }}
+                >
+                  {tier.label}
+                </div>
+                <p className="text-xs font-bold text-zinc-400">{tier.desc}</p>
+              </div>
+            ))}
+          </div>
+
+          {/* Rankings Table */}
+          <div className="space-y-2">
+            {allDrivers.map((d) => {
+              const getTier = (elo: number) => {
+                if (elo >= 1820) return { label: 'S', color: '#ff3b3b' }
+                if (elo >= 1750) return { label: 'A', color: '#ff9500' }
+                if (elo >= 1700) return { label: 'B', color: '#34c759' }
+                if (elo >= 1650) return { label: 'C', color: '#007aff' }
+                if (elo >= 1600) return { label: 'D', color: '#af52de' }
+                return { label: 'E', color: '#636366' }
+              }
+              const tier = getTier(d.elo)
+              const tc = TEAM_COLORS[d.team.toLowerCase()] || '#8a8a94'
+
+              return (
+                <Link key={d.driver} href={`/drivers/${encodeURIComponent(d.driver)}`}>
+                  <div className="bg-gradient-to-r from-zinc-900/50 to-black border border-zinc-700/30 hover:border-orange-500/50 hover:bg-zinc-900/80 rounded-lg p-4 transition-all cursor-pointer group">
+                    <div className="flex items-center gap-4">
+                      {/* Rank */}
+                      <div className="text-2xl font-black text-orange-500 w-12 text-center">#{d.rank}</div>
+
+                      {/* Tier Badge */}
+                      <div 
+                        className="w-12 h-12 rounded-lg flex items-center justify-center text-white font-black text-lg flex-shrink-0 shadow-lg"
+                        style={{ background: `linear-gradient(135deg, ${tier.color}, ${tier.color}dd)` }}
+                      >
+                        {tier.label}
+                      </div>
+
+                      {/* Driver Info */}
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 mb-1">
+                          <p className="text-lg font-black uppercase group-hover:text-orange-400 transition-colors">{d.driver}</p>
+                          <div className="w-2 h-2 rounded-full" style={{ backgroundColor: tc }} />
+                          <p className="text-xs font-bold text-zinc-500 uppercase">{d.team}</p>
+                        </div>
+                        <p className="text-xs text-zinc-600">Peak: {d.peak} | Avg: {d.avg.toFixed(0)}</p>
+                      </div>
+
+                      {/* Stats */}
+                      <div className="flex items-center gap-6 text-right">
+                        <div>
+                          <p className="text-2xl font-black font-mono text-white">{d.elo}</p>
+                          <p className="text-[10px] text-zinc-500 uppercase tracking-wider">ELO</p>
+                        </div>
+                        <div className={`flex items-center gap-1 ${d.change > 0 ? 'text-green-400' : d.change < 0 ? 'text-red-400' : 'text-zinc-600'}`}>
+                          {d.change > 0 ? <TrendingUp size={16} /> : d.change < 0 ? <TrendingDown size={16} /> : null}
+                          <span className="font-bold text-sm">{d.change > 0 ? '+' : ''}{d.change}</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </Link>
+              )
+            })}
+          </div>
+        </div>
+      </div>
+    )
+  }
+
   if (error) {
     return (
       <div className="min-h-screen bg-black flex items-center justify-center p-4">

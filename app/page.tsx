@@ -421,25 +421,25 @@ export default function Home() {
 
       {/* ── ANALYTICS GRID ── */}
       <div className="container mx-auto px-6 max-w-[1400px]">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
 
-          {/* ELO RANKINGS */}
-          <div className="lg:col-span-6 flex flex-col">
+          {/* ELO RANKINGS - FULL GRID */}
+          <div className="lg:col-span-1 flex flex-col">
             <div className="bg-gradient-to-br from-zinc-900/80 to-black border border-zinc-700/50 rounded-xl flex flex-col shadow-xl flex-1 overflow-hidden backdrop-blur-sm">
-              <div className="flex items-center gap-3 px-6 py-5 border-b border-zinc-700/40 bg-black/40">
+              <div className="flex items-center gap-3 px-6 py-5 border-b border-zinc-700/40 bg-black/40 sticky top-0 z-20">
                 <Activity size={18} className="text-orange-500" />
-                <span className="text-[11px] font-black uppercase tracking-[0.3em] text-zinc-300">Live Rankings</span>
+                <span className="text-[11px] font-black uppercase tracking-[0.3em] text-zinc-300">All Drivers ({sortedDrivers.length})</span>
                 <span className="ml-auto flex items-center gap-1.5 text-[10px] text-lime-400 font-black uppercase">
                   <span className="w-1.5 h-1.5 bg-lime-400 rounded-full animate-pulse" />Live
                 </span>
               </div>
               
-              <div className="flex-1 overflow-y-auto no-scrollbar p-2">
+              <div className="flex-1 overflow-y-auto no-scrollbar">
                 {loading ? (
                   <div className="py-20 text-center text-sm uppercase text-zinc-600 animate-pulse">Loading rankings...</div>
                 ) : (
-                  <div className="flex flex-col gap-1">
-                    {sortedDrivers.slice(0, 15).map((d, i) => {
+                  <div className="flex flex-col gap-0">
+                    {sortedDrivers.map((d, i) => {
                       const tc = TEAM_COLORS[d.team.toLowerCase()] || '#8a8a94'
                       const nameParts = d.driver.split(' ')
                       const last = nameParts.pop()
@@ -448,23 +448,23 @@ export default function Home() {
                       const isTop3 = i < 3
 
                       return (
-                        <div key={d.driver} className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-zinc-800/40 transition-colors group cursor-pointer border border-transparent hover:border-orange-500/20">
-                          <span className={`text-xl font-black italic w-7 text-center shrink-0 transition-colors ${isTop3 ? 'text-orange-500' : 'text-zinc-500 group-hover:text-zinc-300'}`}>{i + 1}</span>
+                        <div key={d.driver} className="flex items-center gap-2 px-3 py-2.5 hover:bg-zinc-800/40 transition-colors group cursor-pointer border-b border-zinc-800/20 last:border-b-0">
+                          <span className={`text-sm font-black italic w-6 text-center shrink-0 transition-colors ${isTop3 ? 'text-orange-500' : 'text-zinc-500 group-hover:text-zinc-300'}`}>{i + 1}</span>
                           
-                          <div className="w-1 h-8 rounded-full shrink-0" style={{ backgroundColor: tc }} />
+                          <div className="w-0.5 h-6 rounded-full shrink-0" style={{ backgroundColor: tc }} />
                           
                           <div className="flex-1 min-w-0">
-                            <div className="flex items-baseline gap-2">
-                              <span className="text-[10px] text-zinc-500">{first}</span>
-                              <span className="text-sm font-black italic uppercase text-white">{last}</span>
+                            <div className="flex items-baseline gap-1">
+                              <span className="text-[9px] text-zinc-600 truncate">{first}</span>
+                              <span className="text-xs font-black italic uppercase text-white truncate">{last}</span>
                             </div>
-                            <div className="text-[8px] font-bold uppercase tracking-[0.15em] mt-1" style={{ color: tc }}>{d.team}</div>
+                            <div className="text-[7px] font-bold uppercase tracking-[0.1em] mt-0.5 truncate" style={{ color: tc }}>{d.team}</div>
                           </div>
                           
                           <div className="text-right shrink-0">
-                            <div className="text-lg font-black font-mono text-orange-400">{d.elo}</div>
-                            <div className={`text-[10px] font-bold font-mono mt-1 flex justify-end items-center gap-1 ${changeVal > 0 ? 'text-green-400' : changeVal < 0 ? 'text-red-400' : 'text-zinc-600'}`}>
-                              {changeVal > 0 ? <TrendingUp size={10}/> : changeVal < 0 ? <TrendingDown size={10}/> : null}
+                            <div className="text-sm font-black font-mono text-orange-400">{d.elo}</div>
+                            <div className={`text-[8px] font-bold font-mono flex justify-end items-center gap-0.5 ${changeVal > 0 ? 'text-green-400' : changeVal < 0 ? 'text-red-400' : 'text-zinc-600'}`}>
+                              {changeVal > 0 ? <TrendingUp size={8}/> : changeVal < 0 ? <TrendingDown size={8}/> : null}
                               <span>{changeVal !== null ? (changeVal > 0 ? `+${changeVal}` : changeVal) : '—'}</span>
                             </div>
                           </div>
@@ -477,48 +477,59 @@ export default function Home() {
             </div>
           </div>
 
-          {/* TRAJECTORY CHART */}
-          <div className="lg:col-span-6 flex flex-col">
+          {/* TRAJECTORY CHART - EXPANDED */}
+          <div className="lg:col-span-2 flex flex-col">
             <div className="bg-gradient-to-br from-zinc-900/80 to-black border border-zinc-700/50 rounded-xl flex flex-col shadow-xl flex-1 overflow-hidden backdrop-blur-sm">
-              <div className="flex items-center justify-between px-6 py-5 border-b border-zinc-700/40 bg-black/40">
+              <div className="flex items-center justify-between px-6 py-5 border-b border-zinc-700/40 bg-black/40 sticky top-0 z-20">
                 <div className="flex items-center gap-3">
-                  <Target size={18} className="text-orange-500" />
-                  <span className="text-[11px] font-black uppercase tracking-[0.3em] text-zinc-300">Season Trajectory</span>
+                  <BarChart2 size={18} className="text-orange-500" />
+                  <span className="text-[11px] font-black uppercase tracking-[0.3em] text-zinc-300">Season Performance</span>
                 </div>
-                <span className="text-[10px] font-mono text-zinc-500">{updated ? `${updated}` : 'live'}</span>
+                <span className="text-[10px] font-mono text-zinc-500">{updated ? `Updated ${updated}` : 'live'}</span>
               </div>
               
-              {/* Driver Selectors */}
-              <div className="flex flex-wrap gap-2 px-4 py-3 border-b border-zinc-700/40 max-h-[120px] overflow-y-auto no-scrollbar bg-black/20">
-                {drivers.map(d => {
-                  const sel = selectedChartDrivers.includes(d.driver)
-                  const tc = TEAM_COLORS[d.team.toLowerCase()] || '#8a8a94'
-                  return (
-                    <button key={d.driver} onClick={() => toggleDriverChart(d.driver)}
-                      className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-[10px] font-bold uppercase border transition-all ${sel ? 'bg-orange-600/30 text-white border-orange-500/50 shadow-lg shadow-orange-500/20' : 'bg-black/40 text-zinc-400 border-zinc-700/40 hover:text-zinc-200 hover:border-zinc-600/60'}`}
-                    >
-                      <span className="w-2 h-2 rounded-full" style={{ backgroundColor: tc, opacity: sel ? 1 : 0.5 }} />
-                      {d.driver.split(' ').pop()}
-                    </button>
-                  )
-                })}
+              {/* Driver Selectors - Improved Grid */}
+              <div className="px-6 py-4 border-b border-zinc-700/40 bg-black/20">
+                <p className="text-[9px] text-zinc-500 uppercase tracking-widest font-bold mb-3">Select up to 9 drivers</p>
+                <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-5 gap-2 max-h-[140px] overflow-y-auto no-scrollbar">
+                  {drivers.map(d => {
+                    const sel = selectedChartDrivers.includes(d.driver)
+                    const tc = TEAM_COLORS[d.team.toLowerCase()] || '#8a8a94'
+                    return (
+                      <button key={d.driver} onClick={() => toggleDriverChart(d.driver)}
+                        className={`flex flex-col items-center gap-1.5 px-2 py-2 rounded-lg text-[9px] font-bold uppercase border transition-all ${sel ? 'bg-orange-600/30 text-white border-orange-500/50 shadow-lg shadow-orange-500/20 ring-1 ring-orange-500/20' : 'bg-black/40 text-zinc-400 border-zinc-700/40 hover:text-zinc-200 hover:border-zinc-600/60'}`}
+                      >
+                        <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: tc }} />
+                        <span className="text-[8px] leading-tight text-center">{d.driver.split(' ').pop()}</span>
+                      </button>
+                    )
+                  })}
+                </div>
               </div>
 
-              {/* Chart */}
-              <div className="flex-1 relative py-4 px-4 min-h-[320px]">
+              {/* Chart - Larger */}
+              <div className="flex-1 relative py-6 px-6 min-h-[400px] flex flex-col">
                 {loading ? (
-                  <div className="absolute inset-0 flex items-center justify-center text-xs uppercase text-zinc-600 animate-pulse">Loading chart...</div>
+                  <div className="absolute inset-0 flex items-center justify-center text-xs uppercase text-zinc-600 animate-pulse">Loading performance data...</div>
+                ) : chartData.length === 0 ? (
+                  <div className="flex-1 flex items-center justify-center text-sm text-zinc-500 uppercase tracking-widest">No race data yet</div>
                 ) : (
                   <ResponsiveContainer width="100%" height="100%">
-                    <LineChart data={chartData} margin={{ top: 5, right: 10, left: -20, bottom: 0 }}>
-                      <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#27272a" opacity={0.3} />
-                      <XAxis dataKey="name" stroke="#52525b" tick={{ fill: '#71717a', fontSize: 10, fontWeight: 600 }} tickFormatter={v => v.toUpperCase()} axisLine={false} tickLine={false} minTickGap={20} dy={5} />
-                      <YAxis domain={['dataMin - 15', 'dataMax + 15']} stroke="#52525b" tick={{ fill: '#71717a', fontSize: 10 }} axisLine={false} tickLine={false} width={40} />
-                      <Tooltip content={<CustomTooltip />} />
+                    <LineChart data={chartData} margin={{ top: 10, right: 20, left: 0, bottom: 5 }}>
+                      <defs>
+                        <linearGradient id="grad1" x1="0%" y1="0%" x2="0%" y2="100%">
+                          <stop offset="0%" stopColor="#f97316" stopOpacity={0.1}/>
+                          <stop offset="100%" stopColor="#f97316" stopOpacity={0}/>
+                        </linearGradient>
+                      </defs>
+                      <CartesianGrid strokeDasharray="4 4" vertical={false} stroke="#27272a" opacity={0.2} />
+                      <XAxis dataKey="name" stroke="#52525b" tick={{ fill: '#71717a', fontSize: 11, fontWeight: 600 }} tickFormatter={v => v.toUpperCase()} axisLine={false} tickLine={false} minTickGap={15} dy={8} />
+                      <YAxis domain={['dataMin - 20', 'dataMax + 20']} stroke="#52525b" tick={{ fill: '#71717a', fontSize: 11 }} axisLine={false} tickLine={false} width={45} />
+                      <Tooltip content={<CustomTooltip />} cursor={{ stroke: '#f97316', opacity: 0.2 }} />
                       {selectedChartDrivers.map(id => {
                         const d = drivers.find(x => x.driver === id)
                         const color = d ? TEAM_COLORS[d.team.toLowerCase()] : '#8a8a94'
-                        return <Line key={id} type="monotone" dataKey={id} name={id} stroke={color} strokeWidth={2.5} dot={false} activeDot={{ r: 6, fill: color }} connectNulls isAnimationActive={false} />
+                        return <Line key={id} type="monotone" dataKey={id} name={id} stroke={color} strokeWidth={3} dot={false} activeDot={{ r: 7, fill: color }} connectNulls isAnimationActive={false} />
                       })}
                     </LineChart>
                   </ResponsiveContainer>

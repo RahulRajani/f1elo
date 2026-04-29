@@ -108,7 +108,13 @@ const DriverCard = ({ driver, isGainer }: { driver: Driver; isGainer: boolean })
   useEffect(() => {
     const fetchWikiImage = async () => {
       try {
-        const searchName = driver.driver === 'Yuuki Tsunoda' ? 'Yuki Tsunoda' : driver.driver;
+        // Handle special cases where Wikipedia name differs from common usage
+        const nameMap: Record<string, string> = {
+          'Yuuki Tsunoda': 'Yuki Tsunoda',
+          'George Russell': 'George Russell (racing driver)',
+        };
+        
+        const searchName = nameMap[driver.driver] || driver.driver;
         const res = await fetch(
           `https://en.wikipedia.org/w/api.php?action=query&titles=${encodeURIComponent(searchName)}&prop=pageimages&format=json&pithumbsize=600&origin=*`
         );
@@ -157,19 +163,18 @@ const DriverCard = ({ driver, isGainer }: { driver: Driver; isGainer: boolean })
           />
         )}
         
-        {/* Multi-layer overlay */}
-        <div className="absolute inset-0 bg-gradient-to-b from-black/0 via-black/30 to-black/90" />
-        <div className="absolute inset-0 opacity-40" style={{ background: `radial-gradient(circle at 60% 40%, ${tc}20, transparent 70%)` }} />
+        {/* Subtle color tint only - no fade */}
+        <div className="absolute inset-0 opacity-20" style={{ background: `radial-gradient(circle at 60% 40%, ${tc}20, transparent 70%)` }} />
       </div>
 
       {/* Content */}
       <div className="flex-1 flex flex-col p-5 relative z-10">
         <div className="mb-4">
-          <p className="text-[10px] text-zinc-500 uppercase tracking-widest font-bold">{first}</p>
-          <h3 className="text-2xl font-black italic uppercase text-white mt-1 drop-shadow-lg">{last}</h3>
+          <p className="text-[12px] text-zinc-400 uppercase tracking-widest font-bold">{first}</p>
+          <h3 className="text-4xl font-black italic uppercase text-white mt-2 drop-shadow-lg leading-tight">{last}</h3>
           <div className="flex items-center gap-2 mt-3 pt-3 border-t border-zinc-700/50">
             <div className="w-1.5 h-4 rounded-full" style={{ backgroundColor: tc }} />
-            <p className="text-[9px] font-black uppercase tracking-[0.15em]" style={{ color: tc }}>
+            <p className="text-[10px] font-black uppercase tracking-[0.15em]" style={{ color: tc }}>
               {driver.team}
             </p>
           </div>

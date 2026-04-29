@@ -5,7 +5,7 @@ import Papa from 'papaparse'
 import Link from 'next/link'
 import {
   Quote, Trophy, Activity, ChevronRight, TrendingUp, TrendingDown,
-  Crosshair, BarChart2, Zap, Flame, Target, X, Wallet, ShoppingCart, ArrowRight
+  Crosshair, BarChart2, Zap, Flame, Target, Zap as ZapIcon
 } from 'lucide-react'
 import {
   LineChart, Line, XAxis, YAxis, Tooltip,
@@ -22,30 +22,32 @@ const TEAM_COLORS: Record<string, string> = {
   'sauber': '#52E252', 'haas': '#B6BABD', 'cadillac': '#C8A951',
 }
 
-const COUNTRY_THEMES: Record<string, { name: string; primaryColor: string; secondaryColor: string; accentColor: string; flag: string; flagEmoji: string }> = {
-  'Australian GP': { name: 'Australia', primaryColor: '#FFD700', secondaryColor: '#1e3a8a', accentColor: '#FFA500', flag: '🇦🇺', flagEmoji: '🇦🇺' },
-  'Chinese GP': { name: 'China', primaryColor: '#DE2910', secondaryColor: '#FFDE00', accentColor: '#FF6B6B', flag: '🇨🇳', flagEmoji: '🇨🇳' },
-  'Japanese GP': { name: 'Japan', primaryColor: '#BC002D', secondaryColor: '#FFFFFF', accentColor: '#FF1744', flag: '🇯🇵', flagEmoji: '🇯🇵' },
-  'Miami GP': { name: 'USA', primaryColor: '#3C3B6B', secondaryColor: '#FF1E56', accentColor: '#00B4D8', flag: '🇺🇸', flagEmoji: '🇺🇸' },
-  'Canadian GP': { name: 'Canada', primaryColor: '#FF0000', secondaryColor: '#FFFFFF', accentColor: '#FF6B6B', flag: '🇨🇦', flagEmoji: '🇨🇦' },
-  'Monaco GP': { name: 'Monaco', primaryColor: '#E8000B', secondaryColor: '#FFFFFF', accentColor: '#FFD700', flag: '🇲🇨', flagEmoji: '🇲🇨' },
-  'Spanish GP (Barcelona)': { name: 'Spain', primaryColor: '#FFC400', secondaryColor: '#C60B1E', accentColor: '#005AFF', flag: '🇪🇸', flagEmoji: '🇪🇸' },
-  'Austrian GP': { name: 'Austria', primaryColor: '#ED2939', secondaryColor: '#FFFFFF', accentColor: '#FFC400', flag: '🇦🇹', flagEmoji: '🇦🇹' },
-  'British GP': { name: 'United Kingdom', primaryColor: '#002D62', secondaryColor: '#FFFFFF', accentColor: '#FF1744', flag: '🇬🇧', flagEmoji: '🇬🇧' },
-  'Belgian GP': { name: 'Belgium', primaryColor: '#000000', secondaryColor: '#FFD700', accentColor: '#EF3B39', flag: '🇧🇪', flagEmoji: '🇧🇪' },
-  'Hungarian GP': { name: 'Hungary', primaryColor: '#CE1126', secondaryColor: '#FFFFFF', accentColor: '#007F5F', flag: '🇭🇺', flagEmoji: '🇭🇺' },
-  'Dutch GP': { name: 'Netherlands', primaryColor: '#AE1C28', secondaryColor: '#FFFFFF', accentColor: '#21468B', flag: '🇳🇱', flagEmoji: '🇳🇱' },
-  'Italian GP': { name: 'Italy', primaryColor: '#009246', secondaryColor: '#CE2B37', accentColor: '#002395', flag: '🇮🇹', flagEmoji: '🇮🇹' },
-  'Spanish GP (Madrid)': { name: 'Spain', primaryColor: '#FFC400', secondaryColor: '#C60B1E', accentColor: '#005AFF', flag: '🇪🇸', flagEmoji: '🇪🇸' },
-  'Azerbaijan GP': { name: 'Azerbaijan', primaryColor: '#3F9FD7', secondaryColor: '#FFFFFF', accentColor: '#00A651', flag: '🇦🇿', flagEmoji: '🇦🇿' },
-  'Singapore GP': { name: 'Singapore', primaryColor: '#FFFFFF', secondaryColor: '#FF0000', accentColor: '#FF8C00', flag: '🇸🇬', flagEmoji: '🇸🇬' },
-  'United States GP': { name: 'USA', primaryColor: '#3C3B6B', secondaryColor: '#FF1E56', accentColor: '#00B4D8', flag: '🇺🇸', flagEmoji: '🇺🇸' },
-  'Mexico City GP': { name: 'Mexico', primaryColor: '#C41E3A', secondaryColor: '#FFFFFF', accentColor: '#007C3F', flag: '🇲🇽', flagEmoji: '🇲🇽' },
-  'São Paulo GP': { name: 'Brazil', primaryColor: '#009B3A', secondaryColor: '#FFCC00', accentColor: '#002776', flag: '🇧🇷', flagEmoji: '🇧🇷' },
-  'Las Vegas GP': { name: 'USA', primaryColor: '#3C3B6B', secondaryColor: '#FF1E56', accentColor: '#00B4D8', flag: '🇺🇸', flagEmoji: '🇺🇸' },
-  'Qatar GP': { name: 'Qatar', primaryColor: '#8B0000', secondaryColor: '#FFFFFF', accentColor: '#FFD700', flag: '🇶🇦', flagEmoji: '🇶🇦' },
-  'Abu Dhabi GP': { name: 'UAE', primaryColor: '#CE1126', secondaryColor: '#00843D', accentColor: '#007F5F', flag: '🇦🇪', flagEmoji: '🇦🇪' },
+const COUNTRY_THEMES: Record<string, { name: string; primaryColor: string; secondaryColor: string; accentColor: string; flag: string }> = {
+  'Australian GP': { name: 'Australia', primaryColor: '#FFD700', secondaryColor: '#1e3a8a', accentColor: '#FFA500', flag: '🇦🇺' },
+  'Chinese GP': { name: 'China', primaryColor: '#DE2910', secondaryColor: '#FFDE00', accentColor: '#FF6B6B', flag: '🇨🇳' },
+  'Japanese GP': { name: 'Japan', primaryColor: '#BC002D', secondaryColor: '#FFFFFF', accentColor: '#FF1744', flag: '🇯🇵' },
+  'Miami GP': { name: 'USA', primaryColor: '#3C3B6B', secondaryColor: '#FF1E56', accentColor: '#00B4D8', flag: '🇺🇸' },
+  'Canadian GP': { name: 'Canada', primaryColor: '#FF0000', secondaryColor: '#FFFFFF', accentColor: '#FF6B6B', flag: '🇨🇦' },
+  'Monaco GP': { name: 'Monaco', primaryColor: '#E8000B', secondaryColor: '#FFFFFF', accentColor: '#FFD700', flag: '🇲🇨' },
+  'Spanish GP (Barcelona)': { name: 'Spain', primaryColor: '#FFC400', secondaryColor: '#C60B1E', accentColor: '#005AFF', flag: '🇪🇸' },
+  'Austrian GP': { name: 'Austria', primaryColor: '#ED2939', secondaryColor: '#FFFFFF', accentColor: '#FFC400', flag: '🇦🇹' },
+  'British GP': { name: 'United Kingdom', primaryColor: '#002D62', secondaryColor: '#FFFFFF', accentColor: '#FF1744', flag: '🇬🇧' },
+  'Belgian GP': { name: 'Belgium', primaryColor: '#000000', secondaryColor: '#FFD700', accentColor: '#EF3B39', flag: '🇧🇪' },
+  'Hungarian GP': { name: 'Hungary', primaryColor: '#CE1126', secondaryColor: '#FFFFFF', accentColor: '#007F5F', flag: '🇭🇺' },
+  'Dutch GP': { name: 'Netherlands', primaryColor: '#AE1C28', secondaryColor: '#FFFFFF', accentColor: '#21468B', flag: '🇳🇱' },
+  'Italian GP': { name: 'Italy', primaryColor: '#009246', secondaryColor: '#CE2B37', accentColor: '#002395', flag: '🇮🇹' },
+  'Spanish GP (Madrid)': { name: 'Spain', primaryColor: '#FFC400', secondaryColor: '#C60B1E', accentColor: '#005AFF', flag: '🇪🇸' },
+  'Azerbaijan GP': { name: 'Azerbaijan', primaryColor: '#3F9FD7', secondaryColor: '#FFFFFF', accentColor: '#00A651', flag: '🇦🇿' },
+  'Singapore GP': { name: 'Singapore', primaryColor: '#FFFFFF', secondaryColor: '#FF0000', accentColor: '#FF8C00', flag: '🇸🇬' },
+  'United States GP': { name: 'USA', primaryColor: '#3C3B6B', secondaryColor: '#FF1E56', accentColor: '#00B4D8', flag: '🇺🇸' },
+  'Mexico City GP': { name: 'Mexico', primaryColor: '#C41E3A', secondaryColor: '#FFFFFF', accentColor: '#007C3F', flag: '🇲🇽' },
+  'São Paulo GP': { name: 'Brazil', primaryColor: '#009B3A', secondaryColor: '#FFCC00', accentColor: '#002776', flag: '🇧🇷' },
+  'Las Vegas GP': { name: 'USA', primaryColor: '#3C3B6B', secondaryColor: '#FF1E56', accentColor: '#00B4D8', flag: '🇺🇸' },
+  'Qatar GP': { name: 'Qatar', primaryColor: '#8B0000', secondaryColor: '#FFFFFF', accentColor: '#FFD700', flag: '🇶🇦' },
+  'Abu Dhabi GP': { name: 'UAE', primaryColor: '#CE1126', secondaryColor: '#00843D', accentColor: '#007F5F', flag: '🇦🇪' },
 }
+
+const FALLBACK_IMAGE = 'https://images.unsplash.com/photo-1552820728-8ac41f1ce891?w=500&h=600&fit=crop'
 
 const RACE_FLAGS: Record<string, string> = {
   'Australian GP': '🇦🇺', 'Chinese GP': '🇨🇳', 'Japanese GP': '🇯🇵',
@@ -104,7 +106,21 @@ const CustomTooltip = ({ active, payload, label }: any) => {
   return null
 }
 
-const DriverCard = ({ driver, isGainer, onTrade }: { driver: Driver; isGainer: boolean; onTrade: (code: string) => void }) => {
+const MiniSparkline = ({ data, driverName, color, w = 72, h = 28 }: { data: any[], driverName: string, color: string, w?: number, h?: number }) => {
+  const pts = data.map(d => d[driverName]).filter((v): v is number => v !== undefined && !isNaN(v))
+  if (pts.length < 2) return <span className="text-zinc-600 text-[10px] font-mono italic">—</span>
+  const min = Math.min(...pts), max = Math.max(...pts), range = max - min || 1
+  const coords = pts.map((v, i) => `${(i / (pts.length - 1)) * w},${h - ((v - min) / range) * h}`).join(' ')
+  const lastY = h - ((pts[pts.length - 1] - min) / range) * h
+  return (
+    <svg width={w} height={h} className="overflow-visible">
+      <polyline points={coords} fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" opacity="0.9" />
+      <circle cx={w} cy={lastY} r="3" fill={color} />
+    </svg>
+  )
+}
+
+const DriverCard = ({ driver, isGainer }: { driver: Driver; isGainer: boolean }) => {
   const tc = TEAM_COLORS[driver.team.toLowerCase()] || '#8a8a94'
   const changeVal = driver.change ?? 0
   const last = driver.driver.split(' ').pop()
@@ -117,10 +133,12 @@ const DriverCard = ({ driver, isGainer, onTrade }: { driver: Driver; isGainer: b
   useEffect(() => {
     const fetchWikiImage = async () => {
       try {
+        // Handle special cases where Wikipedia name differs from common usage
         const nameMap: Record<string, string> = {
           'Yuuki Tsunoda': 'Yuki Tsunoda',
           'George Russell': 'George Russell (racing driver)',
         };
+        
         const searchName = nameMap[driver.driver] || driver.driver;
         const res = await fetch(
           `https://en.wikipedia.org/w/api.php?action=query&titles=${encodeURIComponent(searchName)}&prop=pageimages&format=json&pithumbsize=600&origin=*`
@@ -149,15 +167,17 @@ const DriverCard = ({ driver, isGainer, onTrade }: { driver: Driver; isGainer: b
 
   return (
     <div className="group relative overflow-hidden rounded-xl border border-zinc-700/40 hover:border-orange-500/40 transition-all duration-500 h-full flex flex-col bg-gradient-to-br from-zinc-900 to-black shadow-lg hover:shadow-2xl hover:shadow-orange-500/10">
+      {/* Top accent beam */}
+      <div className="absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-transparent via-orange-500 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
       <div className="absolute top-0 left-0 right-0 h-1" style={{ background: `linear-gradient(90deg, transparent, ${tc}, transparent)`, opacity: 0.6 }} />
 
-      {/* Image */}
-      <div className="relative h-32 overflow-hidden bg-gradient-to-b from-zinc-800 to-black">
+      {/* Image Section */}
+      <div className="relative h-48 overflow-hidden bg-gradient-to-b from-zinc-800 to-black">
         {isLoading && <div className="absolute inset-0 bg-zinc-800/20 animate-pulse" />}
         
         {(imageError || (!isLoading && !imageUrl)) ? (
           <div className="absolute inset-0 flex items-center justify-center" style={{ background: `linear-gradient(135deg, ${tc}30 0%, transparent 100%)` }}>
-            <User size={60} className="text-zinc-700/30" />
+            <User size={80} className="text-zinc-700/30" />
           </div>
         ) : (
           <img 
@@ -168,40 +188,33 @@ const DriverCard = ({ driver, isGainer, onTrade }: { driver: Driver; isGainer: b
           />
         )}
         
-        <div className="absolute inset-0 bg-gradient-to-b from-black/0 via-black/30 to-black/90" />
-        <div className="absolute inset-0 opacity-40" style={{ background: `radial-gradient(circle at 60% 40%, ${tc}20, transparent 70%)` }} />
+        {/* Subtle color tint only - no fade */}
+        <div className="absolute inset-0 opacity-20" style={{ background: `radial-gradient(circle at 60% 40%, ${tc}20, transparent 70%)` }} />
       </div>
 
       {/* Content */}
-      <div className="flex-1 flex flex-col p-4 relative z-10">
-        <div className="mb-3">
-          <p className="text-[9px] text-zinc-500 uppercase tracking-widest font-bold">{first}</p>
-          <h3 className="text-lg font-black italic uppercase text-white break-words">{last}</h3>
-          <div className="flex items-center gap-2 mt-2 pt-2 border-t border-zinc-700/50">
-            <div className="w-1 h-3 rounded-full" style={{ backgroundColor: tc }} />
-            <p className="text-[8px] font-black uppercase tracking-[0.1em] break-words" style={{ color: tc }}>
+      <div className="flex-1 flex flex-col p-5 relative z-10">
+        <div className="mb-4">
+          <p className="text-[12px] text-zinc-400 uppercase tracking-widest font-bold">{first}</p>
+          <h3 className="text-3xl font-black italic uppercase text-white mt-2 drop-shadow-lg leading-tight break-words word-break overflow-hidden">{last}</h3>
+          <div className="flex items-center gap-2 mt-3 pt-3 border-t border-zinc-700/50">
+            <div className="w-1.5 h-4 rounded-full" style={{ backgroundColor: tc }} />
+            <p className="text-[10px] font-black uppercase tracking-[0.15em] break-words" style={{ color: tc }}>
               {driver.team}
             </p>
           </div>
         </div>
 
-        <div className="mt-auto pt-3 border-t border-zinc-700/40 space-y-2">
-          <div className="flex justify-between items-center">
-            <span className="text-[9px] text-zinc-500 uppercase font-bold">Rating</span>
-            <div className="text-lg font-black font-mono text-white">{driver.elo}</div>
+        <div className="mt-auto pt-4 border-t border-zinc-700/40">
+          <div className="mb-4">
+            <span className="text-[10px] text-zinc-500 uppercase tracking-[0.15em] font-bold">ELO Rating</span>
+            <div className="text-2xl font-black font-mono text-white mt-1">{driver.elo.toLocaleString()}</div>
           </div>
           
-          <div className={`flex items-center gap-2 px-2 py-1.5 rounded text-xs font-black transition-all justify-center ${isGainer ? 'bg-green-500/15 text-green-300 border border-green-500/30' : 'bg-red-500/15 text-red-300 border border-red-500/30'}`}>
-            {isGainer ? <TrendingUp size={14} /> : <TrendingDown size={14} />}
+          <div className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-black transition-all ${isGainer ? 'bg-green-500/15 text-green-300 border border-green-500/30 shadow-lg shadow-green-500/10' : 'bg-red-500/15 text-red-300 border border-red-500/30 shadow-lg shadow-red-500/10'}`}>
+            {isGainer ? <TrendingUp size={16} /> : <TrendingDown size={16} />}
             <span>{isGainer ? '+' : ''}{changeVal}</span>
           </div>
-
-          <button 
-            onClick={() => onTrade(driver.driver.split(' ').pop()?.substring(0, 3).toUpperCase() || '')}
-            className="w-full bg-gradient-to-r from-orange-600 to-orange-500 hover:from-orange-500 hover:to-orange-400 text-white text-[10px] font-black uppercase italic py-2 rounded-lg transition-all shadow-lg shadow-orange-500/20 active:scale-95 flex items-center justify-center gap-1.5 mt-2"
-          >
-            <ShoppingCart size={12} /> Trade
-          </button>
         </div>
       </div>
     </div>
@@ -218,7 +231,6 @@ export default function Home() {
   const [timeLeft, setTimeLeft] = useState({ d: '00', h: '00', m: '00', s: '00' })
   const [nextRaceIndex, setNextRaceIndex] = useState(0)
   const [targetRaceDate, setTargetRaceDate] = useState('')
-  const [tradeModal, setTradeModal] = useState<{ isOpen: boolean, driverCode: string | null }>({ isOpen: false, driverCode: null })
   const [currentTheme, setCurrentTheme] = useState(COUNTRY_THEMES['Miami GP'])
 
   useEffect(() => {
@@ -298,139 +310,123 @@ export default function Home() {
     <div className="min-h-screen bg-black text-zinc-100 font-sans pb-24 selection:bg-orange-500/30">
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Syne:wght@400;500;600;700;800&display=swap');
+        
         body { font-family: 'Inter', sans-serif; }
         h1, h2, h3, h4, h5, h6 { font-family: 'Syne', sans-serif; }
+        
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
       `}</style>
 
-      {/* ── EDITORIAL HERO ── */}
-      <section className="relative overflow-hidden border-b border-orange-500/20 mb-12">
-        <div className="absolute inset-0 opacity-[0.15]" style={{ backgroundImage: "url('https://images.unsplash.com/photo-1614200187524-dc4b892acf16?q=80&w=2000&auto=format&fit=crop')", backgroundSize: 'cover', backgroundPosition: 'center' }} />
-        <div className="absolute inset-0 bg-gradient-to-r from-black via-black/70 to-transparent" />
-        
-        <div className="container mx-auto px-6 relative z-10 py-16 lg:py-20">
-          <Link href="/editorial" className="group block">
-            <div className="mb-6 flex items-center gap-3">
-              <span className="bg-orange-600 text-white text-[11px] font-black italic px-4 py-2 uppercase tracking-widest">Premium</span>
-              <span className="text-[10px] uppercase tracking-[0.3em] font-black text-zinc-400">Issue 03</span>
-            </div>
-            <h1 className="text-6xl lg:text-7xl font-black italic uppercase tracking-tighter leading-[0.9] mb-6 max-w-3xl group-hover:text-orange-300 transition-colors">
-              McLaren, <br />Regulations<br />&amp; <span className="text-orange-500">Miami</span>
-            </h1>
-            <div className="flex items-center gap-3 text-orange-400 text-[11px] font-black italic uppercase tracking-widest group-hover:gap-6 transition-all">
-              Read Analysis <ChevronRight size={20} />
-            </div>
-          </Link>
-        </div>
-      </section>
+      {/* ── HERO NEXT RACE WITH DYNAMIC COUNTRY THEME ── */}
+      <section className="relative overflow-hidden mb-16" style={{ background: `linear-gradient(135deg, ${currentTheme.primaryColor}15 0%, ${currentTheme.secondaryColor}08 50%, #000000 100%)` }}>
+        {/* Animated background with theme colors */}
+        <div className="absolute inset-0" style={{ background: `linear-gradient(to br, ${currentTheme.primaryColor}10 via-black to-black)` }} />
+        <div className="absolute -top-40 -right-40 w-80 h-80 rounded-full blur-3xl animate-pulse" style={{ backgroundColor: `${currentTheme.primaryColor}15` }} />
+        <div className="absolute top-0 left-0 right-0 h-px" style={{ background: `linear-gradient(90deg, transparent, ${currentTheme.primaryColor}80, transparent)` }} />
 
-      {/* ── NEXT RACE BAR WITH DYNAMIC COUNTRY THEME ── */}
-      <section className="container mx-auto px-6 mb-12 relative">
-        {/* Dynamic country background flag */}
-        <div className="absolute inset-0 opacity-[0.08] rounded-xl overflow-hidden" style={{ background: `linear-gradient(135deg, ${currentTheme.primaryColor} 0%, ${currentTheme.secondaryColor} 100%)` }} />
-        
-        <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-8 bg-gradient-to-br from-zinc-900/50 to-black border rounded-xl p-8 relative z-10" style={{ borderColor: `${currentTheme.primaryColor}40` }}>
-          <div className="flex items-start gap-6">
-            <div className="relative shrink-0">
-              <div className="w-20 h-20 rounded-lg flex items-center justify-center shadow-2xl" style={{ background: `linear-gradient(135deg, ${currentTheme.primaryColor}, ${currentTheme.accentColor})`, boxShadow: `0 0 30px ${currentTheme.primaryColor}40` }}>
-                <span className="font-black italic text-white text-3xl">R{(nextRaceIndex + 1).toString().padStart(2, '0')}</span>
+        <div className="container mx-auto px-6 py-12 relative z-10">
+          <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-12">
+            {/* Left: Race Info */}
+            <div className="flex items-start gap-8">
+              <div className="relative shrink-0">
+                <div className="w-24 h-24 rounded-xl flex items-center justify-center shadow-2xl" style={{ background: `linear-gradient(to br, ${currentTheme.primaryColor}, ${currentTheme.accentColor})`, boxShadow: `0 0 30px ${currentTheme.primaryColor}40` }}>
+                  <span className="font-black italic text-white text-4xl">R{(nextRaceIndex + 1).toString().padStart(2, '0')}</span>
+                </div>
+                <div className="absolute -top-2 -right-2 w-4 h-4 bg-lime-400 rounded-full shadow-lg shadow-lime-400/60 animate-pulse" />
               </div>
-              <div className="absolute -top-2 -right-2 w-3 h-3 bg-lime-400 rounded-full shadow-lg shadow-lime-400/60 animate-pulse" />
+              <div>
+                <p className="text-[11px] font-bold uppercase tracking-[0.3em] mb-3 flex items-center gap-2" style={{ color: currentTheme.primaryColor }}>
+                  <span className="w-2 h-2 rounded-full" style={{ backgroundColor: currentTheme.primaryColor }} /> Next Race
+                </p>
+                <h2 className="text-4xl lg:text-5xl font-black italic uppercase tracking-tighter mb-2 text-white">
+                  {currentTheme.flag} {targetRaceName}
+                </h2>
+                <p className="text-sm text-zinc-400 tracking-wider">{targetRaceDate}</p>
+              </div>
             </div>
-            <div>
-              <p className="text-[10px] font-bold uppercase tracking-[0.25em] mb-2" style={{ color: currentTheme.primaryColor }}>Next Race</p>
-              <h2 className="text-3xl font-black italic uppercase tracking-tight text-white mb-1">
-                {currentTheme.flagEmoji} {targetRaceName}
-              </h2>
-              <p className="text-sm text-zinc-400">{targetRaceDate}</p>
-            </div>
-          </div>
 
-          <div className="flex items-stretch gap-0 rounded-lg border overflow-hidden" style={{ backgroundColor: 'rgba(0,0,0,0.6)', borderColor: `${currentTheme.primaryColor}50` }}>
-            {[{ val: timeLeft.d, label: 'DAYS' }, { val: timeLeft.h, label: 'HRS' }, { val: timeLeft.m, label: 'MIN' }, { val: timeLeft.s, label: 'SEC' }].map((t, i) => (
-              <div key={i} className="flex flex-col items-center justify-center px-5 py-3 border-r last:border-r-0" style={{ borderColor: 'rgba(39,39,42,0.5)' }}>
-                <span className="text-3xl font-black font-mono" style={{ color: currentTheme.primaryColor }}>{t.val}</span>
-                <span className="text-[8px] font-black uppercase tracking-[0.25em] text-zinc-500 mt-1.5">{t.label}</span>
-              </div>
-            ))}
+            {/* Right: Countdown */}
+            <div className="flex items-stretch gap-0 rounded-xl border overflow-hidden backdrop-blur-sm" style={{ backgroundColor: 'rgba(0,0,0,0.6)', borderColor: `${currentTheme.primaryColor}50` }}>
+              {[{ val: timeLeft.d, label: 'DAYS' }, { val: timeLeft.h, label: 'HRS' }, { val: timeLeft.m, label: 'MIN' }, { val: timeLeft.s, label: 'SEC' }].map((t, i) => (
+                <div key={i} className={`flex flex-col items-center justify-center px-7 py-4 tabular-nums border-r last:border-r-0`} style={{ borderColor: 'rgba(39,39,42,0.5)' }}>
+                  <span className="text-4xl font-black font-mono leading-none" style={{ color: currentTheme.primaryColor }}>{t.val}</span>
+                  <span className="text-[9px] font-black uppercase tracking-[0.3em] text-zinc-500 mt-2">{t.label}</span>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       </section>
 
-      {/* ── SEASON TRAJECTORY (BIG CHART) ── */}
-      <section className="container mx-auto px-6 mb-12">
-        <div className="bg-gradient-to-br from-zinc-900/80 to-black border border-zinc-700/50 rounded-xl shadow-xl overflow-hidden backdrop-blur-sm">
-          <div className="flex items-center justify-between px-6 py-5 border-b border-zinc-700/40 bg-black/40">
-            <div className="flex items-center gap-3">
-              <Target size={20} className="text-orange-500" />
-              <span className="text-[11px] font-black uppercase tracking-[0.3em] text-zinc-300">Season Trajectory</span>
-            </div>
-            <span className="text-[10px] font-mono text-zinc-500">{updated}</span>
-          </div>
+      {/* ── PREMIUM EDITORIAL CARD - FEATURED AT TOP ── */}
+      <div className="container mx-auto px-6 max-w-[1400px] mb-16">
+        <Link href="/editorial" className="group block relative overflow-hidden rounded-2xl border-2 border-orange-500/40 hover:border-orange-500/80 transition-all duration-500">
+          {/* Background with overlay */}
+          <div className="absolute inset-0 bg-gradient-to-r from-slate-900 via-orange-950/30 to-slate-900" />
+          <div className="absolute inset-0 opacity-0 group-hover:opacity-20 transition-opacity duration-500"
+            style={{ backgroundImage: "url('https://www.racefans.net/wp-content/uploads/2026/03/racefansdotnet-24-03-28-06-02-31-1-2803JapanSat-1.jpg')", backgroundSize: 'cover', backgroundPosition: 'center' }} />
           
-          {/* Driver Selectors */}
-          <div className="flex flex-wrap gap-2 px-6 py-4 border-b border-zinc-700/40 max-h-[100px] overflow-y-auto no-scrollbar bg-black/20">
-            {drivers.map(d => {
-              const sel = selectedChartDrivers.includes(d.driver)
-              const tc = TEAM_COLORS[d.team.toLowerCase()] || '#8a8a94'
-              return (
-                <button key={d.driver} onClick={() => toggleDriverChart(d.driver)}
-                  className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-[10px] font-bold uppercase border transition-all ${sel ? 'bg-orange-600/30 text-white border-orange-500/50' : 'bg-black/40 text-zinc-400 border-zinc-700/40 hover:text-zinc-200'}`}
-                >
-                  <span className="w-2 h-2 rounded-full" style={{ backgroundColor: tc }} />
-                  {d.driver.split(' ').pop()}
-                </button>
-              )
-            })}
-          </div>
+          {/* Animated accent line */}
+          <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-orange-500 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+          
+          <div className="relative z-10 p-12 lg:p-16 backdrop-blur-sm">
+            <div className="grid lg:grid-cols-2 gap-12 items-center">
+              {/* Left: Content */}
+              <div>
+                <span className="inline-block bg-gradient-to-r from-orange-600 to-orange-500 text-white text-[11px] font-black italic px-4 py-2 uppercase tracking-widest rounded shadow-lg shadow-orange-500/40 mb-6">📊 Hall of Fame Analysis</span>
+                
+                <h2 className="text-5xl lg:text-6xl font-black italic uppercase tracking-tighter leading-[0.95] mb-6 text-white group-hover:text-orange-300 transition-colors">
+                  The Best F1 <br />
+                  <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-400 via-orange-500 to-red-500">Races of My Life</span>
+                </h2>
+                
+                <p className="text-lg text-zinc-300 mb-8 leading-relaxed font-light max-w-lg">
+                  A comprehensive journey through 22 years of Formula 1. From 2005 to 2026, I've handpicked the greatest races, analyzed objectively, to showcase what makes this sport truly magical.
+                </p>
+                
+                <div className="flex items-center gap-3 text-orange-400 text-[11px] font-black italic uppercase tracking-widest group-hover:gap-6 transition-all">
+                  Explore Timeline <ChevronRight size={18} />
+                </div>
+              </div>
 
-          {/* Chart - LANDSCAPE */}
-          <div className="relative w-full h-[500px] py-6 px-6">
-            {loading ? (
-              <div className="absolute inset-0 flex items-center justify-center text-xs uppercase text-zinc-600 animate-pulse">Loading chart...</div>
-            ) : (
-              <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={chartData} margin={{ top: 10, right: 20, left: -10, bottom: 10 }}>
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#27272a" opacity={0.3} />
-                  <XAxis dataKey="name" stroke="#52525b" tick={{ fill: '#71717a', fontSize: 11, fontWeight: 600 }} axisLine={false} tickLine={false} />
-                  <YAxis domain={['dataMin - 15', 'dataMax + 15']} stroke="#52525b" tick={{ fill: '#71717a', fontSize: 11 }} axisLine={false} tickLine={false} width={50} />
-                  <Tooltip content={<CustomTooltip />} />
-                  {selectedChartDrivers.map(id => {
-                    const d = drivers.find(x => x.driver === id)
-                    const color = d ? TEAM_COLORS[d.team.toLowerCase()] : '#8a8a94'
-                    return <Line key={id} type="monotone" dataKey={id} name={id} stroke={color} strokeWidth={3} dot={false} activeDot={{ r: 6 }} connectNulls isAnimationActive={false} />
-                  })}
-                </LineChart>
-              </ResponsiveContainer>
-            )}
+              {/* Right: Race Year Grid */}
+              <div className="grid grid-cols-3 gap-4">
+                {['2026🇯🇵', '2025🇧🇷', '2024🇬🇧', '2023🇺🇸', '2022🇧🇭', '2021🇧🇷', '2020🇧🇭'].map((year, i) => {
+                  const [yr, flag] = [year.slice(0, 4), year.slice(4)];
+                  return (
+                    <div key={i} className="flex flex-col items-center justify-center p-4 rounded-lg bg-orange-500/10 border border-orange-500/20 group-hover:bg-orange-500/20 group-hover:border-orange-500/40 transition-all">
+                      <span className="text-2xl mb-2">{flag}</span>
+                      <span className="text-sm font-black text-orange-400">{yr}</span>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
           </div>
-        </div>
-      </section>
+        </Link>
+      </div>
 
       {/* ── BIGGEST MOVERS ── */}
-      <section className="container mx-auto px-6 mb-16">
-        <div className="mb-8">
-          <h2 className="text-4xl font-black uppercase tracking-tight flex items-center gap-3 mb-2">
-            <Flame size={32} className="text-orange-500" />
-            Biggest Movers This Weekend
-          </h2>
-          <p className="text-sm text-zinc-500">Buy low, sell high. Trade F1 driver ELO ratings in real-time.</p>
+      <div className="container mx-auto px-6 max-w-[1400px] mb-16">
+        <div className="mb-8 flex items-center gap-3">
+          <Flame size={32} className="text-orange-500" />
+          <h2 className="text-4xl font-black uppercase tracking-tight">Biggest Movers</h2>
         </div>
 
-        {/* TOP GAINERS & LOSERS SIDE BY SIDE */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           {/* TOP GAINERS */}
           <div>
-            <h3 className="text-xl font-black uppercase tracking-wider text-green-400 mb-6 flex items-center gap-2 pb-3 border-b border-green-500/20">
-              <TrendingUp size={24} /> Top Gainers
+            <h3 className="text-xl font-black uppercase tracking-wider text-green-400 mb-6 flex items-center gap-3 pb-4 border-b border-green-500/20">
+              <TrendingUp size={24} className="text-green-500" /> 
+              <span>Top Gainers</span>
             </h3>
-            <div className="grid grid-cols-2 gap-4 auto-rows-max">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               {loading ? (
-                Array(4).fill(null).map((_, i) => <div key={i} className="h-64 bg-gradient-to-br from-zinc-800 to-black rounded-xl animate-pulse" />)
+                Array(4).fill(null).map((_, i) => <div key={i} className="h-80 bg-gradient-to-br from-zinc-800 to-black rounded-xl animate-pulse" />)
               ) : (
-                sortedDrivers.filter(d => (d.change ?? 0) > 0).slice(0, 6).map((d) => (
-                  <DriverCard key={d.driver} driver={d} isGainer={true} onTrade={(code) => setTradeModal({ isOpen: true, driverCode: code })} />
+                sortedDrivers.filter(d => (d.change ?? 0) > 0).slice(0, 4).map((d) => (
+                  <DriverCard key={d.driver} driver={d} isGainer={true} />
                 ))
               )}
             </div>
@@ -438,97 +434,186 @@ export default function Home() {
 
           {/* TOP LOSERS */}
           <div>
-            <h3 className="text-xl font-black uppercase tracking-wider text-red-400 mb-6 flex items-center gap-2 pb-3 border-b border-red-500/20">
-              <TrendingDown size={24} /> Top Losers
+            <h3 className="text-xl font-black uppercase tracking-wider text-red-400 mb-6 flex items-center gap-3 pb-4 border-b border-red-500/20">
+              <TrendingDown size={24} className="text-red-500" /> 
+              <span>Top Losers</span>
             </h3>
-            <div className="grid grid-cols-2 gap-4 auto-rows-max">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               {loading ? (
-                Array(4).fill(null).map((_, i) => <div key={i} className="h-64 bg-gradient-to-br from-zinc-800 to-black rounded-xl animate-pulse" />)
+                Array(4).fill(null).map((_, i) => <div key={i} className="h-80 bg-gradient-to-br from-zinc-800 to-black rounded-xl animate-pulse" />)
               ) : (
-                sortedDrivers.filter(d => (d.change ?? 0) < 0).slice(0, 6).map((d) => (
-                  <DriverCard key={d.driver} driver={d} isGainer={false} onTrade={(code) => setTradeModal({ isOpen: true, driverCode: code })} />
+                sortedDrivers.filter(d => (d.change ?? 0) < 0).slice(0, 4).map((d) => (
+                  <DriverCard key={d.driver} driver={d} isGainer={false} />
                 ))
               )}
             </div>
           </div>
         </div>
-      </section>
+      </div>
 
-      {/* ── MARKET SECTION ── */}
-      <section className="container mx-auto px-6 mb-12">
+      {/* ── ANALYTICS GRID ── */}
+      <div className="container mx-auto px-6 max-w-[1400px]">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+          {/* ELO RANKINGS - FULL GRID */}
+          <div className="lg:col-span-1 flex flex-col">
+            <div className="bg-gradient-to-br from-zinc-900/80 to-black border border-zinc-700/50 rounded-xl flex flex-col shadow-xl flex-1 overflow-hidden backdrop-blur-sm">
+              <div className="flex items-center gap-3 px-6 py-5 border-b border-zinc-700/40 bg-black/40 sticky top-0 z-20">
+                <Activity size={18} className="text-orange-500" />
+                <span className="text-[11px] font-black uppercase tracking-[0.3em] text-zinc-300">All Drivers ({sortedDrivers.length})</span>
+                <span className="ml-auto flex items-center gap-1.5 text-[10px] text-lime-400 font-black uppercase">
+                  <span className="w-1.5 h-1.5 bg-lime-400 rounded-full animate-pulse" />Live
+                </span>
+              </div>
+              
+              <div className="flex-1 overflow-y-auto no-scrollbar">
+                {loading ? (
+                  <div className="py-20 text-center text-sm uppercase text-zinc-600 animate-pulse">Loading rankings...</div>
+                ) : (
+                  <div className="flex flex-col gap-0">
+                    {sortedDrivers.map((d, i) => {
+                      const tc = TEAM_COLORS[d.team.toLowerCase()] || '#8a8a94'
+                      const nameParts = d.driver.split(' ')
+                      const last = nameParts.pop()
+                      const first = nameParts.join(' ')
+                      const changeVal = d.change ?? 0
+                      const isTop3 = i < 3
+
+                      return (
+                        <div key={d.driver} className="flex items-center gap-2 px-3 py-2.5 hover:bg-zinc-800/40 transition-colors group cursor-pointer border-b border-zinc-800/20 last:border-b-0">
+                          <span className={`text-sm font-black italic w-6 text-center shrink-0 transition-colors ${isTop3 ? 'text-orange-500' : 'text-zinc-500 group-hover:text-zinc-300'}`}>{i + 1}</span>
+                          
+                          <div className="w-0.5 h-6 rounded-full shrink-0" style={{ backgroundColor: tc }} />
+                          
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-baseline gap-1">
+                              <span className="text-[9px] text-zinc-600 truncate">{first}</span>
+                              <span className="text-xs font-black italic uppercase text-white truncate">{last}</span>
+                            </div>
+                            <div className="text-[7px] font-bold uppercase tracking-[0.1em] mt-0.5 truncate" style={{ color: tc }}>{d.team}</div>
+                          </div>
+                          
+                          <div className="text-right shrink-0">
+                            <div className="text-sm font-black font-mono text-orange-400">{d.elo}</div>
+                            <div className={`text-[8px] font-bold font-mono flex justify-end items-center gap-0.5 ${changeVal > 0 ? 'text-green-400' : changeVal < 0 ? 'text-red-400' : 'text-zinc-600'}`}>
+                              {changeVal > 0 ? <TrendingUp size={8}/> : changeVal < 0 ? <TrendingDown size={8}/> : null}
+                              <span>{changeVal !== null ? (changeVal > 0 ? `+${changeVal}` : changeVal) : '—'}</span>
+                            </div>
+                          </div>
+                        </div>
+                      )
+                    })}
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* TRAJECTORY CHART - EXPANDED */}
+          <div className="lg:col-span-2 flex flex-col">
+            <div className="bg-gradient-to-br from-zinc-900/80 to-black border border-zinc-700/50 rounded-xl flex flex-col shadow-xl flex-1 overflow-hidden backdrop-blur-sm">
+              <div className="flex items-center justify-between px-6 py-5 border-b border-zinc-700/40 bg-black/40 sticky top-0 z-20">
+                <div className="flex items-center gap-3">
+                  <BarChart2 size={18} className="text-orange-500" />
+                  <span className="text-[11px] font-black uppercase tracking-[0.3em] text-zinc-300">Season Performance</span>
+                </div>
+                <span className="text-[10px] font-mono text-zinc-500">{updated ? `Updated ${updated}` : 'live'}</span>
+              </div>
+              
+              {/* Driver Selectors - Improved Grid */}
+              <div className="px-6 py-4 border-b border-zinc-700/40 bg-black/20">
+                <p className="text-[9px] text-zinc-500 uppercase tracking-widest font-bold mb-3">Select up to 9 drivers</p>
+                <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-5 gap-2 max-h-[140px] overflow-y-auto no-scrollbar">
+                  {drivers.map(d => {
+                    const sel = selectedChartDrivers.includes(d.driver)
+                    const tc = TEAM_COLORS[d.team.toLowerCase()] || '#8a8a94'
+                    return (
+                      <button key={d.driver} onClick={() => toggleDriverChart(d.driver)}
+                        className={`flex flex-col items-center gap-1.5 px-2 py-2 rounded-lg text-[9px] font-bold uppercase border transition-all ${sel ? 'bg-orange-600/30 text-white border-orange-500/50 shadow-lg shadow-orange-500/20 ring-1 ring-orange-500/20' : 'bg-black/40 text-zinc-400 border-zinc-700/40 hover:text-zinc-200 hover:border-zinc-600/60'}`}
+                      >
+                        <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: tc }} />
+                        <span className="text-[8px] leading-tight text-center">{d.driver.split(' ').pop()}</span>
+                      </button>
+                    )
+                  })}
+                </div>
+              </div>
+
+              {/* Chart - Larger */}
+              <div className="flex-1 relative py-6 px-6 min-h-[400px] flex flex-col">
+                {loading ? (
+                  <div className="absolute inset-0 flex items-center justify-center text-xs uppercase text-zinc-600 animate-pulse">Loading performance data...</div>
+                ) : chartData.length === 0 ? (
+                  <div className="flex-1 flex items-center justify-center text-sm text-zinc-500 uppercase tracking-widest">No race data yet</div>
+                ) : (
+                  <ResponsiveContainer width="100%" height="100%">
+                    <LineChart data={chartData} margin={{ top: 10, right: 20, left: 0, bottom: 5 }}>
+                      <defs>
+                        <linearGradient id="grad1" x1="0%" y1="0%" x2="0%" y2="100%">
+                          <stop offset="0%" stopColor="#f97316" stopOpacity={0.1}/>
+                          <stop offset="100%" stopColor="#f97316" stopOpacity={0}/>
+                        </linearGradient>
+                      </defs>
+                      <CartesianGrid strokeDasharray="4 4" vertical={false} stroke="#27272a" opacity={0.2} />
+                      <XAxis dataKey="name" stroke="#52525b" tick={{ fill: '#71717a', fontSize: 11, fontWeight: 600 }} tickFormatter={v => v.toUpperCase()} axisLine={false} tickLine={false} minTickGap={15} dy={8} />
+                      <YAxis domain={['dataMin - 20', 'dataMax + 20']} stroke="#52525b" tick={{ fill: '#71717a', fontSize: 11 }} axisLine={false} tickLine={false} width={45} />
+                      <Tooltip content={<CustomTooltip />} cursor={{ stroke: '#f97316', opacity: 0.2 }} />
+                      {selectedChartDrivers.map(id => {
+                        const d = drivers.find(x => x.driver === id)
+                        const color = d ? TEAM_COLORS[d.team.toLowerCase()] : '#8a8a94'
+                        return <Line key={id} type="monotone" dataKey={id} name={id} stroke={color} strokeWidth={3} dot={false} activeDot={{ r: 7, fill: color }} connectNulls isAnimationActive={false} />
+                      })}
+                    </LineChart>
+                  </ResponsiveContainer>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* ── MARKET SECTION AT BOTTOM ── */}
+      <section className="container mx-auto px-6 max-w-[1400px] mt-16">
         <Link href="https://www.f1elo.me/market" className="group block relative overflow-hidden rounded-2xl border-2 border-orange-500/40 hover:border-orange-500/80 transition-all duration-500">
           <div className="absolute inset-0 bg-gradient-to-r from-orange-950/20 via-black to-black" />
           <div className="absolute -top-40 -right-40 w-80 h-80 rounded-full bg-orange-600/15 blur-3xl animate-pulse" />
           
-          <div className="relative z-10 p-12 lg:p-16">
-            <div className="grid lg:grid-cols-2 gap-12 items-center">
+          <div className="relative z-10 p-8 lg:p-12">
+            <div className="grid lg:grid-cols-2 gap-8 items-center">
               <div>
-                <div className="flex items-center gap-3 mb-6">
-                  <Wallet className="text-orange-500" size={32} />
-                  <span className="text-[11px] font-black italic px-4 py-2 uppercase tracking-widest" style={{ color: '#FF8000' }}>Stock Market</span>
-                </div>
+                <span className="inline-block bg-gradient-to-r from-orange-600 to-orange-500 text-white text-[11px] font-black italic px-4 py-2 uppercase tracking-widest rounded shadow-lg shadow-orange-500/40 mb-4">💰 Stock Market</span>
                 
-                <h2 className="text-5xl lg:text-6xl font-black italic uppercase tracking-tighter leading-[0.95] mb-6 text-white group-hover:text-orange-300 transition-colors">
-                  Trade Driver<br />
-                  <span className="text-orange-500">ELO Ratings</span>
-                </h2>
+                <h3 className="text-3xl lg:text-4xl font-black italic uppercase tracking-tighter mb-3 text-white group-hover:text-orange-300 transition-colors">
+                  Trade Driver ELO Ratings
+                </h3>
                 
-                <p className="text-lg text-zinc-300 mb-8 leading-relaxed font-light max-w-lg">
-                  Build your portfolio with real F1 ELO data. Buy drivers before they peak, sell at the right moment. Real-time trading powered by live performance analytics.
+                <p className="text-sm text-zinc-300 mb-4 leading-relaxed max-w-lg">
+                  Build your portfolio with real F1 ELO data. Buy low, sell high. Trade ratings in real-time as driver performance changes.
                 </p>
                 
-                <div className="flex items-center gap-3 text-orange-400 text-[11px] font-black italic uppercase tracking-widest group-hover:gap-6 transition-all">
-                  Enter Market <ArrowRight size={20} />
+                <div className="flex items-center gap-2 text-orange-400 text-[10px] font-black italic uppercase tracking-widest group-hover:gap-4 transition-all">
+                  Enter Market <ChevronRight size={16} />
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
-                <div className="bg-gradient-to-br from-green-500/10 to-green-900/20 border border-green-500/30 rounded-xl p-6 text-center">
-                  <p className="text-[11px] uppercase tracking-widest font-black text-green-400 mb-2">Biggest Gainer</p>
-                  <p className="text-2xl font-black text-white">{sortedDrivers.filter(d => (d.change ?? 0) > 0).length}x</p>
-                  <p className="text-[9px] text-zinc-500 mt-2">Gainers Available</p>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="bg-gradient-to-br from-green-500/10 to-green-900/20 border border-green-500/30 rounded-lg p-4 text-center">
+                  <p className="text-[10px] uppercase tracking-widest font-black text-green-400 mb-1">Gainers</p>
+                  <p className="text-lg font-black text-white">{sortedDrivers.filter(d => (d.change ?? 0) > 0).length}</p>
                 </div>
-                <div className="bg-gradient-to-br from-red-500/10 to-red-900/20 border border-red-500/30 rounded-xl p-6 text-center">
-                  <p className="text-[11px] uppercase tracking-widest font-black text-red-400 mb-2">Biggest Loser</p>
-                  <p className="text-2xl font-black text-white">{sortedDrivers.filter(d => (d.change ?? 0) < 0).length}x</p>
-                  <p className="text-[9px] text-zinc-500 mt-2">Losers to Short</p>
+                <div className="bg-gradient-to-br from-red-500/10 to-red-900/20 border border-red-500/30 rounded-lg p-4 text-center">
+                  <p className="text-[10px] uppercase tracking-widest font-black text-red-400 mb-1">Losers</p>
+                  <p className="text-lg font-black text-white">{sortedDrivers.filter(d => (d.change ?? 0) < 0).length}</p>
                 </div>
-                <div className="bg-gradient-to-br from-blue-500/10 to-blue-900/20 border border-blue-500/30 rounded-xl p-6 text-center lg:col-span-2">
-                  <p className="text-[11px] uppercase tracking-widest font-black text-blue-400 mb-2">Total Market Cap</p>
-                  <p className="text-2xl font-black text-white">{sortedDrivers.length} Drivers</p>
-                  <p className="text-[9px] text-zinc-500 mt-2">Actively Trading</p>
+                <div className="bg-gradient-to-br from-blue-500/10 to-blue-900/20 border border-blue-500/30 rounded-lg p-4 text-center lg:col-span-2">
+                  <p className="text-[10px] uppercase tracking-widest font-black text-blue-400 mb-1">Drivers Trading</p>
+                  <p className="text-lg font-black text-white">{sortedDrivers.length}</p>
                 </div>
               </div>
             </div>
           </div>
         </Link>
       </section>
-
-      {/* ── TRADE MODAL ── */}
-      {tradeModal.isOpen && (
-        <div className="fixed inset-0 z-[1000] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
-          <div className="bg-black border border-orange-500/30 rounded-2xl w-full max-w-md p-8 relative shadow-2xl">
-            <button onClick={() => setTradeModal({ isOpen: false, driverCode: null })} className="absolute top-6 right-6 text-zinc-500 hover:text-white transition-colors">
-              <X size={20} />
-            </button>
-            
-            <div className="mb-6">
-              <h3 className="text-3xl font-black italic uppercase text-white mb-2">Trade Asset</h3>
-              <p className="text-sm text-zinc-400">Coming soon: Real trading integration</p>
-            </div>
-
-            <div className="bg-gradient-to-br from-zinc-800/50 to-black border border-zinc-700 rounded-xl p-6 mb-6">
-              <p className="text-sm text-zinc-300">
-                This feature will allow you to trade driver ELO ratings using a Firebase-backed portfolio system. 
-              </p>
-            </div>
-
-            <button onClick={() => setTradeModal({ isOpen: false, driverCode: null })} className="w-full bg-gradient-to-r from-zinc-700 to-zinc-800 hover:from-zinc-600 hover:to-zinc-700 text-white font-black italic uppercase py-3 rounded-xl transition-all">
-              Close
-            </button>
-          </div>
-        </div>
-      )}
 
     </div>
   )

@@ -22,6 +22,31 @@ const TEAM_COLORS: Record<string, string> = {
   'sauber': '#52E252', 'haas': '#B6BABD', 'cadillac': '#C8A951',
 }
 
+const COUNTRY_THEMES: Record<string, { name: string; primaryColor: string; secondaryColor: string; accentColor: string; flag: string }> = {
+  'Australian GP': { name: 'Australia', primaryColor: '#FFD700', secondaryColor: '#1e3a8a', accentColor: '#FFA500', flag: '🇦🇺' },
+  'Chinese GP': { name: 'China', primaryColor: '#DE2910', secondaryColor: '#FFDE00', accentColor: '#FF6B6B', flag: '🇨🇳' },
+  'Japanese GP': { name: 'Japan', primaryColor: '#BC002D', secondaryColor: '#FFFFFF', accentColor: '#FF1744', flag: '🇯🇵' },
+  'Miami GP': { name: 'USA', primaryColor: '#3C3B6B', secondaryColor: '#FF1E56', accentColor: '#00B4D8', flag: '🇺🇸' },
+  'Canadian GP': { name: 'Canada', primaryColor: '#FF0000', secondaryColor: '#FFFFFF', accentColor: '#FF6B6B', flag: '🇨🇦' },
+  'Monaco GP': { name: 'Monaco', primaryColor: '#E8000B', secondaryColor: '#FFFFFF', accentColor: '#FFD700', flag: '🇲🇨' },
+  'Spanish GP (Barcelona)': { name: 'Spain', primaryColor: '#FFC400', secondaryColor: '#C60B1E', accentColor: '#005AFF', flag: '🇪🇸' },
+  'Austrian GP': { name: 'Austria', primaryColor: '#ED2939', secondaryColor: '#FFFFFF', accentColor: '#FFC400', flag: '🇦🇹' },
+  'British GP': { name: 'United Kingdom', primaryColor: '#002D62', secondaryColor: '#FFFFFF', accentColor: '#FF1744', flag: '🇬🇧' },
+  'Belgian GP': { name: 'Belgium', primaryColor: '#000000', secondaryColor: '#FFD700', accentColor: '#EF3B39', flag: '🇧🇪' },
+  'Hungarian GP': { name: 'Hungary', primaryColor: '#CE1126', secondaryColor: '#FFFFFF', accentColor: '#007F5F', flag: '🇭🇺' },
+  'Dutch GP': { name: 'Netherlands', primaryColor: '#AE1C28', secondaryColor: '#FFFFFF', accentColor: '#21468B', flag: '🇳🇱' },
+  'Italian GP': { name: 'Italy', primaryColor: '#009246', secondaryColor: '#CE2B37', accentColor: '#002395', flag: '🇮🇹' },
+  'Spanish GP (Madrid)': { name: 'Spain', primaryColor: '#FFC400', secondaryColor: '#C60B1E', accentColor: '#005AFF', flag: '🇪🇸' },
+  'Azerbaijan GP': { name: 'Azerbaijan', primaryColor: '#3F9FD7', secondaryColor: '#FFFFFF', accentColor: '#00A651', flag: '🇦🇿' },
+  'Singapore GP': { name: 'Singapore', primaryColor: '#FFFFFF', secondaryColor: '#FF0000', accentColor: '#FF8C00', flag: '🇸🇬' },
+  'United States GP': { name: 'USA', primaryColor: '#3C3B6B', secondaryColor: '#FF1E56', accentColor: '#00B4D8', flag: '🇺🇸' },
+  'Mexico City GP': { name: 'Mexico', primaryColor: '#C41E3A', secondaryColor: '#FFFFFF', accentColor: '#007C3F', flag: '🇲🇽' },
+  'São Paulo GP': { name: 'Brazil', primaryColor: '#009B3A', secondaryColor: '#FFCC00', accentColor: '#002776', flag: '🇧🇷' },
+  'Las Vegas GP': { name: 'USA', primaryColor: '#3C3B6B', secondaryColor: '#FF1E56', accentColor: '#00B4D8', flag: '🇺🇸' },
+  'Qatar GP': { name: 'Qatar', primaryColor: '#8B0000', secondaryColor: '#FFFFFF', accentColor: '#FFD700', flag: '🇶🇦' },
+  'Abu Dhabi GP': { name: 'UAE', primaryColor: '#CE1126', secondaryColor: '#00843D', accentColor: '#007F5F', flag: '🇦🇪' },
+}
+
 const FALLBACK_IMAGE = 'https://images.unsplash.com/photo-1552820728-8ac41f1ce891?w=500&h=600&fit=crop'
 
 const RACE_FLAGS: Record<string, string> = {
@@ -171,10 +196,10 @@ const DriverCard = ({ driver, isGainer }: { driver: Driver; isGainer: boolean })
       <div className="flex-1 flex flex-col p-5 relative z-10">
         <div className="mb-4">
           <p className="text-[12px] text-zinc-400 uppercase tracking-widest font-bold">{first}</p>
-          <h3 className="text-4xl font-black italic uppercase text-white mt-2 drop-shadow-lg leading-tight">{last}</h3>
+          <h3 className="text-3xl font-black italic uppercase text-white mt-2 drop-shadow-lg leading-tight break-words word-break overflow-hidden">{last}</h3>
           <div className="flex items-center gap-2 mt-3 pt-3 border-t border-zinc-700/50">
             <div className="w-1.5 h-4 rounded-full" style={{ backgroundColor: tc }} />
-            <p className="text-[10px] font-black uppercase tracking-[0.15em]" style={{ color: tc }}>
+            <p className="text-[10px] font-black uppercase tracking-[0.15em] break-words" style={{ color: tc }}>
               {driver.team}
             </p>
           </div>
@@ -206,6 +231,7 @@ export default function Home() {
   const [timeLeft, setTimeLeft] = useState({ d: '00', h: '00', m: '00', s: '00' })
   const [nextRaceIndex, setNextRaceIndex] = useState(0)
   const [targetRaceDate, setTargetRaceDate] = useState('')
+  const [currentTheme, setCurrentTheme] = useState(COUNTRY_THEMES['Miami GP'])
 
   useEffect(() => {
     const now = new Date().getTime()
@@ -217,6 +243,7 @@ export default function Home() {
     setNextRaceIndex(raceIdx)
     setTargetRaceDate(new Date(upcomingRace.date).toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }))
     setTargetRaceName(upcomingRace.name)
+    setCurrentTheme(COUNTRY_THEMES[upcomingRace.name] || COUNTRY_THEMES['Miami GP'])
     
     const targetDate = new Date(upcomingRace.date).getTime()
     const interval = setInterval(() => {
@@ -291,39 +318,39 @@ export default function Home() {
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
       `}</style>
 
-      {/* ── HERO NEXT RACE ── */}
-      <section className="relative overflow-hidden mb-16">
-        {/* Animated background */}
-        <div className="absolute inset-0 bg-gradient-to-br from-orange-950/20 via-black to-black" />
-        <div className="absolute -top-40 -right-40 w-80 h-80 rounded-full bg-orange-600/10 blur-3xl animate-pulse" />
-        <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-orange-500/50 to-transparent" />
+      {/* ── HERO NEXT RACE WITH DYNAMIC COUNTRY THEME ── */}
+      <section className="relative overflow-hidden mb-16" style={{ background: `linear-gradient(135deg, ${currentTheme.primaryColor}15 0%, ${currentTheme.secondaryColor}08 50%, #000000 100%)` }}>
+        {/* Animated background with theme colors */}
+        <div className="absolute inset-0" style={{ background: `linear-gradient(to br, ${currentTheme.primaryColor}10 via-black to-black)` }} />
+        <div className="absolute -top-40 -right-40 w-80 h-80 rounded-full blur-3xl animate-pulse" style={{ backgroundColor: `${currentTheme.primaryColor}15` }} />
+        <div className="absolute top-0 left-0 right-0 h-px" style={{ background: `linear-gradient(90deg, transparent, ${currentTheme.primaryColor}80, transparent)` }} />
 
         <div className="container mx-auto px-6 py-12 relative z-10">
           <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-12">
             {/* Left: Race Info */}
             <div className="flex items-start gap-8">
               <div className="relative shrink-0">
-                <div className="w-24 h-24 rounded-xl bg-gradient-to-br from-orange-500 to-orange-600 flex items-center justify-center shadow-2xl shadow-orange-500/40">
+                <div className="w-24 h-24 rounded-xl flex items-center justify-center shadow-2xl" style={{ background: `linear-gradient(to br, ${currentTheme.primaryColor}, ${currentTheme.accentColor})`, boxShadow: `0 0 30px ${currentTheme.primaryColor}40` }}>
                   <span className="font-black italic text-white text-4xl">R{(nextRaceIndex + 1).toString().padStart(2, '0')}</span>
                 </div>
                 <div className="absolute -top-2 -right-2 w-4 h-4 bg-lime-400 rounded-full shadow-lg shadow-lime-400/60 animate-pulse" />
               </div>
               <div>
-                <p className="text-[11px] font-bold uppercase tracking-[0.3em] text-orange-400 mb-3 flex items-center gap-2">
-                  <span className="w-2 h-2 bg-orange-400 rounded-full" /> Next Race
+                <p className="text-[11px] font-bold uppercase tracking-[0.3em] mb-3 flex items-center gap-2" style={{ color: currentTheme.primaryColor }}>
+                  <span className="w-2 h-2 rounded-full" style={{ backgroundColor: currentTheme.primaryColor }} /> Next Race
                 </p>
                 <h2 className="text-4xl lg:text-5xl font-black italic uppercase tracking-tighter mb-2 text-white">
-                  {RACE_FLAGS[targetRaceName] ?? '🏁'} {targetRaceName}
+                  {currentTheme.flag} {targetRaceName}
                 </h2>
                 <p className="text-sm text-zinc-400 tracking-wider">{targetRaceDate}</p>
               </div>
             </div>
 
             {/* Right: Countdown */}
-            <div className="flex items-stretch gap-0 bg-black/60 rounded-xl border border-orange-500/30 overflow-hidden backdrop-blur-sm">
+            <div className="flex items-stretch gap-0 rounded-xl border overflow-hidden backdrop-blur-sm" style={{ backgroundColor: 'rgba(0,0,0,0.6)', borderColor: `${currentTheme.primaryColor}50` }}>
               {[{ val: timeLeft.d, label: 'DAYS' }, { val: timeLeft.h, label: 'HRS' }, { val: timeLeft.m, label: 'MIN' }, { val: timeLeft.s, label: 'SEC' }].map((t, i) => (
-                <div key={i} className={`flex flex-col items-center justify-center px-7 py-4 tabular-nums border-r border-zinc-800/50 last:border-r-0`}>
-                  <span className="text-4xl font-black font-mono text-orange-400 leading-none">{t.val}</span>
+                <div key={i} className={`flex flex-col items-center justify-center px-7 py-4 tabular-nums border-r last:border-r-0`} style={{ borderColor: 'rgba(39,39,42,0.5)' }}>
+                  <span className="text-4xl font-black font-mono leading-none" style={{ color: currentTheme.primaryColor }}>{t.val}</span>
                   <span className="text-[9px] font-black uppercase tracking-[0.3em] text-zinc-500 mt-2">{t.label}</span>
                 </div>
               ))}

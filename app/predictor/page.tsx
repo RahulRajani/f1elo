@@ -30,7 +30,7 @@ const DEFAULT_CAR_PERF: CarPerf[] = [
   { team: 'Williams', baseTime: 1.250, trait: 'power' },
   { team: 'Haas', baseTime: 1.450, trait: 'cornering' },
   { team: 'Alpine', baseTime: 1.650, trait: 'balanced' },
-  { team: 'Sauber', baseTime: 1.850, trait: 'balanced' },
+  { team: 'Audi', baseTime: 1.850, trait: 'balanced' },
   { team: 'Racing Bulls', baseTime: 2.100, trait: 'balanced' },
   { team: 'Cadillac', baseTime: 2.400, trait: 'power' },
 ]

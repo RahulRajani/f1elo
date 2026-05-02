@@ -158,19 +158,6 @@ export default function MiamiArticlePage() {
           </div>
         </div>
 
-        {/* Midfield */}
-        <div className="mb-14">
-          <h2 className="text-3xl font-black text-white uppercase mb-4">The Audi Era and Midfield Struggles</h2>
-          <div className="border-l-2 border-orange-500/50 pl-6 py-2">
-            <p className="text-slate-300 leading-relaxed mb-4">
-              In a notable shift for the grid, the team formerly known as Sauber is now competing under the Audi banner. Their first major outing in Miami sees a respectable showing, though they remain just outside the points-paying positions.
-            </p>
-            <p className="text-orange-400/80 text-sm font-bold uppercase tracking-wider bg-orange-500/10 inline-block px-3 py-1 rounded">
-              Note: Audi's Nico Hulkenberg is expected to lead the charge for the new manufacturer in P11, followed by teammate Gabriel Bortoleto in P14.
-            </p>
-          </div>
-        </div>
-
         {/* Predictions Widget / Leaderboard UI (All 22 Drivers) */}
         <div className="mb-14">
           <div className="mb-6 flex flex-col md:flex-row md:items-end justify-between gap-4">

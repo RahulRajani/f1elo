@@ -20,19 +20,22 @@ interface CarPerf {
   trait: string
 }
 
+// Absolute times converted to gaps from fastest (McLaren at 84.200)
 const DEFAULT_CAR_PERF: CarPerf[] = [
-  { team: 'McLaren', baseTime: 84.200, trait: 'cornering' },
-  { team: 'Ferrari', baseTime: 84.450, trait: 'cornering' },
-  { team: 'Mercedes', baseTime: 84.500, trait: 'balanced' },
-  { team: 'Red Bull', baseTime: 84.750, trait: 'power' },
-  { team: 'Aston Martin', baseTime: 85.200, trait: 'balanced' },
-  { team: 'Williams', baseTime: 85.450, trait: 'power' },
-  { team: 'Haas', baseTime: 85.650, trait: 'cornering' },
-  { team: 'Alpine', baseTime: 85.850, trait: 'balanced' },
-  { team: 'Sauber', baseTime: 86.050, trait: 'balanced' },
-  { team: 'Racing Bulls', baseTime: 86.300, trait: 'balanced' },
-  { team: 'Cadillac', baseTime: 86.600, trait: 'power' },
+  { team: 'McLaren', baseTime: 0.000, trait: 'cornering' },
+  { team: 'Ferrari', baseTime: 0.250, trait: 'cornering' },
+  { team: 'Mercedes', baseTime: 0.300, trait: 'balanced' },
+  { team: 'Red Bull', baseTime: 0.550, trait: 'power' },
+  { team: 'Aston Martin', baseTime: 1.000, trait: 'balanced' },
+  { team: 'Williams', baseTime: 1.250, trait: 'power' },
+  { team: 'Haas', baseTime: 1.450, trait: 'cornering' },
+  { team: 'Alpine', baseTime: 1.650, trait: 'balanced' },
+  { team: 'Sauber', baseTime: 1.850, trait: 'balanced' },
+  { team: 'Racing Bulls', baseTime: 2.100, trait: 'balanced' },
+  { team: 'Cadillac', baseTime: 2.400, trait: 'power' },
 ]
+
+const REFERENCE_LAP_TIME = 84.200 // Fastest car's baseline time (McLaren)
 
 interface Driver {
   driver: string
@@ -115,19 +118,19 @@ export default function RacePredictor() {
     if (drivers.length === 0) return
 
     // Calculate lap time for each driver
-    // Find max ELO in the field for reference
-    const maxElo = Math.max(...drivers.map(d => d.elo))
+    // Find min ELO in the field for reference
+    const minElo = Math.min(...drivers.map(d => d.elo))
 
     const predictions: RacePrediction[] = drivers.map(driver => {
       const teamKey = driver.team.toLowerCase()
-      const baseTime = carPerformance[teamKey] || 84.2
+      const carGapSeconds = carPerformance[teamKey] || 0
 
       // Higher ELO = faster (subtract from lap time)
       // 1 ELO difference = 1ms per lap = 0.001 seconds
-      const eloAdvantageSeconds = (driver.elo - maxElo) / 1000
+      const eloAdvantageSeconds = (driver.elo - minElo) / 1000
 
-      // Lap time = base time - ELO advantage (negative advantage makes it faster)
-      const lapTime = baseTime + eloAdvantageSeconds
+      // Lap time = reference time + car gap - ELO advantage
+      const lapTime = REFERENCE_LAP_TIME + carGapSeconds - eloAdvantageSeconds
 
       // Total race time (for sorting, not displayed)
       const totalTime = lapTime * laps
@@ -302,7 +305,7 @@ export default function RacePredictor() {
                 {/* Team Performance Inputs */}
                 <div className="p-6">
                   <p className="text-[10px] font-black uppercase tracking-[0.15em] text-zinc-400 mb-5">
-                    Car base lap times (seconds) - editable
+                    Car gap from fastest (milliseconds) - editable
                   </p>
 
                   <div className="space-y-4">
@@ -310,7 +313,7 @@ export default function RacePredictor() {
                       const teamName = driversByTeam[teamKey][0]?.team || teamKey
                       const teamColor = TEAM_COLORS[teamKey] || '#8a8a94'
                       const teamDrivers = driversByTeam[teamKey]
-                      const baseTime = carPerformance[teamKey] || 84.2
+                      const gapMs = (carPerformance[teamKey] || 0) * 1000
 
                       return (
                         <div
@@ -329,19 +332,20 @@ export default function RacePredictor() {
 
                           <input
                             type="number"
-                            min="80"
-                            max="95"
-                            step="0.001"
-                            value={baseTime}
+                            min="0"
+                            max="5000"
+                            step="10"
+                            value={gapMs}
                             onChange={(e) =>
                               setCarPerformance(prev => ({
                                 ...prev,
-                                [teamKey]: parseFloat(e.target.value) || 84.2,
+                                [teamKey]: parseFloat(e.target.value || '0') / 1000,
                               }))
                             }
                             className="w-full px-3 py-2 bg-zinc-900/60 border border-zinc-700/60 rounded text-white font-bold text-sm focus:outline-none focus:border-orange-500/60 transition-all"
                             style={{ borderLeftColor: teamColor, borderLeftWidth: '2px' }}
                           />
+                          <p className="text-[9px] text-zinc-500 mt-1.5">McLaren is always 0ms (fastest baseline)</p>
                         </div>
                       )
                     })}
@@ -370,27 +374,27 @@ export default function RacePredictor() {
 
                 <div className="p-6 space-y-5">
                   <div>
-                    <p className="text-[10px] font-black uppercase tracking-[0.15em] text-orange-400 mb-2">Base Lap Times</p>
+                    <p className="text-[10px] font-black uppercase tracking-[0.15em] text-orange-400 mb-2">Car Gaps from Fastest</p>
                     <p className="text-xs text-zinc-400 leading-relaxed">
-                      Each team has a realistic base lap time. Mercedes is fastest, others progressively slower.
+                      McLaren = 0ms (baseline). Ferrari = 250ms slower per lap. Adjust all values relative to fastest.
                     </p>
                   </div>
 
                   <div className="h-px bg-zinc-700/40" />
 
                   <div>
-                    <p className="text-[10px] font-black uppercase tracking-[0.15em] text-orange-400 mb-2">ELO Impact</p>
+                    <p className="text-[10px] font-black uppercase tracking-[0.15em] text-orange-400 mb-2">ELO Impact (Higher = Faster)</p>
                     <p className="text-xs text-zinc-400 leading-relaxed">
-                      Higher ELO = Faster. Each 1 ELO point = 1ms faster per lap. A 50 ELO advantage = 50ms per lap faster.
+                      Higher ELO = Faster lap time. Each 1 ELO point = 1ms faster per lap. Reference is slowest driver.
                     </p>
                   </div>
 
                   <div className="h-px bg-zinc-700/40" />
 
                   <div>
-                    <p className="text-[10px] font-black uppercase tracking-[0.15em] text-orange-400 mb-2">Race Calculation</p>
+                    <p className="text-[10px] font-black uppercase tracking-[0.15em] text-orange-400 mb-2">Race Gaps</p>
                     <p className="text-xs text-zinc-400 leading-relaxed">
-                      Final time = (base time + ELO advantage in seconds) × number of laps.
+                      Gaps shown to P1 (the winner). Convert to minutes for longer distances.
                     </p>
                   </div>
 
@@ -507,18 +511,18 @@ export default function RacePredictor() {
               {/* Summary Stats */}
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 px-6 py-6 border-t border-zinc-700/40 bg-black/40">
                 <div>
-                  <p className="text-[10px] font-black uppercase tracking-[0.15em] text-zinc-500 mb-2">Leader</p>
-                  <p className="text-lg font-black text-white">{predictions[0].driver}</p>
-                  <p className="text-[9px] text-zinc-500 mt-1">{(predictions[0].lapTime * 1000).toFixed(1)}ms per lap</p>
+                  <p className="text-[10px] font-black uppercase tracking-[0.15em] text-zinc-500 mb-2">🏆 Winner (P1)</p>
+                  <p className="text-lg font-black text-orange-400">{predictions[0].driver}</p>
+                  <p className="text-[9px] text-zinc-500 mt-1">{predictions[0].team}</p>
                 </div>
                 <div>
-                  <p className="text-[10px] font-black uppercase tracking-[0.15em] text-zinc-500 mb-2">Gap to Last</p>
+                  <p className="text-[10px] font-black uppercase tracking-[0.15em] text-zinc-500 mb-2">Gap to P20</p>
                   <p className="text-lg font-black text-white">{formatGap(predictions[predictions.length - 1].gapToPrevious || 0)}</p>
                 </div>
                 <div>
-                  <p className="text-[10px] font-black uppercase tracking-[0.15em] text-zinc-500 mb-2">Avg Lap (Top 3)</p>
+                  <p className="text-[10px] font-black uppercase tracking-[0.15em] text-zinc-500 mb-2">Podium Avg Lap</p>
                   <p className="text-lg font-black text-white">
-                    {(predictions.slice(0, 3).reduce((a, b) => a + b.lapTime, 0) / 3 * 1000).toFixed(1)}ms
+                    {((predictions.slice(0, 3).reduce((a, b) => a + b.lapTime, 0) / 3 - REFERENCE_LAP_TIME) * 1000).toFixed(1)}ms gap
                   </p>
                 </div>
               </div>

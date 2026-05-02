@@ -11,7 +11,8 @@ const links = [
   { href: '/historical', label: 'Historical ELO' },
   { href: '/effone-season-sim', label: '2026 Season Simulator'},
   { href: '/market', label: 'Stock Market' },
-  { href: '/about', label: 'About' }
+  { href: '/about', label: 'About' },
+  { href: '/predictor', label: 'Predictor' }
 ]
 
 export default function Nav() {

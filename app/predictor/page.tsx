@@ -11,7 +11,28 @@ const TEAM_COLORS: Record<string, string> = {
   'mclaren': '#FF8000', 'aston martin': '#006F62', 'alpine': '#0090FF',
   'williams': '#005AFF', 'racing bulls': '#1634CC', 'vcarb': '#1634CC',
   'sauber': '#52E252', 'haas': '#B6BABD', 'cadillac': '#C8A951',
+  'audi': '#00A651',
 }
+
+interface CarPerf {
+  team: string
+  baseTime: number
+  trait: string
+}
+
+const DEFAULT_CAR_PERF: CarPerf[] = [
+  { team: 'Mercedes', baseTime: 86.500, trait: 'balanced' },
+  { team: 'Ferrari', baseTime: 86.689, trait: 'cornering' },
+  { team: 'McLaren', baseTime: 86.855, trait: 'cornering' },
+  { team: 'Red Bull', baseTime: 87.242, trait: 'power' },
+  { team: 'Alpine', baseTime: 87.620, trait: 'balanced' },
+  { team: 'Haas', baseTime: 87.850, trait: 'cornering' },
+  { team: 'Audi', baseTime: 88.264, trait: 'balanced' },
+  { team: 'Racing Bulls', baseTime: 88.658, trait: 'balanced' },
+  { team: 'Williams', baseTime: 88.890, trait: 'power' },
+  { team: 'Cadillac', baseTime: 89.800, trait: 'power' },
+  { team: 'Aston Martin', baseTime: 90.900, trait: 'balanced' },
+]
 
 interface Driver {
   driver: string
@@ -31,7 +52,9 @@ interface RacePrediction {
 
 export default function RacePredictor() {
   const [drivers, setDrivers] = useState<Driver[]>([])
-  const [carPerformance, setCarPerformance] = useState<Record<string, number>>({})
+  const [carPerformance, setCarPerformance] = useState<Record<string, number>>(
+    Object.fromEntries(DEFAULT_CAR_PERF.map(cp => [cp.team.toLowerCase(), cp.baseTime]))
+  )
   const [laps, setLaps] = useState(50)
   const [predictions, setPredictions] = useState<RacePrediction[]>([])
   const [loading, setLoading] = useState(true)
@@ -69,14 +92,6 @@ export default function RacePredictor() {
             }))
 
           setDrivers(parsed)
-
-          // Initialize car performance with 0 for each unique team
-          const uniqueTeams = [...new Set(parsed.map(d => d.team.toLowerCase()))]
-          const initialPerf: Record<string, number> = {}
-          uniqueTeams.forEach(team => {
-            initialPerf[team] = 0
-          })
-          setCarPerformance(initialPerf)
         }
         setLoading(false)
       },
@@ -102,8 +117,7 @@ export default function RacePredictor() {
     // Calculate lap time for each driver
     const predictions: RacePrediction[] = drivers.map(driver => {
       const teamKey = driver.team.toLowerCase()
-      const carGapTenths = carPerformance[teamKey] || 0
-      const carGapSeconds = carGapTenths * 0.1
+      const baseTime = carPerformance[teamKey] || 86.5
 
       // Find reference ELO (fastest car's top driver)
       let referenceElo = 1500
@@ -121,8 +135,8 @@ export default function RacePredictor() {
       const eloAdvantageMs = (driver.elo - referenceElo)
       const eloAdvantageSeconds = eloAdvantageMs / 1000
 
-      // Lap time = car gap + ELO advantage (in seconds)
-      const lapTime = carGapSeconds + eloAdvantageSeconds
+      // Lap time = base time + ELO advantage (in seconds)
+      const lapTime = baseTime + eloAdvantageSeconds
 
       // Total race time
       const totalTime = lapTime * laps
@@ -168,6 +182,60 @@ export default function RacePredictor() {
       return `+${ms}ms`
     }
     return `+${seconds.toFixed(3)}s`
+  }
+
+  const exportResults = () => {
+    if (predictions.length === 0) return
+
+    const lines: string[] = []
+    lines.push('F1 RACE PREDICTOR RESULTS')
+    lines.push('='.repeat(80))
+    lines.push(``)
+    lines.push(`Race Distance: ${laps} laps`)
+    lines.push(`Generated: ${new Date().toLocaleString()}`)
+    lines.push(``)
+    lines.push('='.repeat(80))
+    lines.push(``)
+
+    // Table header
+    lines.push(`POS | DRIVER                | TEAM              | ELO  | LAP TIME  | TOTAL TIME | GAP`)
+    lines.push('-'.repeat(80))
+
+    // Results
+    predictions.forEach(pred => {
+      const pos = pred.position.toString().padStart(2, ' ')
+      const driver = pred.driver.padEnd(20, ' ')
+      const team = pred.team.padEnd(16, ' ')
+      const elo = pred.elo.toString().padStart(4, ' ')
+      const lapTime = `${(pred.lapTime * 1000).toFixed(1)}ms`.padStart(8, ' ')
+      const totalTime = formatTime(pred.totalTime).padStart(9, ' ')
+      const gap = pred.gapToPrevious === null ? '—'.padEnd(8, ' ') : formatGap(pred.gapToPrevious).padEnd(8, ' ')
+
+      lines.push(`${pos} | ${driver} | ${team} | ${elo} | ${lapTime} | ${totalTime} | ${gap}`)
+    })
+
+    lines.push(``)
+    lines.push('-'.repeat(80))
+    lines.push(``)
+
+    // Summary
+    lines.push(`SUMMARY STATISTICS`)
+    lines.push(`Leader: ${predictions[0].driver} - ${formatTime(predictions[0].totalTime)}`)
+    lines.push(`Gap (P1 to P${predictions.length}): ${formatGap(predictions[predictions.length - 1].totalTime - predictions[0].totalTime)}`)
+    lines.push(`Average Top 3 Lap Time: ${(predictions.slice(0, 3).reduce((a, b) => a + b.lapTime, 0) / 3 * 1000).toFixed(1)}ms`)
+    lines.push(``)
+    lines.push('='.repeat(80))
+
+    const text = lines.join('\n')
+    const blob = new Blob([text], { type: 'text/plain' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `f1-race-prediction-${laps}laps-${new Date().getTime()}.txt`
+    document.body.appendChild(a)
+    a.click()
+    document.body.removeChild(a)
+    URL.revokeObjectURL(url)
   }
 
   return (
@@ -238,10 +306,10 @@ export default function RacePredictor() {
                   </label>
                 </div>
 
-                {/* Team Performance Inputs */}
+                {/* Team Performance Display */}
                 <div className="p-6">
                   <p className="text-[10px] font-black uppercase tracking-[0.15em] text-zinc-400 mb-5">
-                    Enter car gap in tenths of seconds (slower vs fastest car)
+                    Default car performance (base lap times in seconds)
                   </p>
 
                   <div className="space-y-4">
@@ -249,45 +317,28 @@ export default function RacePredictor() {
                       const teamName = driversByTeam[teamKey][0]?.team || teamKey
                       const teamColor = TEAM_COLORS[teamKey] || '#8a8a94'
                       const teamDrivers = driversByTeam[teamKey]
+                      const baseTime = carPerformance[teamKey] || 86.5
 
                       return (
                         <div
                           key={teamKey}
-                          className="p-4 rounded-lg border border-zinc-700/40 hover:border-zinc-600/60 transition-all bg-zinc-900/30"
+                          className="p-4 rounded-lg border border-zinc-700/40 bg-zinc-900/30"
                           style={{ borderLeftColor: teamColor, borderLeftWidth: '3px' }}
                         >
-                          <div className="flex items-center justify-between mb-3">
+                          <div className="flex items-center justify-between">
                             <div>
                               <p className="text-sm font-black uppercase tracking-wider text-white">{teamName}</p>
                               <p className="text-[9px] text-zinc-500 mt-1">
                                 {teamDrivers.length} driver{teamDrivers.length !== 1 ? 's' : ''} (avg ELO: {Math.round(teamDrivers.reduce((a, b) => a + b.elo, 0) / teamDrivers.length)})
                               </p>
                             </div>
-                            <div className="flex items-center gap-3">
-                              <span className="text-right">
-                                <span className="text-lg font-black font-mono" style={{ color: teamColor }}>
-                                  {carPerformance[teamKey] || 0}
-                                </span>
-                                <span className="text-[9px] text-zinc-500 ml-1 font-bold">tenths</span>
+                            <div className="text-right">
+                              <span className="text-lg font-black font-mono" style={{ color: teamColor }}>
+                                {baseTime.toFixed(3)}
                               </span>
+                              <span className="text-[9px] text-zinc-500 ml-1 font-bold">seconds</span>
                             </div>
                           </div>
-
-                          <input
-                            type="number"
-                            min="0"
-                            max="100"
-                            step="0.1"
-                            value={carPerformance[teamKey] || 0}
-                            onChange={(e) =>
-                              setCarPerformance(prev => ({
-                                ...prev,
-                                [teamKey]: parseFloat(e.target.value) || 0,
-                              }))
-                            }
-                            className="w-full px-3 py-2 bg-zinc-900/60 border border-zinc-700/60 rounded text-white font-bold text-sm focus:outline-none focus:border-orange-500/60 transition-all"
-                            style={{ borderLeftColor: teamColor, borderLeftWidth: '2px' }}
-                          />
                         </div>
                       )
                     })}
@@ -316,9 +367,9 @@ export default function RacePredictor() {
 
                 <div className="p-6 space-y-5">
                   <div>
-                    <p className="text-[10px] font-black uppercase tracking-[0.15em] text-orange-400 mb-2">Car Performance</p>
+                    <p className="text-[10px] font-black uppercase tracking-[0.15em] text-orange-400 mb-2">Base Lap Times</p>
                     <p className="text-xs text-zinc-400 leading-relaxed">
-                      Set how many tenths of a second each car is slower than the fastest car per lap.
+                      Each team has a realistic base lap time. Mercedes is fastest, others progressively slower.
                     </p>
                   </div>
 
@@ -336,7 +387,7 @@ export default function RacePredictor() {
                   <div>
                     <p className="text-[10px] font-black uppercase tracking-[0.15em] text-orange-400 mb-2">Race Calculation</p>
                     <p className="text-xs text-zinc-400 leading-relaxed">
-                      Final time = (car gap + ELO advantage in seconds) × number of laps.
+                      Final time = (base time + ELO advantage in seconds) × number of laps.
                     </p>
                   </div>
 
@@ -357,11 +408,19 @@ export default function RacePredictor() {
           <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
             <div className="bg-gradient-to-br from-zinc-900/80 to-black border border-zinc-700/50 rounded-xl overflow-hidden shadow-xl backdrop-blur-sm">
               {/* Table Header */}
-              <div className="flex items-center gap-3 px-6 py-5 border-b border-zinc-700/40 bg-black/40 sticky top-0 z-20">
-                <TrendingUp size={18} className="text-orange-500" />
-                <span className="text-[11px] font-black uppercase tracking-[0.3em] text-zinc-300">
-                  Race Results – {laps} Laps
-                </span>
+              <div className="flex items-center justify-between px-6 py-5 border-b border-zinc-700/40 bg-black/40 sticky top-0 z-20">
+                <div className="flex items-center gap-3">
+                  <TrendingUp size={18} className="text-orange-500" />
+                  <span className="text-[11px] font-black uppercase tracking-[0.3em] text-zinc-300">
+                    Race Results – {laps} Laps
+                  </span>
+                </div>
+                <button
+                  onClick={exportResults}
+                  className="px-3 py-1.5 bg-orange-500/20 hover:bg-orange-500/30 border border-orange-500/40 rounded text-[10px] font-black uppercase tracking-widest text-orange-400 hover:text-orange-300 transition-all active:scale-95"
+                >
+                  Export as Text
+                </button>
               </div>
 
               {/* Table */}

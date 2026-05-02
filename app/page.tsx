@@ -361,7 +361,7 @@ export default function Home() {
 
 {/* ── PREMIUM EDITORIAL CARD - FEATURED AT TOP ── */}
       <div className="container mx-auto px-6 max-w-[1400px] mb-16">
-        <Link href="/miami-preview" className="group block relative overflow-hidden rounded-2xl border-2 border-orange-500/40 hover:border-orange-500/80 transition-all duration-500">
+        <Link href="/editorial" className="group block relative overflow-hidden rounded-2xl border-2 border-orange-500/40 hover:border-orange-500/80 transition-all duration-500">
           {/* Background with overlay */}
           <div className="absolute inset-0 bg-gradient-to-r from-slate-900 via-orange-950/30 to-slate-900" />
           <div className="absolute inset-0 opacity-0 group-hover:opacity-20 transition-opacity duration-500"

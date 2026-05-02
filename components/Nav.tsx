@@ -12,7 +12,8 @@ const links = [
   { href: '/effone-season-sim', label: '2026 Season Simulator'},
   { href: '/market', label: 'Stock Market' },
   { href: '/about', label: 'About' },
-  { href: '/predictor', label: 'Predictor' }
+  { href: '/predictor', label: 'Predictor' },
+  { href: '/jhlsection', label: 'Mclaren Section' }
 ]
 
 export default function Nav() {

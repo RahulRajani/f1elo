@@ -359,13 +359,13 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ── PREMIUM EDITORIAL CARD - FEATURED AT TOP ── */}
+{/* ── PREMIUM EDITORIAL CARD - FEATURED AT TOP ── */}
       <div className="container mx-auto px-6 max-w-[1400px] mb-16">
-        <Link href="/editorial" className="group block relative overflow-hidden rounded-2xl border-2 border-orange-500/40 hover:border-orange-500/80 transition-all duration-500">
+        <Link href="/miami-preview" className="group block relative overflow-hidden rounded-2xl border-2 border-orange-500/40 hover:border-orange-500/80 transition-all duration-500">
           {/* Background with overlay */}
           <div className="absolute inset-0 bg-gradient-to-r from-slate-900 via-orange-950/30 to-slate-900" />
           <div className="absolute inset-0 opacity-0 group-hover:opacity-20 transition-opacity duration-500"
-            style={{ backgroundImage: "url('https://www.racefans.net/wp-content/uploads/2026/03/racefansdotnet-24-03-28-06-02-31-1-2803JapanSat-1.jpg')", backgroundSize: 'cover', backgroundPosition: 'center' }} />
+            style={{ backgroundImage: "url('https://images.unsplash.com/photo-1541160359858-69cb95eeb8b6?q=80&w=2070&auto=format&fit=crop')", backgroundSize: 'cover', backgroundPosition: 'center' }} />
           
           {/* Animated accent line */}
           <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-orange-500 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
@@ -374,30 +374,30 @@ export default function Home() {
             <div className="grid lg:grid-cols-2 gap-12 items-center">
               {/* Left: Content */}
               <div>
-                <span className="inline-block bg-gradient-to-r from-orange-600 to-orange-500 text-white text-[11px] font-black italic px-4 py-2 uppercase tracking-widest rounded shadow-lg shadow-orange-500/40 mb-6">📊 Hall of Fame Analysis</span>
+                <span className="inline-block bg-gradient-to-r from-orange-600 to-orange-500 text-white text-[11px] font-black italic px-4 py-2 uppercase tracking-widest rounded shadow-lg shadow-orange-500/40 mb-6">🏁 Race Preview</span>
                 
                 <h2 className="text-5xl lg:text-6xl font-black italic uppercase tracking-tighter leading-[0.95] mb-6 text-white group-hover:text-orange-300 transition-colors">
-                  The Best F1 <br />
-                  <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-400 via-orange-500 to-red-500">Races of My Life</span>
+                  Miami Heat: <br />
+                  <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-400 via-orange-500 to-red-500">McLaren Upgrades</span>
                 </h2>
                 
                 <p className="text-lg text-zinc-300 mb-8 leading-relaxed font-light max-w-lg">
-                  A comprehensive journey through 22 years of Formula 1. From 2005 to 2026, I've handpicked the greatest races, analyzed objectively, to showcase what makes this sport truly magical.
+                  The 2026 Formula 1 season has hit a fever pitch in Florida. McLaren arrives with a dominant "B" spec, igniting a four-way fight as Red Bull fumbles and Mercedes slumps in the sunshine state.
                 </p>
                 
                 <div className="flex items-center gap-3 text-orange-400 text-[11px] font-black italic uppercase tracking-widest group-hover:gap-6 transition-all">
-                  Explore Timeline <ChevronRight size={18} />
+                  Read Full Article <ChevronRight size={18} />
                 </div>
               </div>
 
-              {/* Right: Race Year Grid */}
+              {/* Right: Predicted Grid Order */}
               <div className="grid grid-cols-3 gap-4">
-                {['2026🇯🇵', '2025🇧🇷', '2024🇬🇧', '2023🇺🇸', '2022🇧🇭', '2021🇧🇷', '2020🇧🇭'].map((year, i) => {
-                  const [yr, flag] = [year.slice(0, 4), year.slice(4)];
+                {['P1 NOR', 'P2 PIA', 'P3 LEC', 'P4 RUS', 'P5 HAM', 'P6 ANT', 'P7 VER'].map((item, i) => {
+                  const [pos, name] = item.split(' ');
                   return (
                     <div key={i} className="flex flex-col items-center justify-center p-4 rounded-lg bg-orange-500/10 border border-orange-500/20 group-hover:bg-orange-500/20 group-hover:border-orange-500/40 transition-all">
-                      <span className="text-2xl mb-2">{flag}</span>
-                      <span className="text-sm font-black text-orange-400">{yr}</span>
+                      <span className="text-2xl font-black text-white mb-2 italic">{pos}</span>
+                      <span className="text-sm font-black text-orange-400">{name}</span>
                     </div>
                   );
                 })}

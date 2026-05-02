@@ -1,256 +1,254 @@
 'use client'
 
-import React, { useState } from 'react';
-import { 
-  Activity, 
-  Trophy,
-  Flag,
-  Zap,
-  AlertTriangle,
-  ChevronRight,
-  Award
-} from 'lucide-react';
+import React from 'react'
+import Link from 'next/link'
+import { AlertTriangle, ChevronRight, Flag, TrendingUp, Wind, Zap, Trophy } from 'lucide-react'
 
-interface Race {
-  race: string;
-  country: string;
-  winner: string;
-  summary: string;
-  highlights: string[];
-}
-
-interface RacesRecord {
-  [key: string]: Race;
-}
-
-export default function ArticlePage() {
-  const [expandedYear, setExpandedYear] = useState<string | null>('2026');
-
-  const races: RacesRecord = {
-    '2026': {
-      race: 'Japan',
-      country: '🇯🇵',
-      winner: 'Antonelli',
-      summary: 'We are only 3 races into the 2026 season, and I have made my opinions very clear on these regulations in a previous article. However, I think there were positives from this race. There was a genuine battle for the lead between Piastri and Russell, and there was more action than the processions we had in the ground effect era. It was also the first race where Mercedes looked slightly vulnerable for an extended period, which makes for a better race. However, Antonelli pulled away after the safety car and moves did become limited in the points outside of Hamilton falling away. We also had the Bearman crash which was a bad look on the regulations, even if Colapinto could\'ve definitely done slightly better. If this is the best race come the end of the year, it would\'ve been an extremely disappointing year.',
-      highlights: ['Piastri vs Russell battle', 'Mercedes vulnerability', 'More overtaking action', 'Bearman crash drama']
-    },
-    '2025': {
-      race: 'Brazil',
-      country: '🇧🇷',
-      winner: 'Norris',
-      summary: 'I said this list wouldn\'t be made of just McLaren wins, but in a year where we won 14 out of the 24 races, it was more than likely that one of ours would\'ve been the best. Brazil had almost everything you wanted from a race. We had multiple strategies, lots of overtakes, different strategies, controversy and safety cars. While Norris did end up winning the race relatively comfortably in the end, there was drama everywhere you looked. You had Bortoleto crashing out early, you had Hamilton drop down the order, you had the 3 car turn 1 crash between Antonelli, Leclerc and Piastri, and you had Verstappen getting an early puncture. And this was all before lap 10. As well as all this drama, you had the 3 men on the podium all performing at an elite level. Norris controlled the entire weekend and earned maximum points. Antonelli drove the best race of his career (even after his 2 wins) and held on to 2nd place. Finally, there was Verstappen who drove the race of the season, coming from the pit lane in P19 to finishing within a few tenths of Antonelli, making it the 2nd year in a row he drove from the back to the front in Brazil. You also had Piastri chasing Russell to the line, Bearman performing miracles in the Haas to finish miles ahead of the rest of the midfield, and then every other driver finishing within a couple of seconds of each other to the line. While races like Britain and Australia had their exciting moments, Brazil was just an epic race from start to finish, and proved to the world that it is one of the best racing tracks in the world.',
-      highlights: ['Antonelli career-best', 'Verstappen pit lane recovery', 'Multi-car incident Turn 1', '3 car battle Piastri vs Russell']
-    },
-    '2024': {
-      race: 'Silverstone',
-      country: '🇬🇧',
-      winner: 'Hamilton',
-      summary: 'This year felt like it would\'ve had way more exciting races, but outside of some Verstappen controversies, I find myself struggling to find great races. However, Silverstone very rarely fails to deliver. Firstly, you cannot go wrong with a mixed conditions race. You also had various battles for the lead, with about 4 drivers at various points looking like the favourite to win. You also had interesting tyre strategies, with it being a gamble in the last stint as no one knew the best tyre. And while I\'m not taking non racing moments into account, Hamilton winning another race after so long was a pretty cool moment for the neutral. I think what makes this race so good was McLaren constantly shooting themselves in the foot (unfortunately). If that was a team that had been at the front more consistently over the previous years, it would\'ve been a 1-2 for us. However, our blunders made for an exciting chase to the line between Verstappen and Hamilton. Behind the front pack, you had Perez and Leclerc forgetting how to drive, Aston Martin getting double points (which would be a miracle today) and Hulkenberg performing miracles in what was, at the time, a slightly underwhelming Haas (it would get better throughout the season). Just a very good race for anyone who wasn\'t a McLaren or Ferrari fan.',
-      highlights: ['Mixed conditions drama', 'Tyre strategy gambles', 'Multiple lead battles', 'Hamilton victory after drought']
-    },
-    '2023': {
-      race: 'Las Vegas',
-      country: '🇺🇸',
-      winner: 'Leclerc',
-      summary: 'Automatically, people would think that Singapore was the best race of 2023 as it was the only non Red Bull win of the year, but overall the racing wasn\'t particularly great. My pick for this year was a race I didn\'t watch for quite a while after it happened. Las Vegas in its first year was destined to be a good race because none of the drivers knew it. We had a mixed up grid, crashes in bizarre places, more overtakes than what felt like the entire 2025 season and an actual battle for the lead. Leclerc and Verstappen put on a show worthy of Sin City. Perez also had a great performance, going from 11th to within a couple of seconds of the lead. You had the Alpines performing miracles. You had the McLarens struggle to figure out how to get the tyres working. Stroll actually had a good race, even if he benefited from a Russell penalty. Verstappen also had to overcome the penalty he got at the start. And of course, you had the phenomenal last lap overtake by Leclerc on Perez to steal 2nd at the end. In what was a lacklustre season overall, this was definitely a shining light.',
-      highlights: ['Leclerc vs Verstappen duel', 'Perez 11th to 2nd', 'Unpredictable racing', 'Last lap Leclerc overtake']
-    },
-    '2022': {
-      race: 'Bahrain',
-      country: '🇧🇭',
-      winner: 'Leclerc',
-      summary: 'There are 2 stand out races for me in 2022, and it was very close between Bahrain and Saudi Arabia. However, I think the edge just about goes to the opening race. This race showed us the potential that never was with these regulations. The battle between Leclerc and Verstappen was some of the best racing in Formula 1 history. The constant planning and execution from both to try and keep hold of first place was outstanding, and the only downside was the Red Bulls giving out at the end. We had the phenomenal return of Magnussen, who achieved P5 for the team who just finished at the back in every race the previous year. You had points for the Alfa Romeos, including Zhou getting points on his debut and all the racing was very close between different groups from start to finish. It showed us what ground effect was capable of, and it such a shame that due to the development of these cars and the increase in dirty air that we never got to see more incredible races like this.',
-      highlights: ['Leclerc vs Verstappen epic', 'Magnussen P5 return', 'Zhou debut points', 'Peak ground effect potential']
-    },
-    '2021': {
-      race: 'Brazil',
-      country: '🇧🇷',
-      winner: 'Verstappen',
-      summary: 'While I\'d love to put Monza on this list, the racing after the crash was not the most entertaining. So for that reason, I have to go for Brazil. This (alongside Saudi Arabia) was the peak of the title battle between Hamilton and Verstappen, which for me is the deciding factor for why this is the best race of 2021 because the rest of the racing behind those 2 wasn\'t actually that great. This race you had Hamilton have to fight back from 10th on the grid, and he did it in style, making some great moves along the way, but the highlight came when he caught up to the top 3, with Perez putting up a strong defence for a bit and then the battle with Verstappen. Was it controversial? Definitely. Was it epic? Absolutely. This year these 2 really knew how to put on a show, and this showed it perfectly, with Verstappen pushing every limit possible to stop Hamilton while Hamilton did everything he could to drive around these obstacles. Behind them it wasn\'t the most thrilling (like most of the year) but there was a great recovery drive from Norris after the lap 1 puncture. 2021 was very memorable for its key moments, but the racing wasn\'t as good as many would make it out to be.',
-      highlights: ['Hamilton 10th to battle', 'Perez strong defence', 'Hamilton vs Verstappen battle', 'Controversial but epic']
-    },
-    '2020': {
-      race: 'Sakhir',
-      country: '🇧🇭',
-      winner: 'Perez',
-      summary: 'While the person running this website would be desperate for me to say Monza this year, I think the clear answer is Sakhir. In a year dominated by Mercedes (and Verstappen to an extent), this race was a glimpse of how good it could be if they weren\'t really there. The outer layout for Bahrain, while short, provided great racing. We had the lap 1 crash that took out Verstappen and Leclerc, and left Perez at the back. We had Sainz battling the Mercedes of Bottas at the start. We had various safety cars which changed the destination of this race multiple times. You can\'t talk about this race without mentioning Russell and Perez. Russell had spent his entire career at the back, but 1 race in that Mercedes and it looked like he\'d been there his whole life. While his pace was potentially overrated, the fact he was able to hold his own in a foreign car is still extremely impressive. Unfortunately for him, Mercedes fumbling the pit stops, while very entertaining for us, meant that Russell was unable to fight for the win despite leading a large percentage of this race. And of course, this race is most remembered for the drive Perez pulled off. After lap 1, he was 18th and last, but throughout the course of the race, he gradually gained all those positions back and took his first ever F1 win after 190 races. However, he drove like he had been winning his entire career. Was he lucky with safety car timings and the Mercedes pit stops? Yes, but you can\'t have a lucky race after being spun out on lap 1. Behind the battle for the win, there were some interesting battles between Norris and Albon, Ocon achieving his first ever podium, multiple rookies on the grid after Grosjean and Hamilton pulled out, and the Mercedes drivers trying their best to limit the damage as best as possible. A chaotic and extremely fun race in what was a pretty miserable year.',
-      highlights: ['Russell Mercedes debut shock', 'Perez pit lane recovery', 'Multiple safety cars', 'Ocon first podium']
-    }
-  };
-
-  const yearOrder = ['2026', '2025', '2024', '2023', '2022', '2021', '2020'];
+export default function MiamiArticlePage() {
+  // Full 22-driver predicted data parsed from the latest F1 simulation results[cite: 2]
+  const predictions = [
+    { rank: 1, driver: "Lando Norris", team: "McLaren", gap: "—" },
+    { rank: 2, driver: "Oscar Piastri", team: "McLaren", gap: "+2.223s" },
+    { rank: 3, driver: "Charles Leclerc", team: "Ferrari", gap: "+9.690s" },
+    { rank: 4, driver: "George Russell", team: "Mercedes", gap: "+12.597s" },
+    { rank: 5, driver: "Lewis Hamilton", team: "Ferrari", gap: "+17.385s" },
+    { rank: 6, driver: "Kimi Antonelli", team: "Mercedes", gap: "+19.608s" },
+    { rank: 7, driver: "Max Verstappen", team: "Red Bull", gap: "+33.801s" },
+    { rank: 8, driver: "Isack Hadjar", team: "Red Bull", gap: "+44.346s" },
+    { rank: 9, driver: "Pierre Gasly", team: "Alpine", gap: "+83.790s" },
+    { rank: 10, driver: "Franco Colapinto", team: "Alpine", gap: "+88.464s" },
+    { rank: 11, driver: "Nico Hulkenberg", team: "Sauber", gap: "+97.812s" },
+    { rank: 12, driver: "Carlos Sainz", team: "Williams", gap: "+98.838s" },
+    { rank: 13, driver: "Oliver Bearman", team: "Haas", gap: "+101.745s" },
+    { rank: 14, driver: "Gabriel Bortoleto", team: "Sauber", gap: "+102.144s" },
+    { rank: 15, driver: "Alex Albon", team: "Williams", gap: "+102.657s" },
+    { rank: 16, driver: "Esteban Ocon", team: "Haas", gap: "+104.139s" },
+    { rank: 17, driver: "Liam Lawson", team: "VCARB", gap: "+134.292s" },
+    { rank: 18, driver: "Arvid Lindblad", team: "VCARB", gap: "+134.805s" },
+    { rank: 19, driver: "Valtteri Bottas", team: "Cadillac", gap: "+170.886s" },
+    { rank: 20, driver: "Sergio Perez", team: "Cadillac", gap: "+172.767s" },
+    { rank: 21, driver: "Fernando Alonso", team: "Aston Martin", gap: "+204.402s" },
+    { rank: 22, driver: "Lance Stroll", team: "Aston Martin", gap: "+214.377s" }
+  ]
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950 text-zinc-100 font-sans selection:bg-orange-500 selection:text-white overflow-x-hidden">
-      
-      {/* NAVIGATION */}
-      <nav className="fixed top-0 w-full z-50 bg-slate-950/80 backdrop-blur-xl border-b border-orange-500/20">
-        <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Flag className="text-orange-500" size={24} />
-            <span className="text-xl font-black italic tracking-tighter text-white">F1<span className="text-orange-500">ELO</span></span>
-          </div>
-          <div className="hidden md:flex items-center gap-6 text-xs font-bold uppercase tracking-widest text-zinc-400">
-            <a href="#" className="hover:text-orange-400 transition-colors">Dashboard</a>
-            <a href="#" className="text-white border-b-2 border-orange-500 pb-1">Analysis</a>
-            <a href="#" className="hover:text-orange-400 transition-colors">Archive</a>
-          </div>
-        </div>
-      </nav>
-
-      {/* HERO SECTION */}
-      <header className="relative pt-32 pb-24 overflow-hidden">
-        {/* Animated background */}
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_80%_at_50%_-20%,rgba(251,146,60,0.15),rgba(51,65,85,0))]" />
-        <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808008_1px,transparent_1px),linear-gradient(to_bottom,#80808008_1px,transparent_1px)] bg-[size:40px_40px]" />
+    <div className="min-h-screen bg-black text-white pb-24">
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Syne:wght@600;700;800&display=swap');
+        body { font-family: 'Space Grotesk', sans-serif; }
+        h1, h2, h3, h4, h5, h6 { font-family: 'Syne', sans-serif; font-weight: 700; }
         
-        <div className="relative max-w-5xl mx-auto px-6 z-10">
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-orange-500/10 border border-orange-500/30 text-orange-400 text-xs font-mono font-bold mb-8 backdrop-blur-sm">
-            <Trophy size={14} /> 
-            <span>Hall of Fame Analysis</span>
-          </div>
-          
-          <h1 className="text-6xl md:text-8xl font-black uppercase italic tracking-tighter text-white leading-[0.95] mb-6 drop-shadow-2xl">
-            The Best F1<br />
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-400 via-orange-500 to-red-500">
-              Races of My Life
-            </span>
+        /* Custom Scrollbar for the leaderboard */
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: rgba(0,0,0,0.2); border-radius: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(234, 88, 12, 0.4); border-radius: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: rgba(234, 88, 12, 0.8); }
+      `}</style>
+
+      {/* Navigation Bar */}
+      <div className="sticky top-0 z-40 bg-black/90 backdrop-blur-md border-b border-orange-500/20">
+        <div className="max-w-4xl mx-auto px-6 py-5 flex items-center justify-between">
+          <Link href="/" className="text-2xl font-black text-white hover:text-orange-500 transition-colors">
+            F1 <span className="text-orange-600">NEWS</span>
+          </Link>
+          <Link href="/rankings" className="text-orange-500/70 hover:text-orange-500 font-bold text-sm uppercase tracking-wider transition-all flex items-center gap-2">
+            Back to Rankings <ChevronRight size={16} />
+          </Link>
+        </div>
+      </div>
+
+      {/* Article Content */}
+      <div className="max-w-4xl mx-auto px-6 py-12">
+        
+        {/* Header / Hero */}
+        <div className="mb-12 border-b border-orange-500/20 pb-12">
+          <p className="text-orange-500 font-bold uppercase tracking-widest text-sm mb-4 flex items-center gap-2">
+            <Flag size={16} />
+            Race Preview • Miami 2026
+          </p>
+          <h1 className="text-5xl md:text-7xl font-black text-white mb-6 italic leading-tight uppercase">
+            Miami Heat: McLaren Upgrades Ignite a Four-Way Fight as Red Bull Fumbles
           </h1>
-          
-          <p className="text-lg text-zinc-300 max-w-2xl leading-relaxed mb-8 font-light">
-            A journey through 22 years of Formula 1. From 2005 to 2026, I'm breaking down the greatest races I've witnessed, analyzed without bias, to showcase what makes this sport truly magical.
+          <p className="text-xl text-slate-300 leading-relaxed font-medium">
+            The 2026 Formula 1 season has hit a fever pitch in Florida. Following an unscheduled four-week break, the grid arrives at the Miami International Autodrome with a revised set of FIA regulations and a pecking order that looks increasingly unstable. While Mercedes dominated the opening rounds in Australia, China, and Japan, the sunshine state suggests a shift in the winds of power.
           </p>
-          
-          <div className="flex items-center gap-4 border-t border-zinc-700/50 pt-6">
-            <div className="w-12 h-12 rounded-full bg-gradient-to-br from-orange-500 to-orange-600 border border-orange-400/50 flex items-center justify-center">
-              <Award className="text-white" size={20} />
+        </div>
+
+        {/* The Papaya Revolution */}
+        <div className="bg-orange-600/10 border-2 border-orange-600/30 rounded-lg p-8 mb-10 hover:border-orange-500/50 transition-all shadow-lg shadow-orange-900/20">
+          <div className="flex items-center gap-3 mb-6">
+            <Zap size={28} className="text-orange-500" />
+            <h2 className="text-3xl font-black text-white uppercase">The Papaya Revolution: McLaren’s "B" Spec Dominance</h2>
+          </div>
+          <p className="text-lg text-slate-300 mb-6">
+            McLaren has arrived in Miami with what is effectively a "B" version of the MCL40, and if early data is any indication, the rest of the field should be worried.
+          </p>
+          <ul className="space-y-4">
+            <li className="flex items-start gap-4">
+              <div className="bg-orange-500/20 p-2 rounded text-orange-500 shrink-0 mt-1"><TrendingUp size={16} /></div>
+              <div>
+                <strong className="text-white text-lg">Scintillating Pace:</strong> 
+                <span className="text-slate-400 block mt-1">Lando Norris claimed pole for the Sprint Qualifying, showcasing a car that has mastered the balance between slow-speed technicality and high-speed downforce.</span>
+              </div>
+            </li>
+            <li className="flex items-start gap-4">
+              <div className="bg-orange-500/20 p-2 rounded text-orange-500 shrink-0 mt-1"><Flag size={16} /></div>
+              <div>
+                <strong className="text-white text-lg">A Predicted 1-2:</strong> 
+                <span className="text-slate-400 block mt-1">According to the latest race simulations, McLaren is favored to secure a dominant one-two finish, with Norris leading teammate Oscar Piastri across the line.</span>
+              </div>
+            </li>
+            <li className="flex items-start gap-4">
+              <div className="bg-orange-500/20 p-2 rounded text-orange-500 shrink-0 mt-1"><Wind size={16} /></div>
+              <div>
+                <strong className="text-white text-lg">Power and Weight:</strong> 
+                <span className="text-slate-400 block mt-1">The team has successfully reduced the car's weight while maximizing the efficiency of their Mercedes Power Unit.</span>
+              </div>
+            </li>
+          </ul>
+        </div>
+
+        {/* Ferrari and Mercedes */}
+        <div className="mb-10">
+          <h2 className="text-3xl font-black text-white uppercase mb-6">Ferrari and Mercedes: The Battle for the Podium</h2>
+          <p className="text-slate-300 leading-relaxed mb-6">
+            While McLaren steals the headlines, Ferrari and Mercedes are locked in a high-stakes chess match for the remaining silverware.
+          </p>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="bg-black/40 border border-orange-500/20 p-6 rounded-lg">
+              <h3 className="text-2xl font-black text-white mb-4 uppercase">Leclerc’s Charge & The Hamilton Factor</h3>
+              <p className="text-slate-400 leading-relaxed mb-4">
+                <strong>Charles Leclerc</strong> showed early promise by topping the only practice session of the weekend. He is predicted to secure P3, keeping Ferrari firmly in the hunt. 
+              </p>
+              <p className="text-slate-400 leading-relaxed">
+                Moving to Ferrari has seen <strong>Lewis Hamilton</strong> settle into a consistent rhythm, with a P5 finish predicted for Sunday’s main event.
+              </p>
             </div>
-            <div>
-              <p className="text-white font-bold text-sm">@FullTimeMclarenFan</p>
-              <p className="text-zinc-400 text-xs font-mono">Published • Spring Break Special</p>
+            <div className="bg-black/40 border border-orange-500/20 p-6 rounded-lg">
+              <h3 className="text-2xl font-black text-white mb-4 uppercase">The Mercedes Slump</h3>
+              <p className="text-slate-400 leading-relaxed">
+                After winning the first three races of the season, Mercedes appears to be on the back foot. While <strong>Kimi Antonelli</strong> currently leads the championship, he and <strong>George Russell</strong> have struggled with rear-end stability in the Miami heat.
+              </p>
             </div>
           </div>
         </div>
-      </header>
 
-      {/* MAIN CONTENT */}
-      <main className="max-w-5xl mx-auto px-6 pb-32">
-        
-        {/* INTRO SECTION */}
-        <section className="mb-20 p-8 rounded-2xl bg-gradient-to-br from-zinc-800/30 to-transparent border border-zinc-700/40 backdrop-blur-sm">
-          <p className="text-lg text-zinc-300 leading-relaxed mb-6">
-            As the F1 spring break comes to a temporary end next weekend, I think it's a good time to go through every year I've been alive (2005-2026) and run through what I believe are the best races from each year. While I don't have my biases towards Jenson Button as a driver and McLaren as a team, I will be objectively looking at what races were the most entertaining to watch as a neutral.
-          </p>
-          <p className="text-zinc-400 italic">Because no one really thinks races like Singapore 2024 are the peak of this sport's potential.</p>
-        </section>
+        {/* Red Bull in Crisis */}
+        <div className="bg-red-500/10 border-2 border-red-500/30 rounded-lg p-8 mb-12 relative overflow-hidden">
+          <div className="absolute top-0 right-0 p-8 opacity-10">
+            <AlertTriangle size={120} className="text-red-500" />
+          </div>
+          <div className="relative z-10">
+            <h2 className="text-3xl font-black text-white uppercase mb-4 flex items-center gap-3">
+              <AlertTriangle className="text-red-500" /> 
+              Red Bull in Crisis: Verstappen’s Uphill Battle
+            </h2>
+            <p className="text-slate-300 leading-relaxed mb-4">
+              The most shocking narrative in Miami isn't just on the track, but in the paddock.
+            </p>
+            <blockquote className="border-l-4 border-red-500 pl-4 py-2 mb-6 bg-red-500/5 text-red-200 italic font-medium text-lg">
+              "Red Bull in crisis as Verstappen's engineer moves to McLaren."
+            </blockquote>
+            <p className="text-slate-300 leading-relaxed mb-4">
+              With Gianpiero Lambiase departing for a rival, Max Verstappen’s season continues to stutter. Having failed to finish higher than sixth in the first three races of 2026, the Dutchman is predicted to cross the line in a lonely P7. 
+            </p>
+            <p className="text-slate-300 leading-relaxed">
+              The energy management issues inherent in the 2026 regulations continue to plague the RB22, leaving Verstappen vocal about his dissatisfaction with the current state of the sport.
+            </p>
+          </div>
+        </div>
 
-        {/* TIMELINE */}
-        <div className="space-y-4 relative">
-          {/* Vertical line */}
-          <div className="absolute left-0 top-0 bottom-0 w-px bg-gradient-to-b from-orange-500/50 via-orange-500/20 to-transparent" />
-          
-          {yearOrder.map((year, idx) => {
-            const race = races[year];
-            const isExpanded = expandedYear === year;
-            
-            return (
-              <div key={year} className="relative">
-                {/* Timeline dot */}
-                <div className="absolute -left-[18px] top-8 w-9 h-9 bg-slate-900 border-2 border-orange-500 rounded-full flex items-center justify-center cursor-pointer hover:scale-110 transition-transform group"
-                  onClick={() => setExpandedYear(isExpanded ? null : year)}>
-                  <span className="text-xs font-black text-orange-400">{idx + 1}</span>
-                  <div className="absolute inset-0 rounded-full bg-orange-500/20 group-hover:bg-orange-500/40 transition-all animate-pulse" />
-                </div>
+        {/* Midfield */}
+        <div className="mb-14">
+          <h2 className="text-3xl font-black text-white uppercase mb-4">The Audi Era and Midfield Struggles</h2>
+          <div className="border-l-2 border-orange-500/50 pl-6 py-2">
+            <p className="text-slate-300 leading-relaxed mb-4">
+              In a notable shift for the grid, the team formerly known as Sauber is now competing under the Audi banner. Their first major outing in Miami sees a respectable showing, though they remain just outside the points-paying positions.
+            </p>
+            <p className="text-orange-400/80 text-sm font-bold uppercase tracking-wider bg-orange-500/10 inline-block px-3 py-1 rounded">
+              Note: Audi's Nico Hulkenberg is expected to lead the charge for the new manufacturer in P11, followed by teammate Gabriel Bortoleto in P14.
+            </p>
+          </div>
+        </div>
 
-                {/* Race Card */}
-                <div 
-                  onClick={() => setExpandedYear(isExpanded ? null : year)}
-                  className={`ml-8 cursor-pointer group transition-all duration-500 ${isExpanded ? 'scale-100' : 'hover:scale-105'}`}
-                >
-                  <div className={`rounded-2xl border transition-all duration-500 overflow-hidden ${
-                    isExpanded 
-                      ? 'bg-gradient-to-br from-orange-900/40 to-slate-900/40 border-orange-500/60 shadow-2xl shadow-orange-500/20' 
-                      : 'bg-slate-800/40 border-zinc-700/40 hover:border-orange-500/40 hover:bg-slate-800/60'
-                  }`}>
-                    
-                    {/* Header */}
-                    <div className="p-6 border-b border-zinc-700/40 bg-gradient-to-r from-slate-800/50 to-transparent">
-                      <div className="flex items-start justify-between">
-                        <div>
-                          <span className="inline-block text-4xl mb-3">{race.country}</span>
-                          <div>
-                            <h3 className="text-5xl font-black italic uppercase text-white mb-2">{year}</h3>
-                            <p className="text-2xl font-bold text-orange-400">{race.race} Grand Prix</p>
-                            <p className="text-xs text-zinc-400 mt-2 font-mono">Winner: <span className="text-white font-bold">{race.winner}</span></p>
-                          </div>
-                        </div>
-                        <ChevronRight size={28} className={`text-orange-500 transition-transform duration-500 ${isExpanded ? 'rotate-90' : ''}`} />
-                      </div>
+        {/* Predictions Widget / Leaderboard UI (All 22 Drivers) */}
+        <div className="mb-14">
+          <div className="mb-6 flex flex-col md:flex-row md:items-end justify-between gap-4">
+            <div>
+              <h2 className="text-4xl font-black text-white italic uppercase flex items-center gap-3">
+                <Trophy className="text-orange-500" size={32} />
+                Full Grid Prediction
+              </h2>
+              <p className="text-orange-500 font-bold uppercase tracking-widest text-sm mt-2">
+                Simulated 57-Lap Results[cite: 2]
+              </p>
+            </div>
+            <div className="text-right text-xs text-slate-500 uppercase font-bold tracking-widest bg-white/5 px-3 py-2 rounded">
+              Scroll to view full grid
+            </div>
+          </div>
+
+          <div className="space-y-2 max-h-[600px] overflow-y-auto pr-4 custom-scrollbar rounded-lg">
+            {predictions.map((p, idx) => {
+              // Styling logic based on grid position
+              const isPodium = idx < 3;
+              const isPoints = idx >= 3 && idx < 10;
+              
+              let containerClasses = "w-full group transition-all duration-200 border-2 rounded-lg p-4 flex items-center justify-between ";
+              let rankClasses = "text-2xl font-black w-12 flex-shrink-0 text-center ";
+              let textClasses = "text-lg font-black transition-colors ";
+              
+              if (isPodium) {
+                containerClasses += "bg-orange-600/15 border-orange-600/50 shadow-md shadow-orange-900/20 hover:bg-orange-600/25";
+                rankClasses += "text-orange-500";
+                textClasses += "text-white group-hover:text-orange-400";
+              } else if (isPoints) {
+                containerClasses += "bg-black/60 border-orange-500/20 hover:border-orange-500/40 hover:bg-orange-500/5";
+                rankClasses += "text-slate-400";
+                textClasses += "text-slate-100 group-hover:text-white";
+              } else {
+                containerClasses += "bg-black/30 border-white/5 hover:border-white/10 opacity-80 hover:opacity-100";
+                rankClasses += "text-slate-600 font-bold text-xl";
+                textClasses += "text-slate-300";
+              }
+
+              return (
+                <div key={p.rank} className={containerClasses}>
+                  <div className="flex items-center gap-4 flex-1">
+                    <div className={rankClasses}>
+                      {p.rank}
                     </div>
-
-                    {/* Expanded Content */}
-                    {isExpanded && (
-                      <div className="p-8 space-y-6 animate-in fade-in duration-300">
-                        <p className="text-lg text-zinc-300 leading-relaxed font-light">
-                          {race.summary}
-                        </p>
-
-                        {/* Highlights Grid */}
-                        <div>
-                          <h4 className="text-sm font-bold uppercase tracking-widest text-orange-400 mb-4 flex items-center gap-2">
-                            <Zap size={16} /> Race Highlights
-                          </h4>
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                            {race.highlights.map((highlight: string, i: number) => (
-                              <div key={i} className="flex items-center gap-3 p-3 rounded-lg bg-orange-500/10 border border-orange-500/20">
-                                <div className="w-2 h-2 rounded-full bg-orange-500 flex-shrink-0" />
-                                <span className="text-sm text-zinc-200">{highlight}</span>
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-
-                        {/* Year-specific note */}
-                        {year === '2024' && (
-                          <div className="flex gap-3 p-4 rounded-lg bg-red-500/10 border border-red-500/20 text-red-300 text-sm">
-                            <AlertTriangle size={18} className="flex-shrink-0 mt-0.5" />
-                            <p><span className="font-bold">Admin Note:</span> Brazil was 100% robbed here. Are we serious?</p>
-                          </div>
-                        )}
-                        {year === '2021' && (
-                          <div className="flex gap-3 p-4 rounded-lg bg-red-500/10 border border-red-500/20 text-red-300 text-sm">
-                            <AlertTriangle size={18} className="flex-shrink-0 mt-0.5" />
-                            <p><span className="font-bold">Admin Note:</span> Abu Dhabi is right there! Most viewed F1 race of all time...</p>
-                          </div>
-                        )}
-                        {year === '2020' && (
-                          <div className="flex gap-3 p-4 rounded-lg bg-red-500/10 border border-red-500/20 text-red-300 text-sm">
-                            <AlertTriangle size={18} className="flex-shrink-0 mt-0.5" />
-                            <p><span className="font-bold">Admin Note:</span> Monza was clearly the best race of the year. This race was pretty much the Perez show.</p>
-                          </div>
-                        )}
-                      </div>
-                    )}
+                    <div>
+                      <p className={textClasses}>
+                        {p.driver}
+                      </p>
+                      <p className={`text-xs mt-1 uppercase tracking-wider font-bold ${isPodium ? 'text-orange-500/80' : 'text-slate-500'}`}>
+                        {p.team}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="text-right flex-shrink-0">
+                    <p className={`font-black ${isPodium ? 'text-white' : 'text-slate-300'}`}>{p.gap}</p>
+                    <p className="text-[10px] text-slate-500 mt-1 uppercase font-bold tracking-widest">Gap</p>
                   </div>
                 </div>
-              </div>
-            );
-          })}
+              );
+            })}
+          </div>
         </div>
 
-        {/* CLOSING SECTION */}
-        <section className="mt-24 p-8 rounded-2xl bg-gradient-to-r from-slate-800/50 to-orange-900/20 border border-orange-500/20 backdrop-blur-sm">
-          <h2 className="text-3xl font-black uppercase italic tracking-tight text-white mb-6">The Journey Continues</h2>
-          <p className="text-lg text-zinc-300 leading-relaxed mb-6">
+        {/* Final Outlook */}
+        <div className="bg-gradient-to-r from-orange-600/20 to-black border border-orange-500/30 rounded-lg p-8">
+          <h3 className="text-2xl font-black text-white uppercase mb-4 flex items-center gap-3">
+            <Wind className="text-orange-500" size={24} /> 
+            Final Outlook
+          </h3>
+          <p className="text-slate-300 leading-relaxed text-lg">
+            With rain and storms forecasted for Sunday, the theoretical data might be thrown out the window in favor of pure driver instinct. However, one thing is certain: the era of Mercedes' 2026 dominance is facing its first true test at the hands of a revitalized McLaren.
           </p>
-          <p className="text-zinc-400">
-            The 2010s and earlier years coming soon. </p>
-          
-          <a href="https://www.f1elo.me" className="mt-8 inline-flex items-center gap-2 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-red-500 text-white font-black uppercase tracking-wider text-sm px-8 py-4 rounded-full transition-all hover:scale-105 active:scale-95 shadow-lg shadow-orange-500/40">
-            Back to Main Site <ChevronRight size={18} />
-          </a>
-        </section>
-      </main>
+        </div>
+
+      </div>
     </div>
-  );
+  )
 }
